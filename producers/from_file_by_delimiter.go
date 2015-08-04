@@ -1,9 +1,9 @@
 package producers
 
 import (
+	"bufio"
 	"github.com/drborges/riversv2/rx"
 	"os"
-	"bufio"
 	"strings"
 )
 

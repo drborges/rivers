@@ -13,13 +13,13 @@ func New(c rx.Context) *Builder {
 func (b *Builder) If(fn rx.PredicateFn) rx.Dispatcher {
 	return &ifDispatcher{
 		context: b.context,
-		fn: fn,
+		fn:      fn,
 	}
 }
 
 func (b *Builder) Always() rx.Dispatcher {
 	return &ifDispatcher{
 		context: b.context,
-		fn: func(_ rx.T) bool { return true },
+		fn:      func(_ rx.T) bool { return true },
 	}
 }

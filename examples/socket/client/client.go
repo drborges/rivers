@@ -1,12 +1,12 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/drborges/riversv2"
 	"github.com/drborges/riversv2/rx"
-	"log"
-	"fmt"
 	"github.com/fatih/color"
-	"flag"
+	"log"
 )
 
 var host = flag.String("host", "127.0.0.1", "The host to connect to")
@@ -23,5 +23,5 @@ func main() {
 		return fmt.Sprintf("[%v] %v", red.SprintFunc()("Server"), yellow.SprintFunc()(data))
 	}
 
-	rivers.New().FromSocket("tcp", *host + ":" + *port).Map(toString).Map(formatMessage).Each(printMessage).Drain()
+	rivers.New().FromSocket("tcp", *host+":"+*port).Map(toString).Map(formatMessage).Each(printMessage).Drain()
 }

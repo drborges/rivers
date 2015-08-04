@@ -19,7 +19,7 @@ func (b *Builder) Zip() rx.Combiner {
 func (b *Builder) ZipBy(fn rx.ReduceFn) rx.Combiner {
 	return &zipBy{
 		context: b.context,
-		fn: fn,
+		fn:      fn,
 	}
 }
 

@@ -1,11 +1,11 @@
 package transformers_test
 
 import (
-	"testing"
 	"github.com/drborges/riversv2"
-	. "github.com/smartystreets/goconvey/convey"
 	"github.com/drborges/riversv2/rx"
 	"github.com/drborges/riversv2/transformers"
+	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
 func TestSortBy(t *testing.T) {

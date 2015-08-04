@@ -1,14 +1,14 @@
 package producers
 
 import (
+	"bufio"
 	"github.com/drborges/riversv2/rx"
 	"os"
-	"bufio"
 )
 
 type fromFileByLine struct {
-	context  rx.Context
-	file *os.File
+	context rx.Context
+	file    *os.File
 }
 
 func (p *fromFileByLine) Produce() rx.InStream {
@@ -27,10 +27,10 @@ func (p *fromFileByLine) Produce() rx.InStream {
 				return
 			default:
 				writer <- scanner.Text()
-			// In case of error the context should be closed
-			// if scanner.Err() != nil {
-			//     p.context.Close(scanner.Err())
-			// }
+				// In case of error the context should be closed
+				// if scanner.Err() != nil {
+				//     p.context.Close(scanner.Err())
+				// }
 			}
 		}
 	}()

@@ -3,13 +3,15 @@ package transformers
 import "github.com/drborges/riversv2/rx"
 
 type reducer struct {
-	context  rx.Context
-	reduceFn rx.ReduceFn
-	acc      rx.T
+	context    rx.Context
+	reduceFn   rx.ReduceFn
+	initialAcc rx.T
 }
 
 func (t *reducer) Transform(in rx.InStream) rx.InStream {
 	reader, writer := rx.NewStream(cap(in))
+
+	acc := t.initialAcc
 
 	go func() {
 		defer t.context.Recover()
@@ -24,11 +26,11 @@ func (t *reducer) Transform(in rx.InStream) rx.InStream {
 				if !more {
 					goto done
 				}
-				t.acc = t.reduceFn(t.acc, data)
+				acc = t.reduceFn(acc, data)
 			}
 		}
-		done:
-		writer <- t.acc
+	done:
+		writer <- acc
 	}()
 
 	return reader

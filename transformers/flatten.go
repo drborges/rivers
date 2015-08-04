@@ -6,7 +6,7 @@ import (
 )
 
 type flatten struct {
-	context   rx.Context
+	context rx.Context
 }
 
 func (t *flatten) Transform(in rx.InStream) rx.InStream {

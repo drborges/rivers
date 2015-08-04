@@ -1,8 +1,8 @@
 package rx
 
 import (
-	"reflect"
 	"errors"
+	"reflect"
 )
 
 var (

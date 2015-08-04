@@ -1,11 +1,11 @@
 package producers_test
 
 import (
-	"testing"
 	"github.com/drborges/riversv2"
 	"github.com/drborges/riversv2/producers"
-	. "github.com/smartystreets/goconvey/convey"
 	"github.com/drborges/riversv2/rx"
+	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
 func TestFromRange(t *testing.T) {

@@ -2,12 +2,12 @@ package main
 
 import (
 	"bufio"
+	"flag"
+	"github.com/fatih/color"
 	"io"
 	"log"
 	"net"
 	"os"
-	"github.com/fatih/color"
-	"flag"
 )
 
 var host = flag.String("host", "0.0.0.0", "The host to connect to")
@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	yellow := color.New(color.FgYellow)
-	ln, _ := net.Listen("tcp", *host + ":" + *port)
+	ln, _ := net.Listen("tcp", *host+":"+*port)
 	log.Println("Listening at:", yellow.SprintFunc()(ln.Addr()))
 
 	reader := bufio.NewReader(os.Stdin)

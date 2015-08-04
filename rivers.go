@@ -1,14 +1,14 @@
 package rivers
 
 import (
-	"github.com/drborges/riversv2/producers"
-	"github.com/drborges/riversv2/consumers"
 	"github.com/drborges/riversv2/combiners"
+	"github.com/drborges/riversv2/consumers"
 	"github.com/drborges/riversv2/dispatchers"
-	"github.com/drborges/riversv2/transformers"
+	"github.com/drborges/riversv2/producers"
 	"github.com/drborges/riversv2/rx"
-	"os"
 	"github.com/drborges/riversv2/scanners"
+	"github.com/drborges/riversv2/transformers"
+	"os"
 )
 
 type producer interface {
@@ -35,11 +35,11 @@ type stage struct {
 
 func (s *stage) NewFrom(in rx.InStream) *stage {
 	return &stage{
-		in: in,
-		producers: s.producers,
-		consumers: s.consumers,
-		combiners: s.combiners,
-		dispatchers: s.dispatchers,
+		in:           in,
+		producers:    s.producers,
+		consumers:    s.consumers,
+		combiners:    s.combiners,
+		dispatchers:  s.dispatchers,
 		transformers: s.transformers,
 	}
 }
@@ -50,10 +50,10 @@ func New() producer {
 
 func NewWith(context rx.Context) producer {
 	return &stage{
-		producers: producers.New(context),
-		consumers: consumers.New(context),
-		combiners: combiners.New(context),
-		dispatchers: dispatchers.New(context),
+		producers:    producers.New(context),
+		consumers:    consumers.New(context),
+		combiners:    combiners.New(context),
+		dispatchers:  dispatchers.New(context),
 		transformers: transformers.New(context),
 	}
 }

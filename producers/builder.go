@@ -2,8 +2,8 @@ package producers
 
 import (
 	"github.com/drborges/riversv2/rx"
-	"os"
 	"github.com/drborges/riversv2/scanners"
+	"os"
 )
 
 type Builder struct {
@@ -17,22 +17,22 @@ func New(c rx.Context) *Builder {
 func (b *Builder) FromRange(from, to int) rx.Producer {
 	return &fromRange{
 		context: b.context,
-		from: from,
-		To: to,
+		from:    from,
+		To:      to,
 	}
 }
 
 func (b *Builder) FromSlice(slice rx.T) rx.Producer {
 	return &fromSlice{
 		context: b.context,
-		slice: slice,
+		slice:   slice,
 	}
 }
 
 func (b *Builder) FromData(data ...rx.T) rx.Producer {
 	return &fromSlice{
 		context: b.context,
-		slice: data,
+		slice:   data,
 	}
 }
 
@@ -42,9 +42,9 @@ func (b *Builder) FromFile(f *os.File) *fromFile {
 
 func (b *Builder) FromSocket(protocol, addr string, scanner scanners.Scanner) rx.Producer {
 	return &fromSocket{
-		context: b.context,
+		context:  b.context,
 		protocol: protocol,
-		addr: addr,
-		scanner: scanner,
+		addr:     addr,
+		scanner:  scanner,
 	}
 }

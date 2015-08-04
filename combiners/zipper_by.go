@@ -4,7 +4,7 @@ import "github.com/drborges/riversv2/rx"
 
 type zipBy struct {
 	context rx.Context
-	fn rx.ReduceFn
+	fn      rx.ReduceFn
 }
 
 func (c *zipBy) Combine(in ...rx.InStream) rx.InStream {

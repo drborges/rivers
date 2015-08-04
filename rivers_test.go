@@ -1,20 +1,20 @@
 package rivers_test
 
 import (
-	"testing"
-	. "github.com/smartystreets/goconvey/convey"
 	"github.com/drborges/riversv2"
 	"github.com/drborges/riversv2/rx"
-	"net"
 	"github.com/drborges/riversv2/scanners"
+	. "github.com/smartystreets/goconvey/convey"
+	"net"
 	"strings"
+	"testing"
 )
 
 func TestRiversAPI(t *testing.T) {
 	toString := func(data rx.T) rx.T { return string(data.([]byte)) }
 	nonEmptyLines := func(data rx.T) bool { return data.(string) != "" }
 	splitWord := func(data rx.T) rx.T { return strings.Split(data.(string), " ") }
-	evens := func(data rx.T) bool { return data.(int) %2 == 0 }
+	evens := func(data rx.T) bool { return data.(int)%2 == 0 }
 	sum := func(a, b rx.T) rx.T { return a.(int) + b.(int) }
 	add := func(n int) rx.MapFn {
 		return func(data rx.T) rx.T { return data.(int) + n }
@@ -41,10 +41,10 @@ func TestRiversAPI(t *testing.T) {
 	}
 
 	listen := func() (net.Listener, string) {
-		port := ":8080"
+		port := ":8282"
 		ln, err := net.Listen("tcp", port)
 		if err != nil {
-			port = ":8081"
+			port = ":8383"
 			ln, _ = net.Listen("tcp", port)
 		}
 		return ln, port

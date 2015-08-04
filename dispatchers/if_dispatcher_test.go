@@ -1,15 +1,15 @@
 package dispatchers_test
 
 import (
-	"testing"
 	"github.com/drborges/riversv2"
-	. "github.com/smartystreets/goconvey/convey"
-	"github.com/drborges/riversv2/rx"
 	"github.com/drborges/riversv2/dispatchers"
+	"github.com/drborges/riversv2/rx"
+	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
 func TestIfDispatcher(t *testing.T) {
-	evens := func(d rx.T) bool { return d.(int) % 2 == 0 }
+	evens := func(d rx.T) bool { return d.(int)%2 == 0 }
 
 	Convey("Given I have a context", t, func() {
 		context := rivers.NewContext()

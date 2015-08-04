@@ -12,14 +12,14 @@ func New(c rx.Context) *Builder {
 
 func (b *Builder) Filter(fn rx.PredicateFn) rx.Transformer {
 	return &filter{
-		context: b.context,
+		context:   b.context,
 		predicate: fn,
 	}
 }
 
 func (b *Builder) FindBy(fn rx.PredicateFn) rx.Transformer {
 	return &findBy{
-		context: b.context,
+		context:   b.context,
 		predicate: fn,
 	}
 }
@@ -27,15 +27,15 @@ func (b *Builder) FindBy(fn rx.PredicateFn) rx.Transformer {
 func (b *Builder) Map(fn rx.MapFn) rx.Transformer {
 	return &mapper{
 		context: b.context,
-		mapFn: fn,
+		mapFn:   fn,
 	}
 }
 
 func (b *Builder) Reduce(acc rx.T, fn rx.ReduceFn) rx.Transformer {
 	return &reducer{
-		context: b.context,
-		reduceFn: fn,
-		acc: acc,
+		context:    b.context,
+		reduceFn:   fn,
+		initialAcc: acc,
 	}
 }
 
@@ -48,14 +48,14 @@ func (b *Builder) Flatten() rx.Transformer {
 func (b *Builder) Batch(size int) rx.Transformer {
 	return &batcher{
 		context: b.context,
-		size: size,
+		size:    size,
 	}
 }
 
 func (b *Builder) SortBy(sorter rx.SortByFn) rx.Transformer {
 	return &sortBy{
 		context: b.context,
-		sorter: sorter,
+		sorter:  sorter,
 	}
 }
 

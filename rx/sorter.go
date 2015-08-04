@@ -13,7 +13,7 @@ func (by SortByFn) Sort(items []T) {
 
 type sorter struct {
 	items []T
-	by SortByFn
+	by    SortByFn
 }
 
 func (s *sorter) Len() int {

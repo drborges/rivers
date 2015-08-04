@@ -1,13 +1,13 @@
 package producers_test
 
 import (
-	"testing"
 	"github.com/drborges/riversv2"
 	"github.com/drborges/riversv2/producers"
-	. "github.com/smartystreets/goconvey/convey"
 	"github.com/drborges/riversv2/rx"
-	"os"
+	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
+	"os"
+	"testing"
 )
 
 func TestFromFileByDelimiter(t *testing.T) {

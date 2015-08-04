@@ -2,8 +2,8 @@ package producers
 
 import (
 	"github.com/drborges/riversv2/rx"
-	"net"
 	"github.com/drborges/riversv2/scanners"
+	"net"
 )
 
 type fromSocket struct {
@@ -19,6 +19,7 @@ func (socket *fromSocket) Produce() rx.InStream {
 	go func() {
 		defer socket.context.Recover()
 		defer close(writer)
+
 		conn, err := net.Dial(socket.protocol, socket.addr)
 		if err != nil {
 			return

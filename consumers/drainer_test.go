@@ -1,11 +1,11 @@
 package consumers_test
 
 import (
-	"testing"
-	. "github.com/smartystreets/goconvey/convey"
 	"github.com/drborges/riversv2"
-	"github.com/drborges/riversv2/rx"
 	"github.com/drborges/riversv2/consumers"
+	"github.com/drborges/riversv2/rx"
+	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
 func TestDrainer(t *testing.T) {
