@@ -7,6 +7,14 @@ type drainer struct {
 }
 
 func (drainer *drainer) Consume(in rx.InStream) {
-	for range in {
+	for {
+		select {
+		case <-drainer.context.Closed():
+			return
+		default:
+			if _, more := <-in; !more {
+				return
+			}
+		}
 	}
 }
