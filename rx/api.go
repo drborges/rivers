@@ -22,7 +22,6 @@ type Producer interface {
 }
 
 // a.k.a Sink
-// TODO better evaluate the need for this interface
 type Consumer interface {
 	Consume(in InStream)
 }
