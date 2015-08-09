@@ -12,6 +12,7 @@ type ReduceFn func(acc, next T) (result T)
 type Context interface {
 	Close()
 	Recover()
+	Err() error
 	Closed() <-chan error
 }
 

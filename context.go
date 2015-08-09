@@ -26,6 +26,10 @@ func (c *context) Close() {
 	}
 }
 
+func (c *context) Err() error {
+	return c.err
+}
+
 func (c *context) Closed() <-chan error {
 	return c.closed
 }
