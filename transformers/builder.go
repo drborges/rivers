@@ -48,7 +48,7 @@ func (b *Builder) Flatten() rx.Transformer {
 func (b *Builder) Batch(size int) rx.Transformer {
 	return &batcher{
 		context: b.context,
-		size:    size,
+		batch:   &batch{size: size},
 	}
 }
 

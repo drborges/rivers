@@ -38,3 +38,10 @@ type Combiner interface {
 type Dispatcher interface {
 	Dispatch(from InStream, to ...OutStream) (sink InStream)
 }
+
+type Batch interface {
+	Commit(OutStream)
+	Full() bool
+	Empty() bool
+	Add(data T)
+}

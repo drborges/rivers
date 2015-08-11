@@ -4,9 +4,31 @@ import (
 	"github.com/drborges/riversv2/rx"
 )
 
+type batch struct {
+	size  int
+	items []rx.T
+}
+
+func (batch *batch) Full() bool {
+	return len(batch.items) == batch.size
+}
+
+func (batch *batch) Empty() bool {
+	return len(batch.items) == 0
+}
+
+func (batch *batch) Commit(out rx.OutStream) {
+	out <- batch.items
+	batch.items = []rx.T{}
+}
+
+func (batch *batch) Add(data rx.T) {
+	batch.items = append(batch.items, data)
+}
+
 type batcher struct {
 	context rx.Context
-	size    int
+	batch   rx.Batch
 }
 
 func (t *batcher) Transform(in rx.InStream) rx.InStream {
@@ -16,7 +38,6 @@ func (t *batcher) Transform(in rx.InStream) rx.InStream {
 		defer t.context.Recover()
 		defer close(writer)
 
-		batch := []rx.T{}
 		for {
 			select {
 			case <-t.context.Closed():
@@ -24,15 +45,14 @@ func (t *batcher) Transform(in rx.InStream) rx.InStream {
 			default:
 				data, more := <-in
 				if !more {
-					if len(batch) > 0 {
-						writer <- batch
+					if !t.batch.Empty() {
+						t.batch.Commit(writer)
 					}
 					return
 				}
-				batch = append(batch, data)
-				if len(batch) == t.size {
-					writer <- batch
-					batch = []rx.T{}
+				t.batch.Add(data)
+				if t.batch.Full() {
+					t.batch.Commit(writer)
 				}
 			}
 		}
