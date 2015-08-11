@@ -150,6 +150,10 @@ func (stage *stage) Batch(size int) *stage {
 	return stage.Apply(stage.transformers.Batch(size))
 }
 
+func (stage *stage) BatchBy(batch rx.Batch) *stage {
+	return stage.Apply(stage.transformers.BatchBy(batch))
+}
+
 func (stage *stage) Sink() rx.InStream {
 	return stage.in
 }

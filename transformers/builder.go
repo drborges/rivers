@@ -52,6 +52,13 @@ func (b *Builder) Batch(size int) rx.Transformer {
 	}
 }
 
+func (b *Builder) BatchBy(batch rx.Batch) rx.Transformer {
+	return &batcher{
+		context: b.context,
+		batch:   batch,
+	}
+}
+
 func (b *Builder) SortBy(sorter rx.SortByFn) rx.Transformer {
 	return &sortBy{
 		context: b.context,
