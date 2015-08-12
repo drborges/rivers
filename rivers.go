@@ -58,6 +58,14 @@ func NewWith(context rx.Context) producer {
 	}
 }
 
+func (stage *stage) Split() (*stage, *stage) {
+	lhsIn, lhsOut := rx.NewStream(cap(stage.in))
+	rhsIn, rhsOut := rx.NewStream(cap(stage.in))
+	stage.dispatchers.Always().Dispatch(stage.in, lhsOut, rhsOut)
+
+	return stage.NewFrom(lhsIn), stage.NewFrom(rhsIn)
+}
+
 func (stage *stage) Partition(fn rx.PredicateFn) (*stage, *stage) {
 	lhsIn, lhsOut := rx.NewStream(cap(stage.in))
 	rhsIn := stage.dispatchers.If(fn).Dispatch(stage.in, lhsOut)

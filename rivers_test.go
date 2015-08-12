@@ -146,5 +146,12 @@ func TestRiversAPI(t *testing.T) {
 			So(evens.Sink().Read(), ShouldResemble, []rx.T{2, 4, 6, 8, 10})
 			So(odds.Sink().Read(), ShouldResemble, []rx.T{1, 3, 5, 7, 9})
 		})
+
+		Convey("From Range -> Slipt -> Sink", func() {
+			lhs, rhs := rivers.New().FromRange(1, 4).Split()
+
+			So(lhs.Sink().Read(), ShouldResemble, []rx.T{1, 2, 3, 4})
+			So(rhs.Sink().Read(), ShouldResemble, []rx.T{1, 2, 3, 4})
+		})
 	})
 }
