@@ -58,6 +58,13 @@ func NewWith(context rx.Context) producer {
 	}
 }
 
+func (stage *stage) Partition(fn rx.PredicateFn) (*stage, *stage) {
+	lhsIn, lhsOut := rx.NewStream(cap(stage.in))
+	rhsIn := stage.dispatchers.If(fn).Dispatch(stage.in, lhsOut)
+
+	return stage.NewFrom(lhsIn), stage.NewFrom(rhsIn)
+}
+
 func (stage *stage) Combine(in ...rx.InStream) *stage {
 	return stage.NewFrom(stage.combiners.FIFO().Combine(in...))
 }

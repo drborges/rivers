@@ -14,7 +14,7 @@ func TestRiversAPI(t *testing.T) {
 	toString := func(data rx.T) rx.T { return string(data.([]byte)) }
 	nonEmptyLines := func(data rx.T) bool { return data.(string) != "" }
 	splitWord := func(data rx.T) rx.T { return strings.Split(data.(string), " ") }
-	evens := func(data rx.T) bool { return data.(int)%2 == 0 }
+	evensOnly := func(data rx.T) bool { return data.(int)%2 == 0 }
 	sum := func(a, b rx.T) rx.T { return a.(int) + b.(int) }
 	add := func(n int) rx.MapFn {
 		return func(data rx.T) rx.T { return data.(int) + n }
@@ -54,7 +54,7 @@ func TestRiversAPI(t *testing.T) {
 
 		Convey("From Range -> Filter -> Map -> Reduce -> Each -> Sink", func() {
 			stream := rivers.New().FromRange(1, 5).
-				Filter(evens).
+				Filter(evensOnly).
 				Map(add(1)).
 				Reduce(0, sum).
 				Sink()
@@ -81,7 +81,7 @@ func TestRiversAPI(t *testing.T) {
 			in, out := rx.NewStream(2)
 
 			notDispatched := rivers.New().FromSlice([]rx.T{1, 2, 3, 4, 5}).
-				DispatchIf(evens, out).
+				DispatchIf(evensOnly, out).
 				Map(add(2)).
 				Sink()
 
@@ -104,7 +104,7 @@ func TestRiversAPI(t *testing.T) {
 			numbers := streams.FromData(1, 2, 3, 4)
 			moreNumbers := streams.FromData(4, 4, 1)
 
-			combined := streams.CombineZippingBy(sum, numbers.Sink(), moreNumbers.Sink()).Filter(evens).Sink()
+			combined := streams.CombineZippingBy(sum, numbers.Sink(), moreNumbers.Sink()).Filter(evensOnly).Sink()
 
 			So(combined.Read(), ShouldResemble, []rx.T{6, 4, 4})
 		})
@@ -138,6 +138,13 @@ func TestRiversAPI(t *testing.T) {
 				Sink()
 
 			So(words.Read(), ShouldResemble, []rx.T{"Hello", "there", "rivers!", "super", "cool!"})
+		})
+
+		Convey("From Range -> Partition -> Sink", func() {
+			evens, odds := rivers.New().FromRange(1, 10).Partition(evensOnly)
+
+			So(evens.Sink().Read(), ShouldResemble, []rx.T{2, 4, 6, 8, 10})
+			So(odds.Sink().Read(), ShouldResemble, []rx.T{1, 3, 5, 7, 9})
 		})
 	})
 }

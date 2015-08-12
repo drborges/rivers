@@ -8,7 +8,6 @@ import (
 	"testing"
 )
 
-
 type batch struct {
 	size  int
 	items []rx.T
