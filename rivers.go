@@ -26,6 +26,7 @@ type producer interface {
 
 type Stage struct {
 	in           rx.InStream
+	context      rx.Context
 	producers    *producers.Builder
 	consumers    *consumers.Builder
 	combiners    *combiners.Builder
@@ -36,6 +37,7 @@ type Stage struct {
 func (s *Stage) NewFrom(in rx.InStream) *Stage {
 	return &Stage{
 		in:           in,
+		context:      s.context,
 		producers:    s.producers,
 		consumers:    s.consumers,
 		combiners:    s.combiners,
@@ -50,6 +52,7 @@ func New() producer {
 
 func NewWith(context rx.Context) producer {
 	return &Stage{
+		context:      context,
 		producers:    producers.New(context),
 		consumers:    consumers.New(context),
 		combiners:    combiners.New(context),
@@ -173,6 +176,7 @@ func (stage *Stage) Sink() rx.InStream {
 	return stage.in
 }
 
-func (stage *Stage) Drain() {
+func (stage *Stage) Drain() error {
 	stage.consumers.Drainer().Consume(stage.in)
+	return stage.context.Err()
 }
