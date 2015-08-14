@@ -7,6 +7,7 @@ type MapFn func(T) T
 type HandleFn func(T)
 type PredicateFn func(T) bool
 type SortByFn func(a, b T) bool
+type OnDataFn func(data T, out OutStream)
 type ReduceFn func(acc, next T) (result T)
 
 type Context interface {

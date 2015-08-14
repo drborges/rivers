@@ -31,6 +31,13 @@ func (b *Builder) Map(fn rx.MapFn) rx.Transformer {
 	}
 }
 
+func (b *Builder) ProcessWith(fn rx.OnDataFn) rx.Transformer {
+	return &processor{
+		context: b.context,
+		onData:  fn,
+	}
+}
+
 func (b *Builder) Reduce(acc rx.T, fn rx.ReduceFn) rx.Transformer {
 	return &reducer{
 		context:    b.context,

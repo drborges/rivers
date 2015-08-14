@@ -140,6 +140,10 @@ func (stage *Stage) Filter(fn rx.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.Filter(fn))
 }
 
+func (stage *Stage) ProcessWith(fn rx.OnDataFn) *Stage {
+	return stage.Apply(stage.transformers.ProcessWith(fn))
+}
+
 func (stage *Stage) Map(fn rx.MapFn) *Stage {
 	return stage.Apply(stage.transformers.Map(fn))
 }
