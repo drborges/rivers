@@ -1,13 +1,13 @@
 package rivers
 
 import (
-	"github.com/drborges/riversv2/combiners"
-	"github.com/drborges/riversv2/consumers"
-	"github.com/drborges/riversv2/dispatchers"
-	"github.com/drborges/riversv2/producers"
-	"github.com/drborges/riversv2/rx"
-	"github.com/drborges/riversv2/scanners"
-	"github.com/drborges/riversv2/transformers"
+	"github.com/drborges/rivers/combiners"
+	"github.com/drborges/rivers/consumers"
+	"github.com/drborges/rivers/dispatchers"
+	"github.com/drborges/rivers/producers"
+	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/scanners"
+	"github.com/drborges/rivers/transformers"
 	"os"
 )
 

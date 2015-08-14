@@ -2,7 +2,7 @@ package producers
 
 import (
 	"bufio"
-	"github.com/drborges/riversv2/rx"
+	"github.com/drborges/rivers/rx"
 	"os"
 	"strings"
 )

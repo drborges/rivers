@@ -1,6 +1,6 @@
 package combiners
 
-import "github.com/drborges/riversv2/rx"
+import "github.com/drborges/rivers/rx"
 
 type zipBy struct {
 	context rx.Context

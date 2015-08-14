@@ -1,9 +1,9 @@
 package transformers_test
 
 import (
-	"github.com/drborges/riversv2"
-	"github.com/drborges/riversv2/rx"
-	"github.com/drborges/riversv2/transformers"
+	"github.com/drborges/rivers"
+	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/transformers"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )

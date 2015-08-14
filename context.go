@@ -3,7 +3,7 @@ package rivers
 import (
 	"errors"
 	"fmt"
-	"github.com/drborges/riversv2/rx"
+	"github.com/drborges/rivers/rx"
 )
 
 type context struct {

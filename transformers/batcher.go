@@ -1,7 +1,7 @@
 package transformers
 
 import (
-	"github.com/drborges/riversv2/rx"
+	"github.com/drborges/rivers/rx"
 )
 
 type batch struct {

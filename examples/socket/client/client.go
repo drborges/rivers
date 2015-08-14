@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/drborges/riversv2"
-	"github.com/drborges/riversv2/rx"
+	"github.com/drborges/rivers"
+	"github.com/drborges/rivers/rx"
 	"github.com/fatih/color"
 	"log"
 )

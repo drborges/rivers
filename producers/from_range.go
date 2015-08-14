@@ -1,6 +1,6 @@
 package producers
 
-import "github.com/drborges/riversv2/rx"
+import "github.com/drborges/rivers/rx"
 
 type fromRange struct {
 	context rx.Context

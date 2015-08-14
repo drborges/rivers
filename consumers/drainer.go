@@ -1,6 +1,6 @@
 package consumers
 
-import "github.com/drborges/riversv2/rx"
+import "github.com/drborges/rivers/rx"
 
 type drainer struct {
 	context rx.Context

@@ -1,6 +1,6 @@
 package transformers
 
-import "github.com/drborges/riversv2/rx"
+import "github.com/drborges/rivers/rx"
 
 type mapper struct {
 	context rx.Context

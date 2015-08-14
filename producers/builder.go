@@ -1,8 +1,8 @@
 package producers
 
 import (
-	"github.com/drborges/riversv2/rx"
-	"github.com/drborges/riversv2/scanners"
+	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/scanners"
 	"os"
 )
 

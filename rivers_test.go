@@ -1,9 +1,9 @@
 package rivers_test
 
 import (
-	"github.com/drborges/riversv2"
-	"github.com/drborges/riversv2/rx"
-	"github.com/drborges/riversv2/scanners"
+	"github.com/drborges/rivers"
+	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/scanners"
 	. "github.com/smartystreets/goconvey/convey"
 	"net"
 	"strings"

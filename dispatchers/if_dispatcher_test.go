@@ -1,9 +1,9 @@
 package dispatchers_test
 
 import (
-	"github.com/drborges/riversv2"
-	"github.com/drborges/riversv2/dispatchers"
-	"github.com/drborges/riversv2/rx"
+	"github.com/drborges/rivers"
+	"github.com/drborges/rivers/dispatchers"
+	"github.com/drborges/rivers/rx"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )

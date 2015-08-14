@@ -1,7 +1,7 @@
 package producers
 
 import (
-	"github.com/drborges/riversv2/rx"
+	"github.com/drborges/rivers/rx"
 	"os"
 )
 

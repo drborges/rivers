@@ -1,9 +1,9 @@
 package consumers_test
 
 import (
-	"github.com/drborges/riversv2"
-	"github.com/drborges/riversv2/consumers"
-	"github.com/drborges/riversv2/rx"
+	"github.com/drborges/rivers"
+	"github.com/drborges/rivers/consumers"
+	"github.com/drborges/rivers/rx"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
