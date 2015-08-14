@@ -73,7 +73,7 @@ func (b *Builder) SortBy(sorter rx.SortByFn) rx.Transformer {
 	}
 }
 
-func (b *Builder) Each(fn rx.HandleFn) rx.Transformer {
+func (b *Builder) Each(fn rx.EachFn) rx.Transformer {
 	return &each{
 		context: b.context,
 		handler: fn,

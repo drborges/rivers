@@ -4,7 +4,7 @@ type T interface{}
 type InStream <-chan T
 type OutStream chan<- T
 type MapFn func(T) T
-type HandleFn func(T)
+type EachFn func(T)
 type PredicateFn func(T) bool
 type SortByFn func(a, b T) bool
 type OnDataFn func(data T, out OutStream)

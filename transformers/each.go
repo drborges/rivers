@@ -6,7 +6,7 @@ import (
 
 type each struct {
 	context rx.Context
-	handler rx.HandleFn
+	handler rx.EachFn
 }
 
 func (p *each) Transform(in rx.InStream) rx.InStream {

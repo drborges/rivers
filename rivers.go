@@ -148,7 +148,7 @@ func (stage *Stage) Map(fn rx.MapFn) *Stage {
 	return stage.Apply(stage.transformers.Map(fn))
 }
 
-func (stage *Stage) Each(fn rx.HandleFn) *Stage {
+func (stage *Stage) Each(fn rx.EachFn) *Stage {
 	return stage.Apply(stage.transformers.Each(fn))
 }
 

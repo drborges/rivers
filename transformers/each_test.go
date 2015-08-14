@@ -9,7 +9,7 @@ import (
 )
 
 func TestEach(t *testing.T) {
-	collect := func(items *[]rx.T) rx.HandleFn {
+	collect := func(items *[]rx.T) rx.EachFn {
 		return func(data rx.T) {
 			*items = append(*items, data)
 		}
