@@ -160,6 +160,10 @@ func (stage *Stage) TakeBy(fn rx.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.TakeBy(fn))
 }
 
+func (stage *Stage) DropBy(fn rx.PredicateFn) *Stage {
+	return stage.Apply(stage.transformers.DropBy(fn))
+}
+
 func (stage *Stage) Reduce(acc rx.T, fn rx.ReduceFn) *Stage {
 	return stage.Apply(stage.transformers.Reduce(acc, fn))
 }

@@ -28,6 +28,10 @@ func (b *Builder) TakeBy(fn rx.PredicateFn) rx.Transformer {
 	return b.Filter(fn)
 }
 
+func (b *Builder) DropBy(fn rx.PredicateFn) rx.Transformer {
+	return b.Filter(func(data rx.T) bool { return !fn(data) })
+}
+
 func (b *Builder) Map(fn rx.MapFn) rx.Transformer {
 	return &mapper{
 		context: b.context,
