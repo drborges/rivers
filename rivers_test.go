@@ -154,6 +154,14 @@ func TestRiversAPI(t *testing.T) {
 			So(rhs.Sink().Read(), ShouldResemble, []rx.T{1, 2, 3, 4})
 		})
 
+		Convey("From Range -> Slipt N -> Sink", func() {
+			streams := rivers.New().FromRange(1, 4).SplitN(3)
+
+			So(streams[0].Sink().Read(), ShouldResemble, []rx.T{1, 2, 3, 4})
+			So(streams[1].Sink().Read(), ShouldResemble, []rx.T{1, 2, 3, 4})
+			So(streams[2].Sink().Read(), ShouldResemble, []rx.T{1, 2, 3, 4})
+		})
+
 		Convey("From Range -> ProcessWith -> Sink", func() {
 			processor := rivers.New().FromRange(1, 4).ProcessWith(func (data rx.T, out rx.OutStream) {
 				if data.(int) % 2 == 0 {

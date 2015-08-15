@@ -62,11 +62,20 @@ func NewWith(context rx.Context) producer {
 }
 
 func (stage *Stage) Split() (*Stage, *Stage) {
-	lhsIn, lhsOut := rx.NewStream(cap(stage.in))
-	rhsIn, rhsOut := rx.NewStream(cap(stage.in))
-	stage.dispatchers.Always().Dispatch(stage.in, lhsOut, rhsOut)
+	stages := stage.SplitN(2)
+	return stages[0], stages[1]
+}
 
-	return stage.NewFrom(lhsIn), stage.NewFrom(rhsIn)
+func (stage *Stage) SplitN(n int) []*Stage {
+	stages := make([]*Stage, n)
+	streams := make([]rx.OutStream, n)
+	for i := 0; i < n; i++ {
+		in, out := rx.NewStream(cap(stage.in))
+		stages[i] = stage.NewFrom(in)
+		streams[i] = out
+	}
+	stage.dispatchers.Always().Dispatch(stage.in, streams...)
+	return stages
 }
 
 func (stage *Stage) Partition(fn rx.PredicateFn) (*Stage, *Stage) {
