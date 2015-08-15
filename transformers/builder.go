@@ -24,11 +24,11 @@ func (b *Builder) FindBy(fn rx.PredicateFn) rx.Transformer {
 	}
 }
 
-func (b *Builder) TakeBy(fn rx.PredicateFn) rx.Transformer {
+func (b *Builder) TakeIf(fn rx.PredicateFn) rx.Transformer {
 	return b.Filter(fn)
 }
 
-func (b *Builder) DropBy(fn rx.PredicateFn) rx.Transformer {
+func (b *Builder) DropIf(fn rx.PredicateFn) rx.Transformer {
 	return b.Filter(func(data rx.T) bool { return !fn(data) })
 }
 
