@@ -24,6 +24,10 @@ func (b *Builder) FindBy(fn rx.PredicateFn) rx.Transformer {
 	}
 }
 
+func (b *Builder) TakeBy(fn rx.PredicateFn) rx.Transformer {
+	return b.Filter(fn)
+}
+
 func (b *Builder) Map(fn rx.MapFn) rx.Transformer {
 	return &mapper{
 		context: b.context,

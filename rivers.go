@@ -156,6 +156,10 @@ func (stage *Stage) FindBy(fn rx.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.FindBy(fn))
 }
 
+func (stage *Stage) TakeBy(fn rx.PredicateFn) *Stage {
+	return stage.Apply(stage.transformers.TakeBy(fn))
+}
+
 func (stage *Stage) Reduce(acc rx.T, fn rx.ReduceFn) *Stage {
 	return stage.Apply(stage.transformers.Reduce(acc, fn))
 }

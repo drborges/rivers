@@ -163,5 +163,11 @@ func TestRiversAPI(t *testing.T) {
 
 			So(processor.Sink().Read(), ShouldResemble, []rx.T{2, 4})
 		})
+
+		Convey("From Range -> TakeBy -> Sink", func() {
+			processor := rivers.New().FromRange(1, 4).TakeBy(evensOnly)
+
+			So(processor.Sink().Read(), ShouldResemble, []rx.T{2, 4})
+		})
 	})
 }
