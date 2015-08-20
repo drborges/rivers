@@ -191,6 +191,21 @@ func TestRiversAPI(t *testing.T) {
 			So(data, ShouldResemble, []rx.T{1, 2, 3, 4})
 		})
 
+		Convey("From Range -> CollectFirst -> Sink", func() {
+			data, err := rivers.New().FromRange(1, 4).CollectFirst()
+
+			So(err, ShouldBeNil)
+			So(data, ShouldEqual, 1)
+		})
+
+		Convey("From Range -> CollectFirstAs -> Sink", func() {
+			var data int
+			err := rivers.New().FromRange(1, 4).CollectFirstAs(&data)
+
+			So(err, ShouldBeNil)
+			So(data, ShouldEqual, 1)
+		})
+
 		Convey("From Range -> CollectAs -> Sink", func() {
 			var numbers []int
 			err := rivers.New().FromRange(1, 4).CollectAs(&numbers)

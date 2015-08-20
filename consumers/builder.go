@@ -29,3 +29,16 @@ func (builder *Builder) ItemsCollector(dst interface{}) rx.Consumer {
 		container: slicePtr.Elem(),
 	}
 }
+
+func (builder *Builder) ItemCollector(dst interface{}) rx.Consumer {
+	slicePtr := reflect.ValueOf(dst)
+
+	if slicePtr.Kind() != reflect.Ptr {
+		panic(rx.ErrNoSuchPointer)
+	}
+
+	return &itemCollector{
+		context: builder.context,
+		item:    slicePtr.Elem(),
+	}
+}
