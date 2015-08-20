@@ -30,6 +30,17 @@ func TestItemsCollector(t *testing.T) {
 					So(opened, ShouldBeFalse)
 				})
 			})
+
+			Convey("When I apply the collector consuming data into a non slice pointer", func() {
+				var data []rx.T
+				collect := func() {
+					consumers.New(context).ItemsCollector(data)
+				}
+
+				Convey("Then it panics", func() {
+					So(collect, ShouldPanicWith, rx.ErrNoSuchSlicePointer)
+				})
+			})
 		})
 	})
 }

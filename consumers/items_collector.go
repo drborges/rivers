@@ -1,10 +1,13 @@
 package consumers
 
-import "github.com/drborges/rivers/rx"
+import (
+	"github.com/drborges/rivers/rx"
+	"reflect"
+)
 
 type itemsCollector struct {
-	context rx.Context
-	data    *[]rx.T
+	context   rx.Context
+	container reflect.Value
 }
 
 func (collector *itemsCollector) Consume(in rx.InStream) {
@@ -17,7 +20,7 @@ func (collector *itemsCollector) Consume(in rx.InStream) {
 				return
 			}
 
-			*collector.data = append(*collector.data, item)
+			collector.container.Set(reflect.Append(collector.container, reflect.ValueOf(item)))
 		}
 	}
 }

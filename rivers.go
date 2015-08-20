@@ -203,6 +203,11 @@ func (stage *Stage) Collect() ([]rx.T, error) {
 	return data, stage.context.Err()
 }
 
+func (stage *Stage) CollectAs(data interface{}) error {
+	stage.consumers.ItemsCollector(data).Consume(stage.in)
+	return stage.context.Err()
+}
+
 func (stage *Stage) Drain() error {
 	stage.consumers.Drainer().Consume(stage.in)
 	return stage.context.Err()
