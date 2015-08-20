@@ -53,24 +53,24 @@ func TestRiversAPI(t *testing.T) {
 	Convey("rivers API", t, func() {
 
 		Convey("From Range -> Filter -> Map -> Reduce -> Each -> Sink", func() {
-			stream := rivers.New().FromRange(1, 5).
+			data, _ := rivers.New().FromRange(1, 5).
 				Filter(evensOnly).
 				Map(add(1)).
 				Reduce(0, sum).
-				Sink()
+				Collect()
 
-			So(stream.Read(), ShouldResemble, []rx.T{8})
+			So(data, ShouldResemble, []rx.T{8})
 		})
 
 		Convey("From Data -> Flatten -> Map -> Sort By -> Batch -> Sink", func() {
-			stream := rivers.New().FromData([]rx.T{"a", "c"}, "b", []rx.T{"d", "e"}).
+			data, _ := rivers.New().FromData([]rx.T{"a", "c"}, "b", []rx.T{"d", "e"}).
 				Flatten().
 				Map(append("_")).
 				SortBy(alphabeticOrder).
 				Batch(2).
-				Sink()
+				Collect()
 
-			So(stream.Read(), ShouldResemble, []rx.T{
+			So(data, ShouldResemble, []rx.T{
 				[]rx.T{"a_", "b_"},
 				[]rx.T{"c_", "d_"},
 				[]rx.T{"e_"},
@@ -80,13 +80,13 @@ func TestRiversAPI(t *testing.T) {
 		Convey("From Slice -> Dispatch If -> Map -> Sink", func() {
 			in, out := rx.NewStream(2)
 
-			notDispatched := rivers.New().FromSlice([]rx.T{1, 2, 3, 4, 5}).
+			notDispatched, _ := rivers.New().FromSlice([]rx.T{1, 2, 3, 4, 5}).
 				DispatchIf(evensOnly, out).
 				Map(add(2)).
-				Sink()
+				Collect()
 
 			So(in.Read(), ShouldResemble, []rx.T{2, 4})
-			So(notDispatched.Read(), ShouldResemble, []rx.T{3, 5, 7})
+			So(notDispatched, ShouldResemble, []rx.T{3, 5, 7})
 		})
 
 		Convey("Combine Zipping -> Map -> Sink", func() {
@@ -94,9 +94,10 @@ func TestRiversAPI(t *testing.T) {
 			numbers := streams.FromData(1, 2, 3, 4)
 			letters := streams.FromData("a", "b", "c")
 
-			combined := streams.CombineZipping(numbers.Sink(), letters.Sink()).Map(addOrAppend(1, "_")).Sink()
+			combined, _ := streams.CombineZipping(numbers.Sink(), letters.Sink()).
+				Map(addOrAppend(1, "_")).Collect()
 
-			So(combined.Read(), ShouldResemble, []rx.T{2, "a_", 3, "b_", 4, "c_", 5})
+			So(combined, ShouldResemble, []rx.T{2, "a_", 3, "b_", 4, "c_", 5})
 		})
 
 		Convey("Combine Zipping By -> Map -> Sink", func() {
@@ -104,9 +105,9 @@ func TestRiversAPI(t *testing.T) {
 			numbers := streams.FromData(1, 2, 3, 4)
 			moreNumbers := streams.FromData(4, 4, 1)
 
-			combined := streams.CombineZippingBy(sum, numbers.Sink(), moreNumbers.Sink()).Filter(evensOnly).Sink()
+			combined, _ := streams.CombineZippingBy(sum, numbers.Sink(), moreNumbers.Sink()).Filter(evensOnly).Collect()
 
-			So(combined.Read(), ShouldResemble, []rx.T{6, 4, 4})
+			So(combined, ShouldResemble, []rx.T{6, 4, 4})
 		})
 
 		Convey("From Data -> Drain", func() {
