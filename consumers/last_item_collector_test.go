@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestItemCollector(t *testing.T) {
+func TestLastItemCollector(t *testing.T) {
 	Convey("Given I have a context", t, func() {
 		context := rivers.NewContext()
 
@@ -20,21 +20,20 @@ func TestItemCollector(t *testing.T) {
 
 			Convey("When I apply the collector consumer", func() {
 				var number int
-				consumers.New(context).ItemCollector(&number).Consume(in)
+				consumers.New(context).LastItemCollector(&number).Consume(in)
 
 				Convey("Then data is collected out of the stream", func() {
-					So(number, ShouldResemble, 1)
+					So(number, ShouldResemble, 2)
 
-					data, opened := <-in
-					So(data, ShouldEqual, 2)
-					So(opened, ShouldBeTrue)
+					_, opened := <-in
+					So(opened, ShouldBeFalse)
 				})
 			})
 
 			Convey("When I apply the collector consuming data into a non pointer", func() {
 				var number int
 				collect := func() {
-					consumers.New(context).ItemCollector(number)
+					consumers.New(context).LastItemCollector(number)
 				}
 
 				Convey("Then it panics", func() {

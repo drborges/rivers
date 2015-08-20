@@ -213,6 +213,21 @@ func TestRiversAPI(t *testing.T) {
 			So(data, ShouldEqual, 1)
 		})
 
+		Convey("From Range -> CollectLast -> Sink", func() {
+			data, err := rivers.New().FromRange(1, 4).CollectLast()
+
+			So(err, ShouldBeNil)
+			So(data, ShouldEqual, 4)
+		})
+
+		Convey("From Range -> CollectLastAs -> Sink", func() {
+			var data int
+			err := rivers.New().FromRange(1, 4).CollectLastAs(&data)
+
+			So(err, ShouldBeNil)
+			So(data, ShouldEqual, 4)
+		})
+
 		Convey("From Range -> CollectAs -> Sink", func() {
 			var numbers []int
 			err := rivers.New().FromRange(1, 4).CollectAs(&numbers)

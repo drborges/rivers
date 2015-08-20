@@ -21,7 +21,6 @@ func (collector *itemCollector) Consume(in rx.InStream) {
 			}
 
 			collector.item.Set(reflect.ValueOf(item))
-			return
 		}
 	}
 }

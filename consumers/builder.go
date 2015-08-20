@@ -30,7 +30,7 @@ func (builder *Builder) ItemsCollector(dst interface{}) rx.Consumer {
 	}
 }
 
-func (builder *Builder) ItemCollector(dst interface{}) rx.Consumer {
+func (builder *Builder) LastItemCollector(dst interface{}) rx.Consumer {
 	slicePtr := reflect.ValueOf(dst)
 
 	if slicePtr.Kind() != reflect.Ptr {

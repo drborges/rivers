@@ -203,23 +203,31 @@ func (stage *Stage) Sink() rx.InStream {
 
 func (stage *Stage) Collect() ([]rx.T, error) {
 	var data []rx.T
-	stage.consumers.ItemsCollector(&data).Consume(stage.in)
-	return data, stage.context.Err()
-}
-
-func (stage *Stage) CollectFirst() (rx.T, error) {
-	var data rx.T
-	stage.consumers.ItemCollector(&data).Consume(stage.in)
-	return data, stage.context.Err()
-}
-
-func (stage *Stage) CollectFirstAs(data interface{}) error {
-	stage.consumers.ItemCollector(data).Consume(stage.in)
-	return stage.context.Err()
+	return data, stage.CollectAs(&data)
 }
 
 func (stage *Stage) CollectAs(data interface{}) error {
 	stage.consumers.ItemsCollector(data).Consume(stage.in)
+	return stage.context.Err()
+}
+
+func (stage *Stage) CollectFirst() (rx.T, error) {
+	var data rx.T
+	return data, stage.CollectFirstAs(&data)
+}
+
+func (stage *Stage) CollectFirstAs(data interface{}) error {
+	stage.consumers.LastItemCollector(data).Consume(stage.Take(1).Sink())
+	return stage.context.Err()
+}
+
+func (stage *Stage) CollectLast() (rx.T, error) {
+	var data rx.T
+	return data, stage.CollectLastAs(&data)
+}
+
+func (stage *Stage) CollectLastAs(data interface{}) error {
+	stage.consumers.LastItemCollector(data).Consume(stage.in)
 	return stage.context.Err()
 }
 
