@@ -165,6 +165,10 @@ func (stage *Stage) FindBy(fn rx.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.FindBy(fn))
 }
 
+func (stage *Stage) Take(n int) *Stage {
+	return stage.Apply(stage.transformers.Take(n))
+}
+
 func (stage *Stage) TakeIf(fn rx.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.TakeIf(fn))
 }

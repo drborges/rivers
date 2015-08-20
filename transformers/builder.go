@@ -24,6 +24,13 @@ func (b *Builder) FindBy(fn rx.PredicateFn) rx.Transformer {
 	}
 }
 
+func (b *Builder) Take(n int) rx.Transformer {
+	return &takeN{
+		context: b.context,
+		n:       n,
+	}
+}
+
 func (b *Builder) TakeIf(fn rx.PredicateFn) rx.Transformer {
 	return b.Filter(fn)
 }
