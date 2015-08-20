@@ -197,6 +197,12 @@ func (stage *Stage) Sink() rx.InStream {
 	return stage.in
 }
 
+func (stage *Stage) Collect() ([]rx.T, error) {
+	var data []rx.T
+	stage.consumers.DataCollector(&data).Consume(stage.in)
+	return data, stage.context.Err()
+}
+
 func (stage *Stage) Drain() error {
 	stage.consumers.Drainer().Consume(stage.in)
 	return stage.context.Err()
