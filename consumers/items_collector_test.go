@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestDataCollector(t *testing.T) {
+func TestItemsCollector(t *testing.T) {
 	Convey("Given I have a context", t, func() {
 		context := rivers.NewContext()
 
@@ -18,9 +18,9 @@ func TestDataCollector(t *testing.T) {
 			out <- 2
 			close(out)
 
-			Convey("When I apply the data collector consumer", func() {
+			Convey("When I apply the collector consumer", func() {
 				var data []rx.T
-				consumers.New(context).DataCollector(&data).Consume(in)
+				consumers.New(context).ItemsCollector(&data).Consume(in)
 
 				Convey("Then data is collected out of the stream", func() {
 					So(data, ShouldResemble, []rx.T{1, 2})

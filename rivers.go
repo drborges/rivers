@@ -199,7 +199,7 @@ func (stage *Stage) Sink() rx.InStream {
 
 func (stage *Stage) Collect() ([]rx.T, error) {
 	var data []rx.T
-	stage.consumers.DataCollector(&data).Consume(stage.in)
+	stage.consumers.ItemsCollector(&data).Consume(stage.in)
 	return data, stage.context.Err()
 }
 

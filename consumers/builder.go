@@ -14,8 +14,8 @@ func (builder *Builder) Drainer() rx.Consumer {
 	return &drainer{builder.context}
 }
 
-func (builder *Builder) DataCollector(data *[]rx.T) rx.Consumer {
-	return &dataCollector{
+func (builder *Builder) ItemsCollector(data *[]rx.T) rx.Consumer {
+	return &itemsCollector{
 		context: builder.context,
 		data: data,
 	}
