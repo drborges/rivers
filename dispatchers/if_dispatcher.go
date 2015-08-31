@@ -10,17 +10,17 @@ type ifDispatcher struct {
 	fn      rx.PredicateFn
 }
 
-func (dispatcher *ifDispatcher) Dispatch(in rx.InStream, out ...rx.OutStream) rx.InStream {
+func (dispatcher *ifDispatcher) Dispatch(in rx.Readable, out ...rx.Writable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
-	wg := make(map[rx.OutStream]*sync.WaitGroup)
+	wg := make(map[rx.Writable]*sync.WaitGroup)
 	closeToStreams := func() {
 		close(writer)
-		for _, stream := range out {
-			go func(s rx.OutStream) {
+		for _, writable := range out {
+			go func(s rx.Writable) {
 				wg[s].Wait()
 				close(s)
-			}(stream)
+			}(writable)
 		}
 	}
 
@@ -38,15 +38,15 @@ func (dispatcher *ifDispatcher) Dispatch(in rx.InStream, out ...rx.OutStream) rx
 				return
 			default:
 				if dispatcher.fn(data) {
-					for _, stream := range out {
-						wg[stream].Add(1)
+					for _, writable := range out {
+						wg[writable].Add(1)
 						// dispatch data asynchronously so that
 						// slow receivers don't block the dispatch
 						// process
-						go func(s rx.OutStream, d rx.T) {
+						go func(s rx.Writable, d rx.T) {
 							s <- d
 							wg[s].Done()
-						}(stream, data)
+						}(writable, data)
 					}
 				} else {
 					writer <- data

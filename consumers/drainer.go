@@ -6,7 +6,7 @@ type drainer struct {
 	context rx.Context
 }
 
-func (drainer *drainer) Consume(in rx.InStream) {
+func (drainer *drainer) Consume(in rx.Readable) {
 	for {
 		select {
 		case <-drainer.context.Closed():

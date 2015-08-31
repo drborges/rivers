@@ -11,7 +11,7 @@ type fromFileByLine struct {
 	file    *os.File
 }
 
-func (p *fromFileByLine) Produce() rx.InStream {
+func (p *fromFileByLine) Produce() rx.Readable {
 	// TODO find a better way to set stream capacity
 	reader, writer := rx.NewStream(100)
 

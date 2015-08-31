@@ -8,7 +8,7 @@ type reducer struct {
 	initialAcc rx.T
 }
 
-func (t *reducer) Transform(in rx.InStream) rx.InStream {
+func (t *reducer) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	acc := t.initialAcc

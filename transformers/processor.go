@@ -7,7 +7,7 @@ type processor struct {
 	onData  rx.OnDataFn
 }
 
-func (processor *processor) Transform(in rx.InStream) rx.InStream {
+func (processor *processor) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

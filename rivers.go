@@ -13,19 +13,19 @@ import (
 
 type producer interface {
 	From(producer rx.Producer) *Stage
-	FromStream(stream rx.InStream) *Stage
+	FromStream(readable rx.Readable) *Stage
 	FromRange(from, to int) *Stage
 	FromData(data ...rx.T) *Stage
 	FromSlice(slice rx.T) *Stage
 	FromSocket(protocol, addr string) *Stage
 	FromSocketWithScanner(protocol, addr string, scanner scanners.Scanner) *Stage
-	Combine(in ...rx.InStream) *Stage
-	CombineZipping(in ...rx.InStream) *Stage
-	CombineZippingBy(fn rx.ReduceFn, in ...rx.InStream) *Stage
+	Combine(in ...rx.Readable) *Stage
+	CombineZipping(in ...rx.Readable) *Stage
+	CombineZippingBy(fn rx.ReduceFn, in ...rx.Readable) *Stage
 }
 
 type Stage struct {
-	in           rx.InStream
+	in           rx.Readable
 	context      rx.Context
 	producers    *producers.Builder
 	consumers    *consumers.Builder
@@ -34,7 +34,7 @@ type Stage struct {
 	transformers *transformers.Builder
 }
 
-func (s *Stage) NewFrom(in rx.InStream) *Stage {
+func (s *Stage) NewFrom(in rx.Readable) *Stage {
 	return &Stage{
 		in:           in,
 		context:      s.context,
@@ -68,7 +68,7 @@ func (stage *Stage) Split() (*Stage, *Stage) {
 
 func (stage *Stage) SplitN(n int) []*Stage {
 	stages := make([]*Stage, n)
-	streams := make([]rx.OutStream, n)
+	streams := make([]rx.Writable, n)
 	for i := 0; i < n; i++ {
 		in, out := rx.NewStream(cap(stage.in))
 		stages[i] = stage.NewFrom(in)
@@ -85,23 +85,23 @@ func (stage *Stage) Partition(fn rx.PredicateFn) (*Stage, *Stage) {
 	return stage.NewFrom(lhsIn), stage.NewFrom(rhsIn)
 }
 
-func (stage *Stage) Combine(in ...rx.InStream) *Stage {
+func (stage *Stage) Combine(in ...rx.Readable) *Stage {
 	return stage.NewFrom(stage.combiners.FIFO().Combine(in...))
 }
 
-func (stage *Stage) CombineZipping(in ...rx.InStream) *Stage {
+func (stage *Stage) CombineZipping(in ...rx.Readable) *Stage {
 	return stage.NewFrom(stage.combiners.Zip().Combine(in...))
 }
 
-func (stage *Stage) CombineZippingBy(fn rx.ReduceFn, in ...rx.InStream) *Stage {
+func (stage *Stage) CombineZippingBy(fn rx.ReduceFn, in ...rx.Readable) *Stage {
 	return stage.NewFrom(stage.combiners.ZipBy(fn).Combine(in...))
 }
 
-func (stage *Stage) Dispatch(out ...rx.OutStream) *Stage {
+func (stage *Stage) Dispatch(out ...rx.Writable) *Stage {
 	return stage.NewFrom(stage.dispatchers.Always().Dispatch(stage.in, out...))
 }
 
-func (stage *Stage) DispatchIf(fn rx.PredicateFn, out ...rx.OutStream) *Stage {
+func (stage *Stage) DispatchIf(fn rx.PredicateFn, out ...rx.Writable) *Stage {
 	return stage.NewFrom(stage.dispatchers.If(fn).Dispatch(stage.in, out...))
 }
 
@@ -109,8 +109,8 @@ func (stage *Stage) From(producer rx.Producer) *Stage {
 	return stage.NewFrom(producer.Produce())
 }
 
-func (stage *Stage) FromStream(stream rx.InStream) *Stage {
-	return stage.NewFrom(stream)
+func (stage *Stage) FromStream(readable rx.Readable) *Stage {
+	return stage.NewFrom(readable)
 }
 
 func (stage *Stage) FromRange(from, to int) *Stage {
@@ -197,7 +197,7 @@ func (stage *Stage) BatchBy(batch rx.Batch) *Stage {
 	return stage.Apply(stage.transformers.BatchBy(batch))
 }
 
-func (stage *Stage) Sink() rx.InStream {
+func (stage *Stage) Sink() rx.Readable {
 	return stage.in
 }
 

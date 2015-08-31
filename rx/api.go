@@ -1,13 +1,13 @@
 package rx
 
 type T interface{}
-type InStream <-chan T
-type OutStream chan<- T
+type Readable <-chan T
+type Writable chan<- T
 type MapFn func(T) T
 type EachFn func(T)
 type PredicateFn func(T) bool
 type SortByFn func(a, b T) bool
-type OnDataFn func(data T, out OutStream)
+type OnDataFn func(data T, out Writable)
 type ReduceFn func(acc, next T) (result T)
 
 type Context interface {
@@ -19,29 +19,29 @@ type Context interface {
 
 // a.k.a Source
 type Producer interface {
-	Produce() (out InStream)
+	Produce() (out Readable)
 }
 
 // a.k.a Sink
 type Consumer interface {
-	Consume(in InStream)
+	Consume(in Readable)
 }
 
 type Transformer interface {
-	Transform(in InStream) (out InStream)
+	Transform(in Readable) (out Readable)
 }
 
 // FIFO, Zip, InOrder combiner
 type Combiner interface {
-	Combine(in ...InStream) (out InStream)
+	Combine(in ...Readable) (out Readable)
 }
 
 type Dispatcher interface {
-	Dispatch(from InStream, to ...OutStream) (sink InStream)
+	Dispatch(from Readable, to ...Writable) (sink Readable)
 }
 
 type Batch interface {
-	Commit(OutStream)
+	Commit(Writable)
 	Full() bool
 	Empty() bool
 	Add(data T)

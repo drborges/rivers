@@ -19,10 +19,10 @@ func TestFromFileByDelimiter(t *testing.T) {
 			file, _ := os.Open("/tmp/from_file_by_line")
 
 			Convey("When I produce data from the file", func() {
-				stream := producers.New(context).FromFile(file).ByDelimiter(' ').Produce()
+				readable := producers.New(context).FromFile(file).ByDelimiter(' ').Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(stream.Read(), ShouldResemble, []rx.T{"Hello", "there", "folks!"})
+					So(readable.Read(), ShouldResemble, []rx.T{"Hello", "there", "folks!"})
 				})
 			})
 		})

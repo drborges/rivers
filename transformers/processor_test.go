@@ -9,7 +9,7 @@ import (
 )
 
 func TestProcessor(t *testing.T) {
-	evensFilter := func(d rx.T, out rx.OutStream) {
+	evensFilter := func(d rx.T, out rx.Writable) {
 		if d.(int)%2 == 0 {
 			out <- d
 		}

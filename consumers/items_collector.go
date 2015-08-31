@@ -10,7 +10,7 @@ type itemsCollector struct {
 	container reflect.Value
 }
 
-func (collector *itemsCollector) Consume(in rx.InStream) {
+func (collector *itemsCollector) Consume(in rx.Readable) {
 	for {
 		select {
 		case <-collector.context.Closed():

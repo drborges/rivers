@@ -8,7 +8,7 @@ type sortBy struct {
 }
 
 // TODO Sort on demand rather than waiting to receive all items
-func (t *sortBy) Transform(in rx.InStream) rx.InStream {
+func (t *sortBy) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

@@ -9,8 +9,8 @@ type fifo struct {
 	context rx.Context
 }
 
-func (c *fifo) Combine(in ...rx.InStream) rx.InStream {
-	capacity := func(in ...rx.InStream) int {
+func (c *fifo) Combine(in ...rx.Readable) rx.Readable {
+	capacity := func(in ...rx.Readable) int {
 		capacity := 0
 		for _, r := range in {
 			capacity += cap(r)
@@ -23,7 +23,7 @@ func (c *fifo) Combine(in ...rx.InStream) rx.InStream {
 
 	for _, r := range in {
 		wg.Add(1)
-		go func(r rx.InStream) {
+		go func(r rx.Readable) {
 			defer c.context.Recover()
 			defer wg.Done()
 

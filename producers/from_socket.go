@@ -13,7 +13,7 @@ type fromSocket struct {
 	scanner  scanners.Scanner
 }
 
-func (socket *fromSocket) Produce() rx.InStream {
+func (socket *fromSocket) Produce() rx.Readable {
 	reader, writer := rx.NewStream(100)
 
 	go func() {

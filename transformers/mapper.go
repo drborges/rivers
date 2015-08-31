@@ -7,7 +7,7 @@ type mapper struct {
 	mapFn   rx.MapFn
 }
 
-func (t *mapper) Transform(in rx.InStream) rx.InStream {
+func (t *mapper) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

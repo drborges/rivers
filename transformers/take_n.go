@@ -7,7 +7,7 @@ type takeN struct {
 	n       int
 }
 
-func (take *takeN) Transform(in rx.InStream) rx.InStream {
+func (take *takeN) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

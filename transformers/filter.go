@@ -7,7 +7,7 @@ type filter struct {
 	predicate rx.PredicateFn
 }
 
-func (t *filter) Transform(in rx.InStream) rx.InStream {
+func (t *filter) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

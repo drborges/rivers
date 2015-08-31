@@ -164,7 +164,7 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Range -> ProcessWith -> Sink", func() {
-			processor := rivers.New().FromRange(1, 4).ProcessWith(func (data rx.T, out rx.OutStream) {
+			processor := rivers.New().FromRange(1, 4).ProcessWith(func (data rx.T, out rx.Writable) {
 				if data.(int) % 2 == 0 {
 					out <- data
 				}

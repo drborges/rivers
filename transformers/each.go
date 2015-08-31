@@ -9,7 +9,7 @@ type each struct {
 	handler rx.EachFn
 }
 
-func (p *each) Transform(in rx.InStream) rx.InStream {
+func (p *each) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

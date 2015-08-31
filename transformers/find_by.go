@@ -7,7 +7,7 @@ type findBy struct {
 	predicate rx.PredicateFn
 }
 
-func (t *findBy) Transform(in rx.InStream) rx.InStream {
+func (t *findBy) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

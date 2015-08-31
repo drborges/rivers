@@ -17,7 +17,7 @@ func (batch *batch) Empty() bool {
 	return len(batch.items) == 0
 }
 
-func (batch *batch) Commit(out rx.OutStream) {
+func (batch *batch) Commit(out rx.Writable) {
 	out <- batch.items
 	batch.items = []rx.T{}
 }
@@ -31,7 +31,7 @@ type batcher struct {
 	batch   rx.Batch
 }
 
-func (t *batcher) Transform(in rx.InStream) rx.InStream {
+func (t *batcher) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

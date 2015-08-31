@@ -6,8 +6,8 @@ type zip struct {
 	context rx.Context
 }
 
-func (c *zip) Combine(in ...rx.InStream) rx.InStream {
-	capacity := func(rs ...rx.InStream) int {
+func (c *zip) Combine(in ...rx.Readable) rx.Readable {
+	capacity := func(rs ...rx.Readable) int {
 		capacity := 0
 		for _, r := range rs {
 			capacity += cap(r)

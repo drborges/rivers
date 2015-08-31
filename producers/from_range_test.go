@@ -16,10 +16,10 @@ func TestFromRange(t *testing.T) {
 			producer := producers.New(context).FromRange(1, 3)
 
 			Convey("When I produce data", func() {
-				stream := producer.Produce()
+				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(stream.Read(), ShouldResemble, []rx.T{1, 2, 3})
+					So(readable.Read(), ShouldResemble, []rx.T{1, 2, 3})
 				})
 			})
 		})

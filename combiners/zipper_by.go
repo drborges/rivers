@@ -7,8 +7,8 @@ type zipBy struct {
 	fn      rx.ReduceFn
 }
 
-func (c *zipBy) Combine(in ...rx.InStream) rx.InStream {
-	max := func(rs ...rx.InStream) int {
+func (c *zipBy) Combine(in ...rx.Readable) rx.Readable {
+	max := func(rs ...rx.Readable) int {
 		max := 0
 		for _, r := range rs {
 			capacity := cap(r)

@@ -9,7 +9,7 @@ type flatten struct {
 	context rx.Context
 }
 
-func (t *flatten) Transform(in rx.InStream) rx.InStream {
+func (t *flatten) Transform(in rx.Readable) rx.Readable {
 	reader, writer := rx.NewStream(cap(in))
 
 	go func() {

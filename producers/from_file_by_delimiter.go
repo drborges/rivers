@@ -13,7 +13,7 @@ type fromFileByDelimiter struct {
 	delimiter byte
 }
 
-func (p *fromFileByDelimiter) Produce() rx.InStream {
+func (p *fromFileByDelimiter) Produce() rx.Readable {
 	// TODO find a better way to set stream capacity
 	reader, writer := rx.NewStream(100)
 

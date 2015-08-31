@@ -10,7 +10,7 @@ type fromSlice struct {
 	slice   rx.T
 }
 
-func (p *fromSlice) Produce() rx.InStream {
+func (p *fromSlice) Produce() rx.Readable {
 	sv := reflect.ValueOf(p.slice)
 
 	if sv.Kind() != reflect.Slice && sv.Kind() != reflect.Ptr {

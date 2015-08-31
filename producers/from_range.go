@@ -8,7 +8,7 @@ type fromRange struct {
 	To      int
 }
 
-func (p *fromRange) Produce() rx.InStream {
+func (p *fromRange) Produce() rx.Readable {
 	capacity := p.To - p.from
 	if capacity < 0 {
 		capacity = 0
