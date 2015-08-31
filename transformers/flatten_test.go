@@ -2,7 +2,7 @@ package transformers_test
 
 import (
 	"github.com/drborges/rivers"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -13,9 +13,9 @@ func TestFlatten(t *testing.T) {
 		context := rivers.NewContext()
 
 		Convey("And a stream of data", func() {
-			in, out := rx.NewStream(3)
-			out <- []rx.T{1, 2}
-			out <- []rx.T{3}
+			in, out := stream.New(3)
+			out <- []stream.T{1, 2}
+			out <- []stream.T{3}
 			out <- 4
 			close(out)
 
@@ -23,7 +23,7 @@ func TestFlatten(t *testing.T) {
 				next := transformers.New(context).Flatten().Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(next.Read(), ShouldResemble, []rx.T{1, 2, 3, 4})
+					So(next.Read(), ShouldResemble, []stream.T{1, 2, 3, 4})
 				})
 			})
 

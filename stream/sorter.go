@@ -1,4 +1,4 @@
-package rx
+package stream
 
 import (
 	"sort"

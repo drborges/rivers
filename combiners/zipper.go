@@ -1,13 +1,13 @@
 package combiners
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type zip struct {
-	context rx.Context
+	context stream.Context
 }
 
-func (c *zip) Combine(in ...rx.Readable) rx.Readable {
-	capacity := func(rs ...rx.Readable) int {
+func (c *zip) Combine(in ...stream.Readable) stream.Readable {
+	capacity := func(rs ...stream.Readable) int {
 		capacity := 0
 		for _, r := range rs {
 			capacity += cap(r)
@@ -15,7 +15,7 @@ func (c *zip) Combine(in ...rx.Readable) rx.Readable {
 		return capacity
 	}
 
-	reader, writer := rx.NewStream(capacity(in...))
+	reader, writer := stream.New(capacity(in...))
 
 	go func() {
 		defer c.context.Recover()

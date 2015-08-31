@@ -1,16 +1,16 @@
 package transformers
 
 import (
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 )
 
 type each struct {
-	context rx.Context
-	handler rx.EachFn
+	context stream.Context
+	handler stream.EachFn
 }
 
-func (p *each) Transform(in rx.Readable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (p *each) Transform(in stream.Readable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
 	go func() {
 		defer p.context.Recover()

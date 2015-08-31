@@ -2,20 +2,20 @@ package producers
 
 import (
 	"bufio"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"os"
 	"strings"
 )
 
 type fromFileByDelimiter struct {
-	context   rx.Context
+	context   stream.Context
 	file      *os.File
 	delimiter byte
 }
 
-func (p *fromFileByDelimiter) Produce() rx.Readable {
+func (p *fromFileByDelimiter) Produce() stream.Readable {
 	// TODO find a better way to set stream capacity
-	reader, writer := rx.NewStream(100)
+	reader, writer := stream.New(100)
 
 	go func() {
 		defer p.context.Recover()

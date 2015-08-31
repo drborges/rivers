@@ -1,23 +1,23 @@
 package dispatchers
 
 import (
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"sync"
 )
 
 type ifDispatcher struct {
-	context rx.Context
-	fn      rx.PredicateFn
+	context stream.Context
+	fn      stream.PredicateFn
 }
 
-func (dispatcher *ifDispatcher) Dispatch(in rx.Readable, out ...rx.Writable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, out ...stream.Writable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
-	wg := make(map[rx.Writable]*sync.WaitGroup)
+	wg := make(map[stream.Writable]*sync.WaitGroup)
 	closeToStreams := func() {
 		close(writer)
 		for _, writable := range out {
-			go func(s rx.Writable) {
+			go func(s stream.Writable) {
 				wg[s].Wait()
 				close(s)
 			}(writable)
@@ -43,7 +43,7 @@ func (dispatcher *ifDispatcher) Dispatch(in rx.Readable, out ...rx.Writable) rx.
 						// dispatch data asynchronously so that
 						// slow receivers don't block the dispatch
 						// process
-						go func(s rx.Writable, d rx.T) {
+						go func(s stream.Writable, d stream.T) {
 							s <- d
 							wg[s].Done()
 						}(writable, data)

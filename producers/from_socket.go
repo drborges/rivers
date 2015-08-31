@@ -1,20 +1,20 @@
 package producers
 
 import (
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/scanners"
 	"net"
 )
 
 type fromSocket struct {
-	context  rx.Context
+	context  stream.Context
 	protocol string
 	addr     string
 	scanner  scanners.Scanner
 }
 
-func (socket *fromSocket) Produce() rx.Readable {
-	reader, writer := rx.NewStream(100)
+func (socket *fromSocket) Produce() stream.Readable {
+	reader, writer := stream.New(100)
 
 	go func() {
 		defer socket.context.Recover()

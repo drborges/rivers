@@ -3,7 +3,7 @@ package producers_test
 import (
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/producers"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
 	"os"
@@ -22,7 +22,7 @@ func TestFromFileByDelimiter(t *testing.T) {
 				readable := producers.New(context).FromFile(file).ByDelimiter(' ').Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(readable.Read(), ShouldResemble, []rx.T{"Hello", "there", "folks!"})
+					So(readable.Read(), ShouldResemble, []stream.T{"Hello", "there", "folks!"})
 				})
 			})
 		})

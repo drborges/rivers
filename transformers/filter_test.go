@@ -2,20 +2,20 @@ package transformers_test
 
 import (
 	"github.com/drborges/rivers"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestFilter(t *testing.T) {
-	evens := func(d rx.T) bool { return d.(int)%2 == 0 }
+	evens := func(d stream.T) bool { return d.(int)%2 == 0 }
 
 	Convey("Given I have a context", t, func() {
 		context := rivers.NewContext()
 
 		Convey("And a stream of data", func() {
-			in, out := rx.NewStream(2)
+			in, out := stream.New(2)
 			out <- 1
 			out <- 2
 			close(out)
@@ -24,7 +24,7 @@ func TestFilter(t *testing.T) {
 				transformed := transformers.New(context).Filter(evens).Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(transformed.Read(), ShouldResemble, []rx.T{2})
+					So(transformed.Read(), ShouldResemble, []stream.T{2})
 				})
 			})
 

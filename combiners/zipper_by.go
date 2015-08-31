@@ -1,14 +1,14 @@
 package combiners
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type zipBy struct {
-	context rx.Context
-	fn      rx.ReduceFn
+	context stream.Context
+	fn      stream.ReduceFn
 }
 
-func (c *zipBy) Combine(in ...rx.Readable) rx.Readable {
-	max := func(rs ...rx.Readable) int {
+func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
+	max := func(rs ...stream.Readable) int {
 		max := 0
 		for _, r := range rs {
 			capacity := cap(r)
@@ -19,13 +19,13 @@ func (c *zipBy) Combine(in ...rx.Readable) rx.Readable {
 		return max
 	}
 
-	reader, writer := rx.NewStream(max(in...))
+	reader, writer := stream.New(max(in...))
 
 	go func() {
 		defer c.context.Recover()
 		defer close(writer)
 
-		var zipped rx.T
+		var zipped stream.T
 		var doneCount int
 
 		for doneCount < len(in) {

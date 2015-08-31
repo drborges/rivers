@@ -1,12 +1,12 @@
 package consumers
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type drainer struct {
-	context rx.Context
+	context stream.Context
 }
 
-func (drainer *drainer) Consume(in rx.Readable) {
+func (drainer *drainer) Consume(in stream.Readable) {
 	for {
 		select {
 		case <-drainer.context.Closed():

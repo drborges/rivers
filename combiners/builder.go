@@ -1,29 +1,29 @@
 package combiners
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type Builder struct {
-	context rx.Context
+	context stream.Context
 }
 
-func New(c rx.Context) *Builder {
+func New(c stream.Context) *Builder {
 	return &Builder{c}
 }
 
-func (b *Builder) Zip() rx.Combiner {
+func (b *Builder) Zip() stream.Combiner {
 	return &zip{
 		context: b.context,
 	}
 }
 
-func (b *Builder) ZipBy(fn rx.ReduceFn) rx.Combiner {
+func (b *Builder) ZipBy(fn stream.ReduceFn) stream.Combiner {
 	return &zipBy{
 		context: b.context,
 		fn:      fn,
 	}
 }
 
-func (b *Builder) FIFO() rx.Combiner {
+func (b *Builder) FIFO() stream.Combiner {
 	return &fifo{
 		context: b.context,
 	}

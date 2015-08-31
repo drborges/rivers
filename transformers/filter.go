@@ -1,14 +1,14 @@
 package transformers
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type filter struct {
-	context   rx.Context
-	predicate rx.PredicateFn
+	context   stream.Context
+	predicate stream.PredicateFn
 }
 
-func (t *filter) Transform(in rx.Readable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (t *filter) Transform(in stream.Readable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
 	go func() {
 		defer t.context.Recover()

@@ -3,7 +3,7 @@ package producers_test
 import (
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/producers"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/scanners"
 	. "github.com/smartystreets/goconvey/convey"
 	"net"
@@ -39,7 +39,7 @@ func TestFromSocket(t *testing.T) {
 				readable := producers.New(context).FromSocket("tcp", addr, scanners.NewLineScanner()).Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(readable.Read(), ShouldResemble, []rx.T{
+					So(readable.Read(), ShouldResemble, []stream.T{
 						[]byte("Hello there"),
 						[]byte("rivers!"),
 						[]byte("super cool!"),
@@ -51,7 +51,7 @@ func TestFromSocket(t *testing.T) {
 				readable := producers.New(context).FromSocket("tcp", addr, scanners.NewWordScanner()).Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(readable.Read(), ShouldResemble, []rx.T{
+					So(readable.Read(), ShouldResemble, []stream.T{
 						[]byte("Hello"),
 						[]byte("there"),
 						[]byte("rivers!"),

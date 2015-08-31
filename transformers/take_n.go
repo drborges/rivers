@@ -1,14 +1,14 @@
 package transformers
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type takeN struct {
-	context rx.Context
+	context stream.Context
 	n       int
 }
 
-func (take *takeN) Transform(in rx.Readable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (take *takeN) Transform(in stream.Readable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
 	go func() {
 		defer take.context.Recover()

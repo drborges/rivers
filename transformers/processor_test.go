@@ -2,14 +2,14 @@ package transformers_test
 
 import (
 	"github.com/drborges/rivers"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestProcessor(t *testing.T) {
-	evensFilter := func(d rx.T, out rx.Writable) {
+	evensFilter := func(d stream.T, out stream.Writable) {
 		if d.(int)%2 == 0 {
 			out <- d
 		}
@@ -19,7 +19,7 @@ func TestProcessor(t *testing.T) {
 		context := rivers.NewContext()
 
 		Convey("And a stream of data", func() {
-			in, out := rx.NewStream(2)
+			in, out := stream.New(2)
 			out <- 1
 			out <- 2
 			close(out)
@@ -28,7 +28,7 @@ func TestProcessor(t *testing.T) {
 				transformed := transformers.New(context).ProcessWith(evensFilter).Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(transformed.Read(), ShouldResemble, []rx.T{2})
+					So(transformed.Read(), ShouldResemble, []stream.T{2})
 				})
 			})
 

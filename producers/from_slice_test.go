@@ -3,7 +3,7 @@ package producers_test
 import (
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/producers"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -20,7 +20,7 @@ func TestFromSlice(t *testing.T) {
 				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(readable.Read(), ShouldResemble, []rx.T{1, 2, 3})
+					So(readable.Read(), ShouldResemble, []stream.T{1, 2, 3})
 				})
 			})
 		})
@@ -32,7 +32,7 @@ func TestFromSlice(t *testing.T) {
 				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(readable.Read(), ShouldResemble, []rx.T{1, 2, 3})
+					So(readable.Read(), ShouldResemble, []stream.T{1, 2, 3})
 				})
 			})
 		})

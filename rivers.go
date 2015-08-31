@@ -5,28 +5,28 @@ import (
 	"github.com/drborges/rivers/consumers"
 	"github.com/drborges/rivers/dispatchers"
 	"github.com/drborges/rivers/producers"
-	"github.com/drborges/rivers/rx"
 	"github.com/drborges/rivers/scanners"
+	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
 	"os"
 )
 
 type producer interface {
-	From(producer rx.Producer) *Stage
-	FromStream(readable rx.Readable) *Stage
+	From(producer stream.Producer) *Stage
+	FromStream(readable stream.Readable) *Stage
 	FromRange(from, to int) *Stage
-	FromData(data ...rx.T) *Stage
-	FromSlice(slice rx.T) *Stage
+	FromData(data ...stream.T) *Stage
+	FromSlice(slice stream.T) *Stage
 	FromSocket(protocol, addr string) *Stage
 	FromSocketWithScanner(protocol, addr string, scanner scanners.Scanner) *Stage
-	Combine(in ...rx.Readable) *Stage
-	CombineZipping(in ...rx.Readable) *Stage
-	CombineZippingBy(fn rx.ReduceFn, in ...rx.Readable) *Stage
+	Combine(in ...stream.Readable) *Stage
+	CombineZipping(in ...stream.Readable) *Stage
+	CombineZippingBy(fn stream.ReduceFn, in ...stream.Readable) *Stage
 }
 
 type Stage struct {
-	in           rx.Readable
-	context      rx.Context
+	in           stream.Readable
+	context      stream.Context
 	producers    *producers.Builder
 	consumers    *consumers.Builder
 	combiners    *combiners.Builder
@@ -34,7 +34,7 @@ type Stage struct {
 	transformers *transformers.Builder
 }
 
-func (s *Stage) NewFrom(in rx.Readable) *Stage {
+func (s *Stage) NewFrom(in stream.Readable) *Stage {
 	return &Stage{
 		in:           in,
 		context:      s.context,
@@ -50,7 +50,7 @@ func New() producer {
 	return NewWith(NewContext())
 }
 
-func NewWith(context rx.Context) producer {
+func NewWith(context stream.Context) producer {
 	return &Stage{
 		context:      context,
 		producers:    producers.New(context),
@@ -68,9 +68,9 @@ func (stage *Stage) Split() (*Stage, *Stage) {
 
 func (stage *Stage) SplitN(n int) []*Stage {
 	stages := make([]*Stage, n)
-	streams := make([]rx.Writable, n)
+	streams := make([]stream.Writable, n)
 	for i := 0; i < n; i++ {
-		in, out := rx.NewStream(cap(stage.in))
+		in, out := stream.New(cap(stage.in))
 		stages[i] = stage.NewFrom(in)
 		streams[i] = out
 	}
@@ -78,38 +78,38 @@ func (stage *Stage) SplitN(n int) []*Stage {
 	return stages
 }
 
-func (stage *Stage) Partition(fn rx.PredicateFn) (*Stage, *Stage) {
-	lhsIn, lhsOut := rx.NewStream(cap(stage.in))
+func (stage *Stage) Partition(fn stream.PredicateFn) (*Stage, *Stage) {
+	lhsIn, lhsOut := stream.New(cap(stage.in))
 	rhsIn := stage.dispatchers.If(fn).Dispatch(stage.in, lhsOut)
 
 	return stage.NewFrom(lhsIn), stage.NewFrom(rhsIn)
 }
 
-func (stage *Stage) Combine(in ...rx.Readable) *Stage {
+func (stage *Stage) Combine(in ...stream.Readable) *Stage {
 	return stage.NewFrom(stage.combiners.FIFO().Combine(in...))
 }
 
-func (stage *Stage) CombineZipping(in ...rx.Readable) *Stage {
+func (stage *Stage) CombineZipping(in ...stream.Readable) *Stage {
 	return stage.NewFrom(stage.combiners.Zip().Combine(in...))
 }
 
-func (stage *Stage) CombineZippingBy(fn rx.ReduceFn, in ...rx.Readable) *Stage {
+func (stage *Stage) CombineZippingBy(fn stream.ReduceFn, in ...stream.Readable) *Stage {
 	return stage.NewFrom(stage.combiners.ZipBy(fn).Combine(in...))
 }
 
-func (stage *Stage) Dispatch(out ...rx.Writable) *Stage {
+func (stage *Stage) Dispatch(out ...stream.Writable) *Stage {
 	return stage.NewFrom(stage.dispatchers.Always().Dispatch(stage.in, out...))
 }
 
-func (stage *Stage) DispatchIf(fn rx.PredicateFn, out ...rx.Writable) *Stage {
+func (stage *Stage) DispatchIf(fn stream.PredicateFn, out ...stream.Writable) *Stage {
 	return stage.NewFrom(stage.dispatchers.If(fn).Dispatch(stage.in, out...))
 }
 
-func (stage *Stage) From(producer rx.Producer) *Stage {
+func (stage *Stage) From(producer stream.Producer) *Stage {
 	return stage.NewFrom(producer.Produce())
 }
 
-func (stage *Stage) FromStream(readable rx.Readable) *Stage {
+func (stage *Stage) FromStream(readable stream.Readable) *Stage {
 	return stage.NewFrom(readable)
 }
 
@@ -125,11 +125,11 @@ func (stage *Stage) FromFileByDelimiter(file *os.File, delimiter byte) *Stage {
 	return stage.NewFrom(stage.producers.FromFile(file).ByDelimiter(delimiter).Produce())
 }
 
-func (stage *Stage) FromData(data ...rx.T) *Stage {
+func (stage *Stage) FromData(data ...stream.T) *Stage {
 	return stage.NewFrom(stage.producers.FromData(data...).Produce())
 }
 
-func (stage *Stage) FromSlice(slice rx.T) *Stage {
+func (stage *Stage) FromSlice(slice stream.T) *Stage {
 	return stage.NewFrom(stage.producers.FromSlice(slice).Produce())
 }
 
@@ -141,27 +141,27 @@ func (stage *Stage) FromSocketWithScanner(protocol, addr string, scanner scanner
 	return stage.NewFrom(stage.producers.FromSocket(protocol, addr, scanner).Produce())
 }
 
-func (stage *Stage) Apply(t rx.Transformer) *Stage {
+func (stage *Stage) Apply(t stream.Transformer) *Stage {
 	return stage.NewFrom(t.Transform(stage.in))
 }
 
-func (stage *Stage) Filter(fn rx.PredicateFn) *Stage {
+func (stage *Stage) Filter(fn stream.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.Filter(fn))
 }
 
-func (stage *Stage) ProcessWith(fn rx.OnDataFn) *Stage {
+func (stage *Stage) ProcessWith(fn stream.OnDataFn) *Stage {
 	return stage.Apply(stage.transformers.ProcessWith(fn))
 }
 
-func (stage *Stage) Map(fn rx.MapFn) *Stage {
+func (stage *Stage) Map(fn stream.MapFn) *Stage {
 	return stage.Apply(stage.transformers.Map(fn))
 }
 
-func (stage *Stage) Each(fn rx.EachFn) *Stage {
+func (stage *Stage) Each(fn stream.EachFn) *Stage {
 	return stage.Apply(stage.transformers.Each(fn))
 }
 
-func (stage *Stage) FindBy(fn rx.PredicateFn) *Stage {
+func (stage *Stage) FindBy(fn stream.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.FindBy(fn))
 }
 
@@ -169,15 +169,15 @@ func (stage *Stage) Take(n int) *Stage {
 	return stage.Apply(stage.transformers.Take(n))
 }
 
-func (stage *Stage) TakeIf(fn rx.PredicateFn) *Stage {
+func (stage *Stage) TakeIf(fn stream.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.TakeIf(fn))
 }
 
-func (stage *Stage) DropIf(fn rx.PredicateFn) *Stage {
+func (stage *Stage) DropIf(fn stream.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.DropIf(fn))
 }
 
-func (stage *Stage) Reduce(acc rx.T, fn rx.ReduceFn) *Stage {
+func (stage *Stage) Reduce(acc stream.T, fn stream.ReduceFn) *Stage {
 	return stage.Apply(stage.transformers.Reduce(acc, fn))
 }
 
@@ -185,7 +185,7 @@ func (stage *Stage) Flatten() *Stage {
 	return stage.Apply(stage.transformers.Flatten())
 }
 
-func (stage *Stage) SortBy(fn rx.SortByFn) *Stage {
+func (stage *Stage) SortBy(fn stream.SortByFn) *Stage {
 	return stage.Apply(stage.transformers.SortBy(fn))
 }
 
@@ -193,16 +193,16 @@ func (stage *Stage) Batch(size int) *Stage {
 	return stage.Apply(stage.transformers.Batch(size))
 }
 
-func (stage *Stage) BatchBy(batch rx.Batch) *Stage {
+func (stage *Stage) BatchBy(batch stream.Batch) *Stage {
 	return stage.Apply(stage.transformers.BatchBy(batch))
 }
 
-func (stage *Stage) Sink() rx.Readable {
+func (stage *Stage) Sink() stream.Readable {
 	return stage.in
 }
 
-func (stage *Stage) Collect() ([]rx.T, error) {
-	var data []rx.T
+func (stage *Stage) Collect() ([]stream.T, error) {
+	var data []stream.T
 	return data, stage.CollectAs(&data)
 }
 
@@ -211,8 +211,8 @@ func (stage *Stage) CollectAs(data interface{}) error {
 	return stage.context.Err()
 }
 
-func (stage *Stage) CollectFirst() (rx.T, error) {
-	var data rx.T
+func (stage *Stage) CollectFirst() (stream.T, error) {
+	var data stream.T
 	return data, stage.CollectFirstAs(&data)
 }
 
@@ -221,8 +221,8 @@ func (stage *Stage) CollectFirstAs(data interface{}) error {
 	return stage.context.Err()
 }
 
-func (stage *Stage) CollectLast() (rx.T, error) {
-	var data rx.T
+func (stage *Stage) CollectLast() (stream.T, error) {
+	var data stream.T
 	return data, stage.CollectLastAs(&data)
 }
 

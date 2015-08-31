@@ -3,13 +3,13 @@ package combiners_test
 import (
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/combiners"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestZipperBy(t *testing.T) {
-	adder := func(a, b rx.T) rx.T {
+	adder := func(a, b stream.T) stream.T {
 		return a.(int) + b.(int)
 	}
 
@@ -17,12 +17,12 @@ func TestZipperBy(t *testing.T) {
 		context := rivers.NewContext()
 
 		Convey("And a stream of data", func() {
-			in1, out1 := rx.NewStream(2)
+			in1, out1 := stream.New(2)
 			out1 <- 1
 			out1 <- 2
 			close(out1)
 
-			in2, out2 := rx.NewStream(4)
+			in2, out2 := stream.New(4)
 			out2 <- 3
 			out2 <- 4
 			out2 <- 5
@@ -33,7 +33,7 @@ func TestZipperBy(t *testing.T) {
 				combined := combiners.New(context).ZipBy(adder).Combine(in1, in2)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(combined.Read(), ShouldResemble, []rx.T{4, 6, 5, 6})
+					So(combined.Read(), ShouldResemble, []stream.T{4, 6, 5, 6})
 				})
 			})
 

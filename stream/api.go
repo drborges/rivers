@@ -1,4 +1,4 @@
-package rx
+package stream
 
 type T interface{}
 type Readable <-chan T

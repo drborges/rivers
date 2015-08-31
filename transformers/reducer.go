@@ -1,15 +1,15 @@
 package transformers
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type reducer struct {
-	context    rx.Context
-	reduceFn   rx.ReduceFn
-	initialAcc rx.T
+	context    stream.Context
+	reduceFn   stream.ReduceFn
+	initialAcc stream.T
 }
 
-func (t *reducer) Transform(in rx.Readable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (t *reducer) Transform(in stream.Readable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
 	acc := t.initialAcc
 

@@ -1,14 +1,14 @@
 package transformers
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type processor struct {
-	context rx.Context
-	onData  rx.OnDataFn
+	context stream.Context
+	onData  stream.OnDataFn
 }
 
-func (processor *processor) Transform(in rx.Readable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (processor *processor) Transform(in stream.Readable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
 	go func() {
 		defer processor.context.Recover()

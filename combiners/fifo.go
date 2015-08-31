@@ -1,16 +1,16 @@
 package combiners
 
 import (
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"sync"
 )
 
 type fifo struct {
-	context rx.Context
+	context stream.Context
 }
 
-func (c *fifo) Combine(in ...rx.Readable) rx.Readable {
-	capacity := func(in ...rx.Readable) int {
+func (c *fifo) Combine(in ...stream.Readable) stream.Readable {
+	capacity := func(in ...stream.Readable) int {
 		capacity := 0
 		for _, r := range in {
 			capacity += cap(r)
@@ -19,11 +19,11 @@ func (c *fifo) Combine(in ...rx.Readable) rx.Readable {
 	}
 
 	var wg sync.WaitGroup
-	reader, writer := rx.NewStream(capacity(in...))
+	reader, writer := stream.New(capacity(in...))
 
 	for _, r := range in {
 		wg.Add(1)
-		go func(r rx.Readable) {
+		go func(r stream.Readable) {
 			defer c.context.Recover()
 			defer wg.Done()
 

@@ -1,16 +1,16 @@
 package consumers
 
 import (
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"reflect"
 )
 
 type itemsCollector struct {
-	context   rx.Context
+	context   stream.Context
 	container reflect.Value
 }
 
-func (collector *itemsCollector) Consume(in rx.Readable) {
+func (collector *itemsCollector) Consume(in stream.Readable) {
 	for {
 		select {
 		case <-collector.context.Closed():

@@ -1,19 +1,19 @@
 package producers
 
 import (
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"os"
 )
 
 type fromFile struct {
-	context rx.Context
+	context stream.Context
 	file    *os.File
 }
 
-func (builder *fromFile) ByLine() rx.Producer {
+func (builder *fromFile) ByLine() stream.Producer {
 	return &fromFileByLine{builder.context, builder.file}
 }
 
-func (builder *fromFile) ByDelimiter(delimiter byte) rx.Producer {
+func (builder *fromFile) ByDelimiter(delimiter byte) stream.Producer {
 	return &fromFileByDelimiter{builder.context, builder.file, delimiter}
 }

@@ -1,21 +1,21 @@
 package transformers
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type sortBy struct {
-	context rx.Context
-	sorter  rx.SortByFn
+	context stream.Context
+	sorter  stream.SortByFn
 }
 
 // TODO Sort on demand rather than waiting to receive all items
-func (t *sortBy) Transform(in rx.Readable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (t *sortBy) Transform(in stream.Readable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
 	go func() {
 		defer t.context.Recover()
 		defer close(writer)
 
-		items := []rx.T{}
+		items := []stream.T{}
 		for {
 			select {
 			case <-t.context.Closed():

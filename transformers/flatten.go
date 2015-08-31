@@ -1,16 +1,16 @@
 package transformers
 
 import (
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"reflect"
 )
 
 type flatten struct {
-	context rx.Context
+	context stream.Context
 }
 
-func (t *flatten) Transform(in rx.Readable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (t *flatten) Transform(in stream.Readable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
 	go func() {
 		defer t.context.Recover()

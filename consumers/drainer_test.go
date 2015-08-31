@@ -3,7 +3,7 @@ package consumers_test
 import (
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/consumers"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -13,7 +13,7 @@ func TestDrainer(t *testing.T) {
 		context := rivers.NewContext()
 
 		Convey("And a stream of data", func() {
-			in, out := rx.NewStream(2)
+			in, out := stream.New(2)
 			out <- 1
 			out <- 2
 			close(out)

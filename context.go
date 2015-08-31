@@ -3,7 +3,7 @@ package rivers
 import (
 	"errors"
 	"fmt"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 )
 
 type context struct {
@@ -11,7 +11,7 @@ type context struct {
 	err    error
 }
 
-func NewContext() rx.Context {
+func NewContext() stream.Context {
 	return &context{
 		closed: make(chan error),
 	}

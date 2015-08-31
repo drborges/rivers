@@ -1,27 +1,33 @@
 package consumers
 
 import (
-	"github.com/drborges/rivers/rx"
+	"errors"
+	"github.com/drborges/rivers/stream"
 	"reflect"
 )
 
+var (
+	ErrNoSuchPointer      = errors.New("Element is not a pointer")
+	ErrNoSuchSlicePointer = errors.New("Element is not a pointer to a slice")
+)
+
 type Builder struct {
-	context rx.Context
+	context stream.Context
 }
 
-func New(c rx.Context) *Builder {
+func New(c stream.Context) *Builder {
 	return &Builder{c}
 }
 
-func (builder *Builder) Drainer() rx.Consumer {
+func (builder *Builder) Drainer() stream.Consumer {
 	return &drainer{builder.context}
 }
 
-func (builder *Builder) ItemsCollector(dst interface{}) rx.Consumer {
+func (builder *Builder) ItemsCollector(dst interface{}) stream.Consumer {
 	slicePtr := reflect.ValueOf(dst)
 
 	if slicePtr.Kind() != reflect.Ptr || slicePtr.Elem().Kind() != reflect.Slice {
-		panic(rx.ErrNoSuchSlicePointer)
+		panic(ErrNoSuchSlicePointer)
 	}
 
 	return &itemsCollector{
@@ -30,11 +36,11 @@ func (builder *Builder) ItemsCollector(dst interface{}) rx.Consumer {
 	}
 }
 
-func (builder *Builder) LastItemCollector(dst interface{}) rx.Consumer {
+func (builder *Builder) LastItemCollector(dst interface{}) stream.Consumer {
 	slicePtr := reflect.ValueOf(dst)
 
 	if slicePtr.Kind() != reflect.Ptr {
-		panic(rx.ErrNoSuchPointer)
+		panic(ErrNoSuchPointer)
 	}
 
 	return &itemCollector{

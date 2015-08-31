@@ -1,25 +1,25 @@
 package dispatchers
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type Builder struct {
-	context rx.Context
+	context stream.Context
 }
 
-func New(c rx.Context) *Builder {
+func New(c stream.Context) *Builder {
 	return &Builder{c}
 }
 
-func (b *Builder) If(fn rx.PredicateFn) rx.Dispatcher {
+func (b *Builder) If(fn stream.PredicateFn) stream.Dispatcher {
 	return &ifDispatcher{
 		context: b.context,
 		fn:      fn,
 	}
 }
 
-func (b *Builder) Always() rx.Dispatcher {
+func (b *Builder) Always() stream.Dispatcher {
 	return &ifDispatcher{
 		context: b.context,
-		fn:      func(_ rx.T) bool { return true },
+		fn:      func(_ stream.T) bool { return true },
 	}
 }

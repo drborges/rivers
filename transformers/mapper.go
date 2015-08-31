@@ -1,14 +1,14 @@
 package transformers
 
-import "github.com/drborges/rivers/rx"
+import "github.com/drborges/rivers/stream"
 
 type mapper struct {
-	context rx.Context
-	mapFn   rx.MapFn
+	context stream.Context
+	mapFn   stream.MapFn
 }
 
-func (t *mapper) Transform(in rx.Readable) rx.Readable {
-	reader, writer := rx.NewStream(cap(in))
+func (t *mapper) Transform(in stream.Readable) stream.Readable {
+	reader, writer := stream.New(cap(in))
 
 	go func() {
 		defer t.context.Recover()

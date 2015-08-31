@@ -2,20 +2,20 @@ package transformers_test
 
 import (
 	"github.com/drborges/rivers"
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestReducer(t *testing.T) {
-	sum := func(acc, next rx.T) rx.T { return acc.(int) + next.(int) }
+	sum := func(acc, next stream.T) stream.T { return acc.(int) + next.(int) }
 
 	Convey("Given I have a context", t, func() {
 		context := rivers.NewContext()
 
 		Convey("And a stream of data", func() {
-			in, out := rx.NewStream(3)
+			in, out := stream.New(3)
 			out <- 1
 			out <- 2
 			out <- 3
@@ -25,7 +25,7 @@ func TestReducer(t *testing.T) {
 				next := transformers.New(context).Reduce(0, sum).Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(next.Read(), ShouldResemble, []rx.T{6})
+					So(next.Read(), ShouldResemble, []stream.T{6})
 				})
 			})
 

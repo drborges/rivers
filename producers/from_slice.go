@@ -1,16 +1,16 @@
 package producers
 
 import (
-	"github.com/drborges/rivers/rx"
+	"github.com/drborges/rivers/stream"
 	"reflect"
 )
 
 type fromSlice struct {
-	context rx.Context
-	slice   rx.T
+	context stream.Context
+	slice   stream.T
 }
 
-func (p *fromSlice) Produce() rx.Readable {
+func (p *fromSlice) Produce() stream.Readable {
 	sv := reflect.ValueOf(p.slice)
 
 	if sv.Kind() != reflect.Slice && sv.Kind() != reflect.Ptr {
@@ -21,7 +21,7 @@ func (p *fromSlice) Produce() rx.Readable {
 		panic("No such slice")
 	}
 
-	reader, writer := rx.NewStream(sv.Len())
+	reader, writer := stream.New(sv.Len())
 
 	go func() {
 		defer close(writer)
