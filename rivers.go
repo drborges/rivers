@@ -149,8 +149,8 @@ func (stage *Stage) Filter(fn stream.PredicateFn) *Stage {
 	return stage.Apply(stage.transformers.Filter(fn))
 }
 
-func (stage *Stage) ProcessWith(fn stream.OnDataFn) *Stage {
-	return stage.Apply(stage.transformers.ProcessWith(fn))
+func (stage *Stage) OnData(fn stream.OnDataFn) *Stage {
+	return stage.Apply(stage.transformers.OnData(fn))
 }
 
 func (stage *Stage) Map(fn stream.MapFn) *Stage {

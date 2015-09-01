@@ -46,7 +46,7 @@ func (b *Builder) Map(fn stream.MapFn) stream.Transformer {
 	}
 }
 
-func (b *Builder) ProcessWith(fn stream.OnDataFn) stream.Transformer {
+func (b *Builder) OnData(fn stream.OnDataFn) stream.Transformer {
 	return &processor{
 		context: b.context,
 		onData:  fn,
