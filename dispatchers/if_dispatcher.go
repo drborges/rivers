@@ -14,7 +14,7 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, out ...stream.Writa
 	reader, writer := stream.New(cap(in))
 
 	wg := make(map[stream.Writable]*sync.WaitGroup)
-	closeToStreams := func() {
+	closeWritables := func() {
 		close(writer)
 		for _, writable := range out {
 			go func(s stream.Writable) {
@@ -26,7 +26,7 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, out ...stream.Writa
 
 	go func() {
 		defer dispatcher.context.Recover()
-		defer closeToStreams()
+		defer closeWritables()
 
 		for _, s := range out {
 			wg[s] = &sync.WaitGroup{}
