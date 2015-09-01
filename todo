@@ -1,10 +1,4 @@
-1. rename stream variables to s
-2. rename package rx to stream
-3. rename rx.InStream to stream.In
-4. rename rx.OutStream to stream.Out
-5. rename rx.NewStream to stream.New
-6. delete rx.InStream methods
-7. move rx.api.go types into their respective packages
 8. make MapFn, EachFn, etc... type interface{} with method Validate() error that checks whether their signature are valid or not
 9. adapt rivers.API to take generic method handlers from 8
 10. improve error handling. Recover mechanism omits a lot of information making debugging very hard
+11. Implement GroupBy operation

@@ -143,7 +143,7 @@ func TestRiversAPI(t *testing.T) {
 				Filter(nonEmptyLines).
 				Map(splitWord).
 				Flatten().
-			Sink()
+				Sink()
 
 			So(words.Read(), ShouldResemble, []stream.T{"Hello", "there", "rivers!", "super", "cool!"})
 		})

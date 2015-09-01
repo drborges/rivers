@@ -1,0 +1,12 @@
+language: go
+
+go:
+  - 1.4
+
+install:
+  - go get github.com/smartystreets/goconvey/convey
+  - go get github.com/smartystreets/assertions
+  - go get github.com/drborges/rivers
+
+script:
+  - go test -v
