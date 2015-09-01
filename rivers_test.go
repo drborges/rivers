@@ -163,7 +163,7 @@ func TestRiversAPI(t *testing.T) {
 			So(streams[2].Sink().Read(), ShouldResemble, []stream.T{1, 2, 3, 4})
 		})
 
-		Convey("From Range -> ProcessWith -> Sink", func() {
+		Convey("From Range -> OnData -> Sink", func() {
 			processor := rivers.New().FromRange(1, 4).OnData(func(data stream.T, out stream.Writable) {
 				if data.(int)%2 == 0 {
 					out <- data

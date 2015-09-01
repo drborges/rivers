@@ -1,5 +1,9 @@
 package stream
 
+import "errors"
+
+var Done = errors.New("Stream is closed")
+
 type T interface{}
 type Readable <-chan T
 type Writable chan<- T
@@ -7,7 +11,7 @@ type MapFn func(T) T
 type EachFn func(T)
 type PredicateFn func(T) bool
 type SortByFn func(a, b T) bool
-type OnDataFn func(data T, out Writable)
+type OnDataFn func(data T, w Writable)
 type ReduceFn func(acc, next T) (result T)
 
 type Context interface {
