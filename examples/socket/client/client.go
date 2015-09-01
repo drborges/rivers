@@ -23,5 +23,5 @@ func main() {
 		return fmt.Sprintf("[%v] %v", red.SprintFunc()("Server"), yellow.SprintFunc()(data))
 	}
 
-	rivers.New().FromSocket("tcp", *host+":"+*port).Map(toString).Map(formatMessage).Each(printMessage).Drain()
+	rivers.FromSocket("tcp", *host+":"+*port).Map(toString).Map(formatMessage).Each(printMessage).Drain()
 }
