@@ -23,5 +23,6 @@ func main() {
 		return fmt.Sprintf("[%v] %v", red.SprintFunc()("Server"), yellow.SprintFunc()(data))
 	}
 
+	rivers.DebugEnabled = true
 	rivers.FromSocket("tcp", *host+":"+*port).Map(toString).Map(formatMessage).Each(printMessage).Drain()
 }

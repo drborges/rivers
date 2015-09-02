@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/drborges/rivers/stream"
+	"runtime/debug"
 )
+
+var DebugEnabled = false
 
 type context struct {
 	closed chan error
@@ -37,6 +40,9 @@ func (c *context) Closed() <-chan error {
 func (c *context) Recover() {
 	if r := recover(); r != nil {
 		c.Close()
+		if DebugEnabled {
+			debug.PrintStack()
+		}
 		c.err = errors.New(fmt.Sprintf("Recovered from %v", r))
 		if e, ok := r.(error); ok {
 			c.err = e
