@@ -47,29 +47,42 @@ func TestStructHas(t *testing.T) {
 		Number int
 	}
 
+	type Post struct {
+		Content string
+	}
+
 	type Account struct {
 		Name, Email string
-		Address     Address
+		Address     *Address
+		Tokens      []string
+		Posts       []Post
 	}
 
 	convey.Convey("Given I have an instance of a particular struct", t, func() {
-		item := &Account{
+		subject := &Account{
 			Name:  "Diego",
 			Email: "drborges.cic@gmail.com",
-			Address: Address{
+			Tokens: []string{"123", "321"},
+			Address: &Address{
 				Street: "Getulio Vargas",
 				Number: 1151,
+			},
+			Posts: []Post{
+				{"Hello there"},
+				{"This is sweet"},
 			},
 		}
 
 		convey.Convey("Then subject matches filter", func() {
-			convey.So(where.StructHas("Name", "Diego")(item), should.BeTrue)
-			convey.So(where.StructHas("Email", "drborges.cic@gmail.com")(item), should.BeTrue)
-			convey.So(where.StructHas("Address.Street", "Getulio Vargas")(item), should.BeTrue)
+			convey.So(where.StructHas("Name", "Diego")(subject), should.BeTrue)
+			convey.So(where.StructHas("Email", "drborges.cic@gmail.com")(subject), should.BeTrue)
+			convey.So(where.StructHas("Address.Street", "Getulio Vargas")(subject), should.BeTrue)
+			convey.So(where.StructHas("Tokens", "123")(subject), should.BeTrue)
+			convey.So(where.StructHas("Posts.Content", "This is sweet")(subject), should.BeTrue)
 		})
 
 		convey.Convey("Then subject is not the same instace", func() {
-			convey.So(where.StructHas("Name", "Borges")(item), should.BeFalse)
+			convey.So(where.StructHas("Name", "Borges")(subject), should.BeFalse)
 		})
 	})
 }
