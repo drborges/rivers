@@ -49,10 +49,30 @@ func TestStructHas(t *testing.T) {
 
 		convey.Convey("Then subject matches filter", func() {
 			convey.So(where.StructHas("Name", "Diego")(item), should.BeTrue)
+			convey.So(where.StructHas("Email", "drborges.cic@gmail.com")(item), should.BeTrue)
 		})
 
 		convey.Convey("Then subject is not the same instace", func() {
 			convey.So(where.StructHas("Name", "Borges")(item), should.BeFalse)
+		})
+	})
+}
+
+func TestStructFieldMatches(t *testing.T) {
+	type Account struct{ Name, Email string }
+
+	convey.Convey("Given I have an instance of a particular struct", t, func() {
+		item := &Account{"Diego", "drborges.cic@gmail.com"}
+
+		convey.Convey("Then subject matches pattern", func() {
+			convey.So(where.StructFieldMatches("Name", "Die.*")(item), should.BeTrue)
+			convey.So(where.StructFieldMatches("Name", "Di.*o")(item), should.BeTrue)
+			convey.So(where.StructFieldMatches("Name", "Diego")(item), should.BeTrue)
+			convey.So(where.StructFieldMatches("Email", ".*@.*\\..*")(item), should.BeTrue)
+		})
+
+		convey.Convey("Then subject does not match pattern", func() {
+			convey.So(where.StructFieldMatches("Name", "Die go")(item), should.BeFalse)
 		})
 	})
 }
