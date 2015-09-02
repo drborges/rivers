@@ -217,16 +217,16 @@ func (s *Stream) FindBy(fn stream.PredicateFn) *Stream {
 	return s.Apply(s.transformers.FindBy(fn))
 }
 
-func (s *Stream) Take(n int) *Stream {
-	return s.Apply(s.transformers.Take(n))
+func (s *Stream) TakeFirst(n int) *Stream {
+	return s.Apply(s.transformers.TakeFirst(n))
 }
 
-func (s *Stream) TakeIf(fn stream.PredicateFn) *Stream {
-	return s.Apply(s.transformers.TakeIf(fn))
+func (s *Stream) Take(fn stream.PredicateFn) *Stream {
+	return s.Apply(s.transformers.Take(fn))
 }
 
-func (s *Stream) DropIf(fn stream.PredicateFn) *Stream {
-	return s.Apply(s.transformers.DropIf(fn))
+func (s *Stream) Drop(fn stream.PredicateFn) *Stream {
+	return s.Apply(s.transformers.Drop(fn))
 }
 
 func (s *Stream) Reduce(acc stream.T, fn stream.ReduceFn) *Stream {
@@ -269,7 +269,7 @@ func (s *Stream) CollectFirst() (stream.T, error) {
 }
 
 func (s *Stream) CollectFirstAs(data interface{}) error {
-	s.consumers.LastItemCollector(data).Consume(s.Take(1).Sink())
+	s.consumers.LastItemCollector(data).Consume(s.TakeFirst(1).Sink())
 	return s.Context.Err()
 }
 

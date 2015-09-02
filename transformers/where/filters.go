@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-func ItemResemble(subject stream.T) stream.PredicateFn {
+func DataResemble(subject stream.T) stream.PredicateFn {
 	return func(data stream.T) bool {
 		return reflect.DeepEqual(data, subject)
 	}
 }
 
-func ItemIs(subject stream.T) stream.PredicateFn {
+func DataIs(subject stream.T) stream.PredicateFn {
 	return func(data stream.T) bool {
 		return data == subject
 	}

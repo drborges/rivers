@@ -181,19 +181,19 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Range -> Take -> Sink", func() {
-			taken, _ := rivers.FromRange(1, 4).Take(2).Collect()
+			taken, _ := rivers.FromRange(1, 4).TakeFirst(2).Collect()
 
 			So(taken, ShouldResemble, []stream.T{1, 2})
 		})
 
 		Convey("From Range -> TakeIf -> Sink", func() {
-			processor := rivers.FromRange(1, 4).TakeIf(evensOnly)
+			processor := rivers.FromRange(1, 4).Take(evensOnly)
 
 			So(processor.Sink().Read(), ShouldResemble, []stream.T{2, 4})
 		})
 
 		Convey("From Range -> DropIf -> Sink", func() {
-			processor := rivers.FromRange(1, 4).DropIf(evensOnly)
+			processor := rivers.FromRange(1, 4).Drop(evensOnly)
 
 			So(processor.Sink().Read(), ShouldResemble, []stream.T{1, 3})
 		})

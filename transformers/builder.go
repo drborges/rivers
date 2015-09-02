@@ -38,7 +38,7 @@ func (b *Builder) FindBy(fn stream.PredicateFn) stream.Transformer {
 	}
 }
 
-func (b *Builder) Take(n int) stream.Transformer {
+func (b *Builder) TakeFirst(n int) stream.Transformer {
 	taken := 0
 	return &Observer{
 		Context: b.context,
@@ -54,11 +54,11 @@ func (b *Builder) Take(n int) stream.Transformer {
 	}
 }
 
-func (b *Builder) TakeIf(fn stream.PredicateFn) stream.Transformer {
+func (b *Builder) Take(fn stream.PredicateFn) stream.Transformer {
 	return b.Filter(fn)
 }
 
-func (b *Builder) DropIf(fn stream.PredicateFn) stream.Transformer {
+func (b *Builder) Drop(fn stream.PredicateFn) stream.Transformer {
 	return b.Filter(func(data stream.T) bool { return !fn(data) })
 }
 

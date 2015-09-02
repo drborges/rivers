@@ -20,7 +20,7 @@ func TestTakeN(t *testing.T) {
 			close(out)
 
 			Convey("When I apply the transformer to the stream", func() {
-				transformed := transformers.New(context).Take(2).Transform(in)
+				transformed := transformers.New(context).TakeFirst(2).Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(transformed.Read(), ShouldResemble, []stream.T{1, 2})
@@ -31,7 +31,7 @@ func TestTakeN(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					next := transformers.New(context).Take(1).Transform(in)
+					next := transformers.New(context).TakeFirst(1).Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(next.Read(), ShouldBeEmpty)
