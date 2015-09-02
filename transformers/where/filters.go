@@ -4,6 +4,7 @@ import (
 	"github.com/drborges/rivers/stream"
 	"reflect"
 	"regexp"
+	"strings"
 )
 
 func ItemResemble(subject stream.T) stream.PredicateFn {
@@ -35,7 +36,21 @@ func StructHas(field string, value stream.T) stream.PredicateFn {
 			val = val.Elem()
 		}
 
-		return val.FieldByName(field).Interface() == value
+		// Handle inner structs
+		if strings.Contains(field, ".") {
+			path := strings.Split(field, ".")
+			pathHead := path[0]
+			pathTail := strings.Join(path[1:], ".")
+			fieldData := val.FieldByName(pathHead).Interface()
+			return StructHas(pathTail, value)(fieldData)
+		}
+
+		fieldVal := val.FieldByName(field)
+		if !fieldVal.IsValid() {
+			return false
+		}
+
+		return fieldVal.Interface() == value
 	}
 }
 

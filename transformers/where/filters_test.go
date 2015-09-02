@@ -42,14 +42,30 @@ func TestItemIs(t *testing.T) {
 }
 
 func TestStructHas(t *testing.T) {
-	type Account struct{ Name, Email string }
+	type Address struct {
+		Street string
+		Number int
+	}
+
+	type Account struct {
+		Name, Email string
+		Address     Address
+	}
 
 	convey.Convey("Given I have an instance of a particular struct", t, func() {
-		item := &Account{"Diego", "drborges.cic@gmail.com"}
+		item := &Account{
+			Name:  "Diego",
+			Email: "drborges.cic@gmail.com",
+			Address: Address{
+				Street: "Getulio Vargas",
+				Number: 1151,
+			},
+		}
 
 		convey.Convey("Then subject matches filter", func() {
 			convey.So(where.StructHas("Name", "Diego")(item), should.BeTrue)
 			convey.So(where.StructHas("Email", "drborges.cic@gmail.com")(item), should.BeTrue)
+			convey.So(where.StructHas("Address.Street", "Getulio Vargas")(item), should.BeTrue)
 		})
 
 		convey.Convey("Then subject is not the same instace", func() {
