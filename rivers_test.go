@@ -8,6 +8,7 @@ import (
 	"net"
 	"strings"
 	"testing"
+	"github.com/drborges/rivers/transformers/from"
 )
 
 func TestRiversAPI(t *testing.T) {
@@ -180,19 +181,19 @@ func TestRiversAPI(t *testing.T) {
 			So(processor.Sink().Read(), ShouldResemble, []stream.T{2, 4})
 		})
 
-		Convey("From Range -> Take -> Sink", func() {
+		Convey("From Range -> TakeFirst N -> Sink", func() {
 			taken, _ := rivers.FromRange(1, 4).TakeFirst(2).Collect()
 
 			So(taken, ShouldResemble, []stream.T{1, 2})
 		})
 
-		Convey("From Range -> TakeIf -> Sink", func() {
+		Convey("From Range -> Take -> Sink", func() {
 			processor := rivers.FromRange(1, 4).Take(evensOnly)
 
 			So(processor.Sink().Read(), ShouldResemble, []stream.T{2, 4})
 		})
 
-		Convey("From Range -> DropIf -> Sink", func() {
+		Convey("From Range -> Drop -> Sink", func() {
 			processor := rivers.FromRange(1, 4).Drop(evensOnly)
 
 			So(processor.Sink().Read(), ShouldResemble, []stream.T{1, 3})
@@ -241,6 +242,22 @@ func TestRiversAPI(t *testing.T) {
 
 			So(err, ShouldBeNil)
 			So(numbers, ShouldResemble, []int{1, 2, 3, 4})
+		})
+
+		Convey("From Data -> Map From Struct To JSON -> Sink", func() {
+			type Account struct{Name string}
+
+			items := rivers.FromData(Account{"Diego"}).Map(from.StructToJSON).Sink().Read()
+
+			So(items, ShouldResemble, []stream.T{[]byte(`{"Name":"Diego"}`)})
+		})
+
+		Convey("From Data -> Map From JSON To Struct -> Sink", func() {
+			type Account struct{Name string}
+
+			items := rivers.FromData([]byte(`{"Name":"Diego"}`)).Map(from.JSONToStruct(Account{})).Sink().Read()
+
+			So(items, ShouldResemble, []stream.T{Account{"Diego"}})
 		})
 	})
 }
