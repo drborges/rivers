@@ -9,6 +9,14 @@ type fifo struct {
 	context stream.Context
 }
 
+func FIFO() stream.Combiner {
+	return &fifo{}
+}
+
+func (c *fifo) Bind(context stream.Context) {
+	c.context = context
+}
+
 func (c *fifo) Combine(in ...stream.Readable) stream.Readable {
 	capacity := func(in ...stream.Readable) int {
 		capacity := 0

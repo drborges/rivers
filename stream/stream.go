@@ -1,8 +1,14 @@
 package stream
 
 func New(capacity int) (Readable, Writable) {
-	pipe := make(chan T, capacity)
-	return pipe, pipe
+	ch := make(chan T, capacity)
+	return ch, ch
+}
+
+func NewEmpty() Readable {
+	ch := make(chan T)
+	close(ch)
+	return ch
 }
 
 func (readable Readable) Read() []T {

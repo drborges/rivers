@@ -24,7 +24,9 @@ func TestFifo(t *testing.T) {
 			close(out2)
 
 			Convey("When I apply the combiner to the streams", func() {
-				combined := combiners.New(context).FIFO().Combine(in1, in2)
+				combiner := combiners.FIFO()
+				combiner.(stream.Bindable).Bind(context)
+				combined := combiner.Combine(in1, in2)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(combined.Read(), ShouldResemble, []stream.T{1, 2, 3, 4})
@@ -35,7 +37,9 @@ func TestFifo(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					combined := combiners.New(context).Zip().Combine(in1, in2)
+					combiner := combiners.Zip()
+					combiner.(stream.Bindable).Bind(context)
+					combined := combiner.Combine(in1, in2)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(combined.Read(), ShouldBeEmpty)

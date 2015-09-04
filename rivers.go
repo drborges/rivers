@@ -10,11 +10,10 @@ import (
 )
 
 type Stream struct {
-	readable     stream.Readable
-	Context      stream.Context
-	consumers    *consumers.Builder
-	combiners    *combiners.Builder
-	dispatchers  *dispatchers.Builder
+	readable    stream.Readable
+	Context     stream.Context
+	consumers   *consumers.Builder
+	dispatchers *dispatchers.Builder
 }
 
 func From(producer stream.Producer) *Stream {
@@ -69,20 +68,19 @@ func ZipBy(fn stream.ReduceFn, streams ...*Stream) *Stream {
 
 func (s *Stream) newFrom(readable stream.Readable) *Stream {
 	return &Stream{
-		readable:     readable,
-		Context:      s.Context,
-		consumers:    s.consumers,
-		combiners:    s.combiners,
-		dispatchers:  s.dispatchers,
+		readable:    readable,
+		Context:     s.Context,
+		consumers:   s.consumers,
+		dispatchers: s.dispatchers,
 	}
 }
 
 func NewWith(context stream.Context) *Stream {
 	return &Stream{
-		Context:      context,
-		consumers:    consumers.New(context),
-		combiners:    combiners.New(context),
-		dispatchers:  dispatchers.New(context),
+		Context:     context,
+		readable:    stream.NewEmpty(),
+		consumers:   consumers.New(context),
+		dispatchers: dispatchers.New(context),
 	}
 }
 
@@ -111,15 +109,30 @@ func (s *Stream) Partition(fn stream.PredicateFn) (*Stream, *Stream) {
 }
 
 func (s *Stream) Merge(readables ...stream.Readable) *Stream {
-	return s.newFrom(s.combiners.FIFO().Combine(readables...))
+	combiner := combiners.FIFO()
+	if bindable, ok := combiner.(stream.Bindable); ok {
+		bindable.Bind(s.Context)
+	}
+	readables = append(readables, s.readable)
+	return s.newFrom(combiner.Combine(readables...))
 }
 
 func (s *Stream) Zip(readables ...stream.Readable) *Stream {
-	return s.newFrom(s.combiners.Zip().Combine(readables...))
+	combiner := combiners.Zip()
+	if bindable, ok := combiner.(stream.Bindable); ok {
+		bindable.Bind(s.Context)
+	}
+	readables = append(readables, s.readable)
+	return s.newFrom(combiner.Combine(readables...))
 }
 
 func (s *Stream) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Stream {
-	return s.newFrom(s.combiners.ZipBy(fn).Combine(readables...))
+	combiner := combiners.ZipBy(fn)
+	if bindable, ok := combiner.(stream.Bindable); ok {
+		bindable.Bind(s.Context)
+	}
+	readables = append(readables, s.readable)
+	return s.newFrom(combiner.Combine(readables...))
 }
 
 func (s *Stream) Dispatch(writables ...stream.Writable) *Stream {
@@ -136,11 +149,10 @@ func (s *Stream) Apply(transformer stream.Transformer) *Stream {
 	}
 
 	return &Stream{
-		readable:     transformer.Transform(s.readable),
-		Context:      s.Context,
-		consumers:    s.consumers,
-		combiners:    s.combiners,
-		dispatchers:  s.dispatchers,
+		readable:    transformer.Transform(s.readable),
+		Context:     s.Context,
+		consumers:   s.consumers,
+		dispatchers: s.dispatchers,
 	}
 }
 

@@ -1,10 +1,22 @@
 package combiners
 
-import "github.com/drborges/rivers/stream"
+import (
+	"github.com/drborges/rivers/stream"
+)
 
 type zipBy struct {
 	context stream.Context
 	fn      stream.ReduceFn
+}
+
+func ZipBy(fn stream.ReduceFn) stream.Combiner {
+	return &zipBy{
+		fn: fn,
+	}
+}
+
+func (c *zipBy) Bind(context stream.Context) {
+	c.context = context
 }
 
 func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
@@ -26,18 +38,20 @@ func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
 		defer close(writer)
 
 		var zipped stream.T
-		var doneCount int
+		doneIndexes := make(map[int]bool)
 
-		for doneCount < len(in) {
+		for len(doneIndexes) < len(in) {
 			select {
 			case <-c.context.Closed():
 				return
 			default:
-				for _, readable := range in {
+				for i, readable := range in {
 					data, opened := <-readable
 
 					if !opened {
-						doneCount++
+						if _, registered := doneIndexes[i]; !registered {
+							doneIndexes[i] = true
+						}
 						continue
 					}
 

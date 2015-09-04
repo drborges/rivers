@@ -30,7 +30,9 @@ func TestZipperBy(t *testing.T) {
 			close(out2)
 
 			Convey("When I apply the combiner to the streams", func() {
-				combined := combiners.New(context).ZipBy(adder).Combine(in1, in2)
+				combiner := combiners.ZipBy(adder)
+				combiner.(stream.Bindable).Bind(context)
+				combined := combiner.Combine(in1, in2)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(combined.Read(), ShouldResemble, []stream.T{4, 6, 5, 6})
@@ -41,7 +43,9 @@ func TestZipperBy(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					combined := combiners.New(context).ZipBy(adder).Combine(in1, in2)
+					combiner := combiners.ZipBy(adder)
+					combiner.(stream.Bindable).Bind(context)
+					combined := combiner.Combine(in1, in2)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(combined.Read(), ShouldBeEmpty)

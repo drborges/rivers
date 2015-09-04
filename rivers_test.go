@@ -2,6 +2,7 @@ package rivers_test
 
 import (
 	"github.com/drborges/rivers"
+	"github.com/drborges/rivers/producers"
 	"github.com/drborges/rivers/scanners"
 	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers/from"
@@ -9,7 +10,6 @@ import (
 	"net"
 	"strings"
 	"testing"
-	"github.com/drborges/rivers/producers"
 )
 
 func TestRiversAPI(t *testing.T) {
@@ -101,12 +101,13 @@ func TestRiversAPI(t *testing.T) {
 			So(combined, ShouldResemble, []stream.T{2, "a_", 3, "b_", 4, "c_", 5})
 		})
 
-		Convey("Zip By -> Map -> Sink", func() {
+		Convey("Zip By -> Filter -> Collect", func() {
 			numbers := rivers.FromData(1, 2, 3, 4)
 			moreNumbers := rivers.FromData(4, 4, 1)
 
-			combined, _ := rivers.ZipBy(sum, numbers, moreNumbers).Filter(evensOnly).Collect()
+			combined, err := rivers.ZipBy(sum, numbers, moreNumbers).Filter(evensOnly).Collect()
 
+			So(err, ShouldBeNil)
 			So(combined, ShouldResemble, []stream.T{6, 4, 4})
 		})
 

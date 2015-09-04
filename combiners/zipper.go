@@ -6,6 +6,14 @@ type zip struct {
 	context stream.Context
 }
 
+func Zip() stream.Combiner {
+	return &zip{}
+}
+
+func (c *zip) Bind(context stream.Context) {
+	c.context = context
+}
+
 func (c *zip) Combine(in ...stream.Readable) stream.Readable {
 	capacity := func(rs ...stream.Readable) int {
 		capacity := 0
