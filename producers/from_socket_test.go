@@ -36,7 +36,9 @@ func TestFromSocket(t *testing.T) {
 			}()
 
 			Convey("When I produce a data stream from a tcp connection scanning by line", func() {
-				readable := producers.New(context).FromSocket("tcp", addr, scanners.NewLineScanner()).Produce()
+				producer := producers.FromSocket("tcp", addr, scanners.NewLineScanner())
+				producer.(stream.Bindable).Bind(context)
+				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
 					So(readable.Read(), ShouldResemble, []stream.T{
@@ -48,7 +50,9 @@ func TestFromSocket(t *testing.T) {
 			})
 
 			Convey("When I produce a data stream from a tcp connection scanning by word", func() {
-				readable := producers.New(context).FromSocket("tcp", addr, scanners.NewWordScanner()).Produce()
+				producer := producers.FromSocket("tcp", addr, scanners.NewWordScanner())
+				producer.(stream.Bindable).Bind(context)
+				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
 					So(readable.Read(), ShouldResemble, []stream.T{

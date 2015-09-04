@@ -48,6 +48,10 @@ type Emitter interface {
 	Emit(data T)
 }
 
+type Bindable interface {
+	Bind(Context)
+}
+
 type Batch interface {
 	Commit(Writable)
 	Full() bool

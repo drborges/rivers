@@ -13,7 +13,8 @@ func TestFromRange(t *testing.T) {
 		context := rivers.NewContext()
 
 		Convey("And I have a range producer", func() {
-			producer := producers.New(context).FromRange(1, 3)
+			producer := producers.FromRange(1, 3)
+			producer.(stream.Bindable).Bind(context)
 
 			Convey("When I produce data", func() {
 				readable := producer.Produce()

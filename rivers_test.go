@@ -9,6 +9,7 @@ import (
 	"net"
 	"strings"
 	"testing"
+	"github.com/drborges/rivers/producers"
 )
 
 func TestRiversAPI(t *testing.T) {
@@ -139,7 +140,7 @@ func TestRiversAPI(t *testing.T) {
 				conn.Write([]byte("super cool!\n"))
 			}()
 
-			words := rivers.FromSocketWithScanner("tcp", port, scanners.NewLineScanner()).
+			words := rivers.From(producers.FromSocket("tcp", port, scanners.NewLineScanner())).
 				Map(toString).
 				Filter(nonEmptyLines).
 				Map(splitWord).

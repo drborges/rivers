@@ -7,6 +7,7 @@ import (
 	"github.com/drborges/rivers/stream"
 	"github.com/fatih/color"
 	"log"
+	"github.com/drborges/rivers/producers"
 )
 
 var host = flag.String("host", "127.0.0.1", "The host to connect to")
@@ -24,5 +25,5 @@ func main() {
 	}
 
 	rivers.DebugEnabled = true
-	rivers.FromSocket("tcp", *host+":"+*port).Map(toString).Map(formatMessage).Each(printMessage).Drain()
+	rivers.From(producers.FromSocket("tcp", *host+":"+*port, nil)).Map(toString).Map(formatMessage).Each(printMessage).Drain()
 }

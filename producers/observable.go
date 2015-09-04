@@ -16,10 +16,16 @@ func (emitter *Emitter) Emit(data stream.T) {
 	}
 }
 
+// TODO Implement Bindable interface to avoid users having to explicitly provide a context
+// rivers could take care of that instead.
 type Observable struct {
-	Context  stream.Context
+	context  stream.Context
 	Capacity int
 	Emit     func(stream.Emitter)
+}
+
+func (observable *Observable) Bind(context stream.Context) {
+	observable.context = context
 }
 
 func (observable *Observable) Produce() stream.Readable {
@@ -29,11 +35,11 @@ func (observable *Observable) Produce() stream.Readable {
 	readable, writable := stream.New(observable.Capacity)
 
 	go func() {
-		defer observable.Context.Recover()
+		defer observable.context.Recover()
 		defer close(writable)
 
 		if observable.Emit != nil {
-			observable.Emit(&Emitter{observable.Context, writable})
+			observable.Emit(&Emitter{observable.context, writable})
 		}
 	}()
 

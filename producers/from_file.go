@@ -8,13 +8,11 @@ import (
 )
 
 type fromFile struct {
-	context stream.Context
 	file    *os.File
 }
 
 func (builder *fromFile) ByLine() stream.Producer {
 	return &Observable{
-		Context:  builder.context,
 		Capacity: 100,
 		Emit: func(emitter stream.Emitter) {
 			defer builder.file.Close()
@@ -28,7 +26,6 @@ func (builder *fromFile) ByLine() stream.Producer {
 
 func (builder *fromFile) ByDelimiter(delimiter byte) stream.Producer {
 	return &Observable{
-		Context:  builder.context,
 		Capacity: 100,
 		Emit: func(emitter stream.Emitter) {
 			defer builder.file.Close()

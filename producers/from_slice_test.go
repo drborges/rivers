@@ -14,9 +14,10 @@ func TestFromSlice(t *testing.T) {
 
 		Convey("And I have a slice producer", func() {
 			numbers := []int{1, 2, 3}
-			producer := producers.New(context).FromSlice(numbers)
+			producer := producers.FromSlice(numbers)
 
 			Convey("When I produce data", func() {
+				producer.(stream.Bindable).Bind(context)
 				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
@@ -26,9 +27,10 @@ func TestFromSlice(t *testing.T) {
 		})
 
 		Convey("And I have a data producer", func() {
-			producer := producers.New(context).FromData(1, 2, 3)
+			producer := producers.FromData(1, 2, 3)
 
 			Convey("When I produce data", func() {
+				producer.(stream.Bindable).Bind(context)
 				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {

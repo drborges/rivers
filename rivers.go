@@ -5,29 +5,13 @@ import (
 	"github.com/drborges/rivers/consumers"
 	"github.com/drborges/rivers/dispatchers"
 	"github.com/drborges/rivers/producers"
-	"github.com/drborges/rivers/scanners"
 	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
-	"os"
 )
-
-type producer interface {
-	From(producer stream.Producer) *Stream
-	FromStream(readable stream.Readable) *Stream
-	FromRange(from, to int) *Stream
-	FromData(data ...stream.T) *Stream
-	FromSlice(slice stream.T) *Stream
-	FromSocket(protocol, addr string) *Stream
-	FromSocketWithScanner(protocol, addr string, scanner scanners.Scanner) *Stream
-	Merge(in ...stream.Readable) *Stream
-	Zip(in ...stream.Readable) *Stream
-	ZipBy(fn stream.ReduceFn, in ...stream.Readable) *Stream
-}
 
 type Stream struct {
 	readable     stream.Readable
 	Context      stream.Context
-	producers    *producers.Builder
 	consumers    *consumers.Builder
 	combiners    *combiners.Builder
 	dispatchers  *dispatchers.Builder
@@ -35,31 +19,29 @@ type Stream struct {
 }
 
 func From(producer stream.Producer) *Stream {
-	return new().From(producer)
+	context := NewContext()
+
+	if bindable, ok := producer.(stream.Bindable); ok {
+		bindable.Bind(context)
+	}
+
+	return NewWith(context).newFrom(producer.Produce())
 }
 
 func FromStream(readable stream.Readable) *Stream {
-	return new().FromStream(readable)
+	return NewWith(NewContext()).newFrom(readable)
 }
 
 func FromRange(from, to int) *Stream {
-	return new().FromRange(from, to)
+	return From(producers.FromRange(from, to))
 }
 
 func FromData(data ...stream.T) *Stream {
-	return new().FromData(data...)
+	return From(producers.FromData(data...))
 }
 
 func FromSlice(slice stream.T) *Stream {
-	return new().FromSlice(slice)
-}
-
-func FromSocket(protocol, addr string) *Stream {
-	return new().FromSocket(protocol, addr)
-}
-
-func FromSocketWithScanner(protocol, addr string, scanner scanners.Scanner) *Stream {
-	return new().FromSocketWithScanner(protocol, addr, scanner)
+	return From(producers.FromSlice(slice))
 }
 
 func Merge(streams ...*Stream) *Stream {
@@ -67,7 +49,7 @@ func Merge(streams ...*Stream) *Stream {
 	for _, s := range streams {
 		readables = append(readables, s.Sink())
 	}
-	return new().Merge(readables...)
+	return NewWith(NewContext()).Merge(readables...)
 }
 
 func Zip(streams ...*Stream) *Stream {
@@ -75,7 +57,7 @@ func Zip(streams ...*Stream) *Stream {
 	for _, s := range streams {
 		readables = append(readables, s.Sink())
 	}
-	return new().Zip(readables...)
+	return NewWith(NewContext()).Zip(readables...)
 }
 
 func ZipBy(fn stream.ReduceFn, streams ...*Stream) *Stream {
@@ -83,14 +65,13 @@ func ZipBy(fn stream.ReduceFn, streams ...*Stream) *Stream {
 	for _, s := range streams {
 		readables = append(readables, s.Sink())
 	}
-	return new().ZipBy(fn, readables...)
+	return NewWith(NewContext()).ZipBy(fn, readables...)
 }
 
 func (s *Stream) newFrom(readable stream.Readable) *Stream {
 	return &Stream{
 		readable:     readable,
 		Context:      s.Context,
-		producers:    s.producers,
 		consumers:    s.consumers,
 		combiners:    s.combiners,
 		dispatchers:  s.dispatchers,
@@ -98,14 +79,9 @@ func (s *Stream) newFrom(readable stream.Readable) *Stream {
 	}
 }
 
-func new() producer {
-	return NewWith(NewContext())
-}
-
-func NewWith(context stream.Context) producer {
+func NewWith(context stream.Context) *Stream {
 	return &Stream{
 		Context:      context,
-		producers:    producers.New(context),
 		consumers:    consumers.New(context),
 		combiners:    combiners.New(context),
 		dispatchers:  dispatchers.New(context),
@@ -155,42 +131,6 @@ func (s *Stream) Dispatch(writables ...stream.Writable) *Stream {
 
 func (s *Stream) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Stream {
 	return s.newFrom(s.dispatchers.If(fn).Dispatch(s.readable, writables...))
-}
-
-func (s *Stream) From(producer stream.Producer) *Stream {
-	return s.newFrom(producer.Produce())
-}
-
-func (s *Stream) FromStream(readable stream.Readable) *Stream {
-	return s.newFrom(readable)
-}
-
-func (s *Stream) FromRange(from, to int) *Stream {
-	return s.newFrom(s.producers.FromRange(from, to).Produce())
-}
-
-func (s *Stream) FromFileByLine(file *os.File) *Stream {
-	return s.newFrom(s.producers.FromFile(file).ByLine().Produce())
-}
-
-func (s *Stream) FromFileByDelimiter(file *os.File, delimiter byte) *Stream {
-	return s.newFrom(s.producers.FromFile(file).ByDelimiter(delimiter).Produce())
-}
-
-func (s *Stream) FromData(data ...stream.T) *Stream {
-	return s.newFrom(s.producers.FromData(data...).Produce())
-}
-
-func (s *Stream) FromSlice(slice stream.T) *Stream {
-	return s.newFrom(s.producers.FromSlice(slice).Produce())
-}
-
-func (s *Stream) FromSocket(protocol, addr string) *Stream {
-	return s.newFrom(s.producers.FromSocket(protocol, addr, scanners.NewLineScanner()).Produce())
-}
-
-func (s *Stream) FromSocketWithScanner(protocol, addr string, scanner scanners.Scanner) *Stream {
-	return s.newFrom(s.producers.FromSocket(protocol, addr, scanner).Produce())
 }
 
 func (s *Stream) Apply(t stream.Transformer) *Stream {

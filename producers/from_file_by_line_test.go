@@ -19,7 +19,9 @@ func TestFromFileByLine(t *testing.T) {
 			file, _ := os.Open("/tmp/from_file_by_line")
 
 			Convey("When I produce data from the file", func() {
-				readable := producers.New(context).FromFile(file).ByLine().Produce()
+				producer := producers.FromFile(file).ByLine()
+				producer.(stream.Bindable).Bind(context)
+				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
 					So(readable.Read(), ShouldResemble, []stream.T{"Hello", "there", "folks!"})
