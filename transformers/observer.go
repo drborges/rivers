@@ -4,8 +4,8 @@ import "github.com/drborges/rivers/stream"
 
 type Observer struct {
 	context     stream.Context
-	OnCompleted func(w stream.Writable)
-	OnNext      func(data stream.T, w stream.Writable) error
+	OnCompleted func(emitter stream.Emitter)
+	OnNext      func(data stream.T, emitter stream.Emitter) error
 }
 
 func (observer *Observer) Bind(context stream.Context) {
@@ -13,11 +13,12 @@ func (observer *Observer) Bind(context stream.Context) {
 }
 
 func (observer *Observer) Transform(in stream.Readable) stream.Readable {
-	reader, writer := stream.New(cap(in))
+	readable, writable := stream.New(cap(in))
+	emitter := stream.NewEmitter(observer.context, writable)
 
 	go func() {
 		defer observer.context.Recover()
-		defer close(writer)
+		defer close(writable)
 
 		for {
 			select {
@@ -27,7 +28,7 @@ func (observer *Observer) Transform(in stream.Readable) stream.Readable {
 				data, more := <-in
 				if !more {
 					if observer.OnCompleted != nil {
-						observer.OnCompleted(writer)
+						observer.OnCompleted(emitter)
 					}
 					return
 				}
@@ -36,7 +37,7 @@ func (observer *Observer) Transform(in stream.Readable) stream.Readable {
 					continue
 				}
 
-				if err := observer.OnNext(data, writer); err != nil {
+				if err := observer.OnNext(data, emitter); err != nil {
 					if err == stream.Done {
 						return
 					}
@@ -46,5 +47,5 @@ func (observer *Observer) Transform(in stream.Readable) stream.Readable {
 		}
 	}()
 
-	return reader
+	return readable
 }

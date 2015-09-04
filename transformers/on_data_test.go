@@ -9,9 +9,9 @@ import (
 )
 
 func TestProcessor(t *testing.T) {
-	evensFilter := func(d stream.T, out stream.Writable) {
+	evensFilter := func(d stream.T, emitter stream.Emitter) {
 		if d.(int)%2 == 0 {
-			out <- d
+			emitter.Emit(d)
 		}
 	}
 

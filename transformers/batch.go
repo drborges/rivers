@@ -17,8 +17,8 @@ func (batch *batch) Empty() bool {
 	return len(batch.items) == 0
 }
 
-func (batch *batch) Commit(out stream.Writable) {
-	out <- batch.items
+func (batch *batch) Commit(emitter stream.Emitter) {
+	emitter.Emit(batch.items)
 	batch.items = []stream.T{}
 }
 

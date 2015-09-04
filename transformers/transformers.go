@@ -7,9 +7,9 @@ import (
 
 func Filter(fn stream.PredicateFn) stream.Transformer {
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
 			if fn(data) {
-				w <- data
+				emitter.Emit(data)
 			}
 			return nil
 		},
@@ -18,9 +18,9 @@ func Filter(fn stream.PredicateFn) stream.Transformer {
 
 func FindBy(fn stream.PredicateFn) stream.Transformer {
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
 			if fn(data) {
-				w <- data
+				emitter.Emit(data)
 				return stream.Done
 			}
 			return nil
@@ -31,12 +31,12 @@ func FindBy(fn stream.PredicateFn) stream.Transformer {
 func TakeFirst(n int) stream.Transformer {
 	taken := 0
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
 			if taken >= n {
 				return stream.Done
 			}
 
-			w <- data
+			emitter.Emit(data)
 			taken++
 			return nil
 		},
@@ -53,8 +53,8 @@ func Drop(fn stream.PredicateFn) stream.Transformer {
 
 func Map(fn stream.MapFn) stream.Transformer {
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
-			w <- fn(data)
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
+			emitter.Emit(fn(data))
 			return nil
 		},
 	}
@@ -62,8 +62,8 @@ func Map(fn stream.MapFn) stream.Transformer {
 
 func OnData(fn stream.OnDataFn) stream.Transformer {
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
-			fn(data, w)
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
+			fn(data, emitter)
 			return nil
 		},
 	}
@@ -71,26 +71,26 @@ func OnData(fn stream.OnDataFn) stream.Transformer {
 
 func Reduce(acc stream.T, fn stream.ReduceFn) stream.Transformer {
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
 			acc = fn(acc, data)
 			return nil
 		},
-		OnCompleted: func(w stream.Writable) {
-			w <- acc
+		OnCompleted: func(emitter stream.Emitter) {
+			emitter.Emit(acc)
 		},
 	}
 }
 
 func Flatten() stream.Transformer {
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
 			dv := reflect.ValueOf(data)
 			if dv.Kind() == reflect.Slice || dv.Kind() == reflect.Ptr && dv.Elem().Kind() == reflect.Slice {
 				for i := 0; i < dv.Len(); i++ {
-					w <- dv.Index(i).Interface()
+					emitter.Emit(dv.Index(i).Interface())
 				}
 			} else {
-				w <- data
+				emitter.Emit(data)
 			}
 			return nil
 		},
@@ -103,16 +103,16 @@ func Batch(size int) stream.Transformer {
 
 func BatchBy(batch stream.Batch) stream.Transformer {
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
 			batch.Add(data)
 			if batch.Full() {
-				batch.Commit(w)
+				batch.Commit(emitter)
 			}
 			return nil
 		},
-		OnCompleted: func(w stream.Writable) {
+		OnCompleted: func(emitter stream.Emitter) {
 			if !batch.Empty() {
-				batch.Commit(w)
+				batch.Commit(emitter)
 			}
 		},
 	}
@@ -121,14 +121,14 @@ func BatchBy(batch stream.Batch) stream.Transformer {
 func SortBy(sorter stream.SortByFn) stream.Transformer {
 	items := []stream.T{}
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
 			items = append(items, data)
 			return nil
 		},
-		OnCompleted: func(w stream.Writable) {
+		OnCompleted: func(emitter stream.Emitter) {
 			sorter.Sort(items)
 			for _, item := range items {
-				w <- item
+				emitter.Emit(item)
 			}
 		},
 	}
@@ -136,9 +136,9 @@ func SortBy(sorter stream.SortByFn) stream.Transformer {
 
 func Each(fn stream.EachFn) stream.Transformer {
 	return &Observer{
-		OnNext: func(data stream.T, w stream.Writable) error {
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
 			fn(data)
-			w <- data
+			emitter.Emit(data)
 			return nil
 		},
 	}

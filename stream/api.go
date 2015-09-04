@@ -11,7 +11,7 @@ type MapFn func(T) T
 type EachFn func(T)
 type PredicateFn func(T) bool
 type SortByFn func(a, b T) bool
-type OnDataFn func(data T, w Writable)
+type OnDataFn func(data T, emitter Emitter)
 type ReduceFn func(acc, next T) (result T)
 
 type Context interface {
@@ -53,7 +53,7 @@ type Bindable interface {
 }
 
 type Batch interface {
-	Commit(Writable)
+	Commit(Emitter)
 	Full() bool
 	Empty() bool
 	Add(data T)
