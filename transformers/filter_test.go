@@ -21,7 +21,9 @@ func TestFilter(t *testing.T) {
 			close(out)
 
 			Convey("When I apply the transformer to the stream", func() {
-				transformed := transformers.New(context).Filter(evens).Transform(in)
+				transformer := transformers.Filter(evens)
+				transformer.(stream.Bindable).Bind(context)
+				transformed := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(transformed.Read(), ShouldResemble, []stream.T{2})
@@ -32,7 +34,9 @@ func TestFilter(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					next := transformers.New(context).Filter(evens).Transform(in)
+					transformer := transformers.Filter(evens)
+					transformer.(stream.Bindable).Bind(context)
+					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(next.Read(), ShouldBeEmpty)

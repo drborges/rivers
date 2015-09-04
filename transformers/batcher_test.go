@@ -42,7 +42,9 @@ func TestBatcher(t *testing.T) {
 			close(out)
 
 			Convey("When I apply the batch transformer to the stream", func() {
-				next := transformers.New(context).Batch(2).Transform(in)
+				transformer := transformers.Batch(2)
+				transformer.(stream.Bindable).Bind(context)
+				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(next.Read(), ShouldResemble, []stream.T{[]stream.T{1, 2}, []stream.T{3}})
@@ -50,7 +52,9 @@ func TestBatcher(t *testing.T) {
 			})
 
 			Convey("When I apply the batch by transformer to the stream", func() {
-				next := transformers.New(context).BatchBy(&batch{size: 1}).Transform(in)
+				transformer := transformers.BatchBy(&batch{size: 1})
+				transformer.(stream.Bindable).Bind(context)
+				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(next.Read(), ShouldResemble, []stream.T{[]stream.T{1}, []stream.T{2}, []stream.T{3}})
@@ -61,7 +65,9 @@ func TestBatcher(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					next := transformers.New(context).Flatten().Transform(in)
+					transformer := transformers.Flatten()
+					transformer.(stream.Bindable).Bind(context)
+					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(next.Read(), ShouldBeEmpty)

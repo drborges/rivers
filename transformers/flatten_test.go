@@ -20,7 +20,9 @@ func TestFlatten(t *testing.T) {
 			close(out)
 
 			Convey("When I apply the transformer to the stream", func() {
-				next := transformers.New(context).Flatten().Transform(in)
+				transformer := transformers.Flatten()
+				transformer.(stream.Bindable).Bind(context)
+				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(next.Read(), ShouldResemble, []stream.T{1, 2, 3, 4})
@@ -31,7 +33,9 @@ func TestFlatten(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					next := transformers.New(context).Flatten().Transform(in)
+					transformer := transformers.Flatten()
+					transformer.(stream.Bindable).Bind(context)
+					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(next.Read(), ShouldBeEmpty)

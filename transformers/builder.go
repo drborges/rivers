@@ -5,17 +5,8 @@ import (
 	"reflect"
 )
 
-type Builder struct {
-	context stream.Context
-}
-
-func New(c stream.Context) *Builder {
-	return &Builder{c}
-}
-
-func (b *Builder) Filter(fn stream.PredicateFn) stream.Transformer {
+func Filter(fn stream.PredicateFn) stream.Transformer {
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			if fn(data) {
 				w <- data
@@ -25,9 +16,8 @@ func (b *Builder) Filter(fn stream.PredicateFn) stream.Transformer {
 	}
 }
 
-func (b *Builder) FindBy(fn stream.PredicateFn) stream.Transformer {
+func FindBy(fn stream.PredicateFn) stream.Transformer {
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			if fn(data) {
 				w <- data
@@ -38,10 +28,9 @@ func (b *Builder) FindBy(fn stream.PredicateFn) stream.Transformer {
 	}
 }
 
-func (b *Builder) TakeFirst(n int) stream.Transformer {
+func TakeFirst(n int) stream.Transformer {
 	taken := 0
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			if taken >= n {
 				return stream.Done
@@ -54,17 +43,16 @@ func (b *Builder) TakeFirst(n int) stream.Transformer {
 	}
 }
 
-func (b *Builder) Take(fn stream.PredicateFn) stream.Transformer {
-	return b.Filter(fn)
+func Take(fn stream.PredicateFn) stream.Transformer {
+	return Filter(fn)
 }
 
-func (b *Builder) Drop(fn stream.PredicateFn) stream.Transformer {
-	return b.Filter(func(data stream.T) bool { return !fn(data) })
+func Drop(fn stream.PredicateFn) stream.Transformer {
+	return Filter(func(data stream.T) bool { return !fn(data) })
 }
 
-func (b *Builder) Map(fn stream.MapFn) stream.Transformer {
+func Map(fn stream.MapFn) stream.Transformer {
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			w <- fn(data)
 			return nil
@@ -72,9 +60,8 @@ func (b *Builder) Map(fn stream.MapFn) stream.Transformer {
 	}
 }
 
-func (b *Builder) OnData(fn stream.OnDataFn) stream.Transformer {
+func OnData(fn stream.OnDataFn) stream.Transformer {
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			fn(data, w)
 			return nil
@@ -82,9 +69,8 @@ func (b *Builder) OnData(fn stream.OnDataFn) stream.Transformer {
 	}
 }
 
-func (b *Builder) Reduce(acc stream.T, fn stream.ReduceFn) stream.Transformer {
+func Reduce(acc stream.T, fn stream.ReduceFn) stream.Transformer {
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			acc = fn(acc, data)
 			return nil
@@ -95,9 +81,8 @@ func (b *Builder) Reduce(acc stream.T, fn stream.ReduceFn) stream.Transformer {
 	}
 }
 
-func (b *Builder) Flatten() stream.Transformer {
+func Flatten() stream.Transformer {
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			dv := reflect.ValueOf(data)
 			if dv.Kind() == reflect.Slice || dv.Kind() == reflect.Ptr && dv.Elem().Kind() == reflect.Slice {
@@ -112,13 +97,12 @@ func (b *Builder) Flatten() stream.Transformer {
 	}
 }
 
-func (b *Builder) Batch(size int) stream.Transformer {
-	return b.BatchBy(&batch{size: size})
+func Batch(size int) stream.Transformer {
+	return BatchBy(&batch{size: size})
 }
 
-func (b *Builder) BatchBy(batch stream.Batch) stream.Transformer {
+func BatchBy(batch stream.Batch) stream.Transformer {
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			batch.Add(data)
 			if batch.Full() {
@@ -134,10 +118,9 @@ func (b *Builder) BatchBy(batch stream.Batch) stream.Transformer {
 	}
 }
 
-func (b *Builder) SortBy(sorter stream.SortByFn) stream.Transformer {
+func SortBy(sorter stream.SortByFn) stream.Transformer {
 	items := []stream.T{}
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			items = append(items, data)
 			return nil
@@ -151,9 +134,8 @@ func (b *Builder) SortBy(sorter stream.SortByFn) stream.Transformer {
 	}
 }
 
-func (b *Builder) Each(fn stream.EachFn) stream.Transformer {
+func Each(fn stream.EachFn) stream.Transformer {
 	return &Observer{
-		Context: b.context,
 		OnNext: func(data stream.T, w stream.Writable) error {
 			fn(data)
 			w <- data

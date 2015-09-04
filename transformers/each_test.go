@@ -26,7 +26,9 @@ func TestEach(t *testing.T) {
 
 			Convey("When I apply the transformer to the stream", func() {
 				var items []stream.T
-				next := transformers.New(context).Each(collect(&items)).Transform(in)
+				transformer := transformers.Each(collect(&items))
+				transformer.(stream.Bindable).Bind(context)
+				next := transformer.Transform(in)
 
 				Convey("Then all items are sent to the next stage", func() {
 					So(next.Read(), ShouldResemble, []stream.T{1, 2})
@@ -42,7 +44,9 @@ func TestEach(t *testing.T) {
 
 				Convey("And I apply the transformer to the stream", func() {
 					var items []stream.T
-					next := transformers.New(context).Each(collect(&items)).Transform(in)
+					transformer := transformers.Each(collect(&items))
+					transformer.(stream.Bindable).Bind(context)
+					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(next.Read(), ShouldBeEmpty)

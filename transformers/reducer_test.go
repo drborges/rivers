@@ -22,7 +22,9 @@ func TestReducer(t *testing.T) {
 			close(out)
 
 			Convey("When I apply a mapper transformer to the stream", func() {
-				next := transformers.New(context).Reduce(0, sum).Transform(in)
+				transformer := transformers.Reduce(0, sum)
+				transformer.(stream.Bindable).Bind(context)
+				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(next.Read(), ShouldResemble, []stream.T{6})
@@ -33,7 +35,9 @@ func TestReducer(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					next := transformers.New(context).Reduce(0, sum).Transform(in)
+					transformer := transformers.Reduce(0, sum)
+					transformer.(stream.Bindable).Bind(context)
+					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(next.Read(), ShouldBeEmpty)

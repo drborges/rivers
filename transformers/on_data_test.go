@@ -25,7 +25,9 @@ func TestProcessor(t *testing.T) {
 			close(out)
 
 			Convey("When I apply the transformer to the stream", func() {
-				transformed := transformers.New(context).OnData(evensFilter).Transform(in)
+				transformer := transformers.OnData(evensFilter)
+				transformer.(stream.Bindable).Bind(context)
+				transformed := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(transformed.Read(), ShouldResemble, []stream.T{2})
@@ -36,7 +38,9 @@ func TestProcessor(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					next := transformers.New(context).OnData(evensFilter).Transform(in)
+					transformer := transformers.OnData(evensFilter)
+					transformer.(stream.Bindable).Bind(context)
+					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(next.Read(), ShouldBeEmpty)

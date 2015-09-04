@@ -22,7 +22,9 @@ func TestFindBy(t *testing.T) {
 			close(out)
 
 			Convey("When I apply the transformer to the stream", func() {
-				next := transformers.New(context).FindBy(evens).Transform(in)
+				transformer := transformers.FindBy(evens)
+				transformer.(stream.Bindable).Bind(context)
+				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
 					So(next.Read(), ShouldResemble, []stream.T{2})
@@ -33,7 +35,9 @@ func TestFindBy(t *testing.T) {
 				context.Close()
 
 				Convey("And I apply the transformer to the stream", func() {
-					next := transformers.New(context).FindBy(evens).Transform(in)
+					transformer := transformers.FindBy(evens)
+					transformer.(stream.Bindable).Bind(context)
+					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
 						So(next.Read(), ShouldBeEmpty)

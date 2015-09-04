@@ -15,7 +15,6 @@ type Stream struct {
 	consumers    *consumers.Builder
 	combiners    *combiners.Builder
 	dispatchers  *dispatchers.Builder
-	transformers *transformers.Builder
 }
 
 func From(producer stream.Producer) *Stream {
@@ -75,7 +74,6 @@ func (s *Stream) newFrom(readable stream.Readable) *Stream {
 		consumers:    s.consumers,
 		combiners:    s.combiners,
 		dispatchers:  s.dispatchers,
-		transformers: s.transformers,
 	}
 }
 
@@ -85,7 +83,6 @@ func NewWith(context stream.Context) *Stream {
 		consumers:    consumers.New(context),
 		combiners:    combiners.New(context),
 		dispatchers:  dispatchers.New(context),
-		transformers: transformers.New(context),
 	}
 }
 
@@ -133,60 +130,70 @@ func (s *Stream) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable)
 	return s.newFrom(s.dispatchers.If(fn).Dispatch(s.readable, writables...))
 }
 
-func (s *Stream) Apply(t stream.Transformer) *Stream {
-	return s.newFrom(t.Transform(s.readable))
+func (s *Stream) Apply(transformer stream.Transformer) *Stream {
+	if bindable, ok := transformer.(stream.Bindable); ok {
+		bindable.Bind(s.Context)
+	}
+
+	return &Stream{
+		readable:     transformer.Transform(s.readable),
+		Context:      s.Context,
+		consumers:    s.consumers,
+		combiners:    s.combiners,
+		dispatchers:  s.dispatchers,
+	}
 }
 
 func (s *Stream) Filter(fn stream.PredicateFn) *Stream {
-	return s.Apply(s.transformers.Filter(fn))
+	return s.Apply(transformers.Filter(fn))
 }
 
 func (s *Stream) OnData(fn stream.OnDataFn) *Stream {
-	return s.Apply(s.transformers.OnData(fn))
+	return s.Apply(transformers.OnData(fn))
 }
 
 func (s *Stream) Map(fn stream.MapFn) *Stream {
-	return s.Apply(s.transformers.Map(fn))
+	return s.Apply(transformers.Map(fn))
 }
 
 func (s *Stream) Each(fn stream.EachFn) *Stream {
-	return s.Apply(s.transformers.Each(fn))
+	return s.Apply(transformers.Each(fn))
 }
 
 func (s *Stream) FindBy(fn stream.PredicateFn) *Stream {
-	return s.Apply(s.transformers.FindBy(fn))
+	return s.Apply(transformers.FindBy(fn))
 }
 
 func (s *Stream) TakeFirst(n int) *Stream {
-	return s.Apply(s.transformers.TakeFirst(n))
+	return s.Apply(transformers.TakeFirst(n))
 }
 
 func (s *Stream) Take(fn stream.PredicateFn) *Stream {
-	return s.Apply(s.transformers.Take(fn))
+	return s.Apply(transformers.Take(fn))
 }
 
 func (s *Stream) Drop(fn stream.PredicateFn) *Stream {
-	return s.Apply(s.transformers.Drop(fn))
+	return s.Apply(transformers.Drop(fn))
 }
 
 func (s *Stream) Reduce(acc stream.T, fn stream.ReduceFn) *Stream {
-	return s.Apply(s.transformers.Reduce(acc, fn))
+	return s.Apply(transformers.Reduce(acc, fn))
 }
 
 func (s *Stream) Flatten() *Stream {
-	return s.Apply(s.transformers.Flatten())
+	return s.Apply(transformers.Flatten())
 }
 
 func (s *Stream) SortBy(fn stream.SortByFn) *Stream {
-	return s.Apply(s.transformers.SortBy(fn))
+	return s.Apply(transformers.SortBy(fn))
 }
 
 func (s *Stream) Batch(size int) *Stream {
-	return s.Apply(s.transformers.Batch(size))
+	return s.Apply(transformers.Batch(size))
 }
 
 func (s *Stream) BatchBy(batch stream.Batch) *Stream {
-	return s.Apply(s.transformers.BatchBy(batch))
+	return s.Apply(transformers.BatchBy(batch))
 }
 
 func (s *Stream) Sink() stream.Readable {
