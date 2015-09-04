@@ -1,11 +1,11 @@
 package producers
 
 import (
-	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/scanners"
+	"github.com/drborges/rivers/stream"
+	"net"
 	"os"
 	"reflect"
-	"net"
 )
 
 type Builder struct {
@@ -18,16 +18,11 @@ func New(c stream.Context) *Builder {
 
 func (b *Builder) FromRange(from, to int) stream.Producer {
 	return &Observable{
-		Context: b.context,
+		Context:  b.context,
 		Capacity: to - from,
-		Emit: func(w stream.Writable) {
+		Emit: func(emitter stream.Emitter) {
 			for i := from; i <= to; i++ {
-				select {
-				case <-b.context.Closed():
-					return
-				default:
-					w <- i
-				}
+				emitter.Emit(i)
 			}
 		},
 	}
@@ -45,16 +40,11 @@ func (b *Builder) FromSlice(slice stream.T) stream.Producer {
 	}
 
 	return &Observable{
-		Context: b.context,
+		Context:  b.context,
 		Capacity: sv.Len(),
-		Emit: func(w stream.Writable) {
+		Emit: func(emitter stream.Emitter) {
 			for i := 0; i < sv.Len(); i++ {
-				select {
-				case <-b.context.Closed():
-					break
-				default:
-					w <- sv.Index(i).Interface()
-				}
+				emitter.Emit(sv.Index(i).Interface())
 			}
 		},
 	}
@@ -70,9 +60,9 @@ func (b *Builder) FromFile(f *os.File) *fromFile {
 
 func (b *Builder) FromSocket(protocol, addr string, scanner scanners.Scanner) stream.Producer {
 	return &Observable{
-		Context: b.context,
+		Context:  b.context,
 		Capacity: 100,
-		Emit: func(w stream.Writable) {
+		Emit: func(emitter stream.Emitter) {
 			conn, err := net.Dial(protocol, addr)
 			if err != nil {
 				return
@@ -80,16 +70,11 @@ func (b *Builder) FromSocket(protocol, addr string, scanner scanners.Scanner) st
 
 			scanner.Attach(conn)
 			for {
-				select {
-				case <-b.context.Closed():
-					return
-				default:
-					if message, err := scanner.Scan(); err == nil {
-						w <- message
-						continue
-					}
-					return
+				if message, err := scanner.Scan(); err == nil {
+					emitter.Emit(message)
+					continue
 				}
+				return
 			}
 		},
 	}

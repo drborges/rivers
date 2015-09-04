@@ -4,11 +4,11 @@ import (
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/scanners"
 	"github.com/drborges/rivers/stream"
+	"github.com/drborges/rivers/transformers/from"
 	. "github.com/smartystreets/goconvey/convey"
 	"net"
 	"strings"
 	"testing"
-	"github.com/drborges/rivers/transformers/from"
 )
 
 func TestRiversAPI(t *testing.T) {
@@ -245,7 +245,7 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Data -> Map From Struct To JSON -> Sink", func() {
-			type Account struct{Name string}
+			type Account struct{ Name string }
 
 			items := rivers.FromData(Account{"Diego"}).Map(from.StructToJSON).Sink().Read()
 
@@ -253,7 +253,7 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Data -> Map From JSON To Struct -> Sink", func() {
-			type Account struct{Name string}
+			type Account struct{ Name string }
 
 			items := rivers.FromData([]byte(`{"Name":"Diego"}`)).Map(from.JSONToStruct(Account{})).Sink().Read()
 

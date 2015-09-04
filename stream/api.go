@@ -44,6 +44,10 @@ type Dispatcher interface {
 	Dispatch(from Readable, to ...Writable) (sink Readable)
 }
 
+type Emitter interface {
+	Emit(data T)
+}
+
 type Batch interface {
 	Commit(Writable)
 	Full() bool
