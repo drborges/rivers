@@ -2,20 +2,6 @@ package producers
 
 import "github.com/drborges/rivers/stream"
 
-type Emitter struct {
-	context  stream.Context
-	writable stream.Writable
-}
-
-func (emitter *Emitter) Emit(data stream.T) {
-	select {
-	case <-emitter.context.Closed():
-		panic("Context is closed")
-	default:
-		emitter.writable <- data
-	}
-}
-
 // TODO Implement Bindable interface to avoid users having to explicitly provide a context
 // rivers could take care of that instead.
 type Observable struct {
@@ -39,7 +25,7 @@ func (observable *Observable) Produce() stream.Readable {
 		defer close(writable)
 
 		if observable.Emit != nil {
-			observable.Emit(&Emitter{observable.context, writable})
+			observable.Emit(stream.NewEmitter(observable.context, writable))
 		}
 	}()
 
