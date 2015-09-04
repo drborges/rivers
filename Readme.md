@@ -50,7 +50,7 @@ type Producer interface {
 
 Producers implement the [pipeline pattern](https://blog.golang.org/pipelines) in order to asynchronously produce items that will be eventually consumed by a further stage in the pipeline.
 
-A good producer implementation takes care of 3 important aspects:
+A good producer implementation takes care of at least 3 important aspects:
 
 1. Checks if rivers context is still opened before emitting any item
 2. Defers the recover function from rivers context as part of the goroutine execution
@@ -85,7 +85,7 @@ func (producer *NumbersProducer) Produce() stream.Readable {
 }
 ```
 
-The code above is a complaint `rivers.Producer` implementation and it gives the developer full control of the process. Rivers also provides a partial producer implementation that you can use for most cases: `producers.Observable`.
+The code above is a complaint `rivers.Producer` implementation and it gives the developer full control of the process. Rivers also provides an `Observable` type that implements `stream.Producer` covering the basic 3 aspects mentioned above that you can use for most cases: `producers.Observable`.
 
 Our producer implementation in terms of an observable would then look like:
 
@@ -94,14 +94,9 @@ func NewNumbersProducer(context stream.Context, numbers []int) stream.Producer {
 	return &Observable{
 		Context:  context,
 		Capacity: len(numbers),
-		Emit: func(w stream.Writable) {
+		Emit: func(emitter stream.Emitter) {
 			for _, n := range numbers {
-				select {
-				case <-context.Closed:
-					return
-				default:
-					writable <- n
-				}
+				emitter.Emit(n)
 			}
 		},
 	}
