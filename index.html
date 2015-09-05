@@ -57,7 +57,7 @@
 
 <p>A pipeline often assumes the following format: <code>Producer</code>, one or more <code>Transformers</code> and an optional <code>Consumer</code></p>
 
-<p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png" alt="Basic Stream"></p>
+<p>-&gt;<img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png" alt="Basic Stream">&lt;-</p>
 
 <p>For more complex formats check the <code>Combiners</code> and <code>Dispatchers</code> sections.</p>
 
@@ -208,7 +208,7 @@
 
 <p>Basic Stream Transformation Pipeline: <code>Producer -&gt; Transformer -&gt; Consumer</code></p>
 
-<p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png" alt="Basic Stream"></p>
+<p>-&gt;<img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png" alt="Basic Stream">&lt;-</p>
 
 <p>Aiming extensibility, rivers allow you to implement your own version of <code>stream.Transformer</code>. The following code implements a <code>filter</code> in terms of <code>stream.Transformer</code>:</p>
 
@@ -288,7 +288,7 @@
 
 <p>Combining Streams Pipeline: <code>Producers -&gt; Combiner -&gt; Transformer -&gt; Consumer</code></p>
 
-<p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png" alt="Combining Streams"></p>
+<p>-&gt;<img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png" alt="Combining Streams">&lt;-</p>
 
 <p>The following example combines data from 3 different streams into a single stream:</p>
 
@@ -322,11 +322,12 @@
 
 <p>Dispatching data to multiple targets in a pipeline would look like: <code>Producer -&gt; Dispatcher -&gt; Transformers -&gt; Consumers</code></p>
 
-<p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png" alt="Dispatching To Streams"></p>
+<p>-&gt;<img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png" alt="Dispatching To Streams">&lt;-</p>
 
 <p>The following code show a use case for the <code>Partition</code> operation mentioned above:</p>
 
-<div class="highlight highlight-go"><pre><span class="pl-smi">inactiveUsers</span>, <span class="pl-smi">activeUsers</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">UserSessionsAPI</span>(httpClient)).<span class="pl-c1">Partition</span>(inactiveForOver7Days)</pre></div>
+<div class="highlight highlight-go"><pre><span class="pl-smi">inactiveUsers</span>, <span class="pl-smi">activeUsers</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">UserSessionsAPI</span>(httpClient)).
+    <span class="pl-c1">Partition</span>(inactiveForOver7Days)</pre></div>
 
 <p>The example above forks the original stream into two others based on the given <code>predicate</code>. Data is then dynamically dispatched to either stream based on the predicate result.</p>
 
