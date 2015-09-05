@@ -1,4 +1,4 @@
-# Rivers ![Basic Stream](docs/rivers-logo.png)
+# Rivers ![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/https://raw.githubusercontent.com/drborges/rivers/master/docs/rivers-logo.png)
 
 [![Build Status](https://travis-ci.org/drborges/rivers.svg?branch=master)](https://travis-ci.org/drborges/rivers)
 
@@ -6,7 +6,7 @@ Data Stream Processing API for GO
 
 # Overview
 
-Rivers provide a simple though powerful API for processing streams of data built on top of `goroutines`, `channels` and the [pipeline pattern](https://blog.golang.org/pipelines).
+Rivers provides a simple though powerful API for processing streams of data built on top of `goroutines`, `channels` and the [pipeline pattern](https://blog.golang.org/pipelines).
 
 ```go
 err := rivers.From(NewGithubRepositoryProducer(httpClient)).
@@ -25,11 +25,11 @@ With a few basic building blocks based on the `Producer-Consumer` model, you can
 
 A particular stream pipeline may be built composing building blocks such as `producers`,  `consumers`,  `transformers`, `combiners` and `dispatchers`.
 
-### Stream ![Basic Stream](docs/stream.png)
+### Stream ![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream.png)
 
 Streams are simply readable or writable channels where data flows through `asynchronously`. They are usually created by `producers` providing data from a particular data source, for example `files`, `network` (socket data, API responses), or even as simple as regular `slice` of data to be processed.
 
-Rivers provide a `stream` package with a constructor function for creating streams as follows:
+Rivers provides a `stream` package with a constructor function for creating streams as follows:
 
 ```go
 capacity := 100
@@ -38,7 +38,7 @@ readable, writable := stream.New(capacity)
 
 Streams are buffered and the `capacity` parameter dictates how many items can be produced into the stream without being consumed until the producer is blocked. This blocking mechanism is natively implemented by Go channels, and is a form of `back-pressuring` the pipeline.
 
-### Producers ![Basic Stream](docs/producer.png)
+### Producers ![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/producer.png)
 
 Asynchronously emits data into a stream. Any struct implementing the `stream.Producer` interface can be used as a producer in rivers.
 
@@ -96,7 +96,7 @@ The code above is a complaint `rivers.Producer` implementation and it gives the 
 Our producer implementation in terms of an observable would then look like:
 
 ```go
-func NewNumbersProducer(context stream.Context, numbers []int) stream.Producer {
+func NewNumbersProducer(numbers []int) stream.Producer {
 	return &Observable{
 		Capacity: len(numbers),
 		Emit: func(emitter stream.Emitter) {
@@ -108,7 +108,7 @@ func NewNumbersProducer(context stream.Context, numbers []int) stream.Producer {
 }
 ```
 
-### Consumers ![Basic Stream](docs/consumer.png)
+### Consumers ![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/consumer.png)
 
 Consumes data from a particular stream. Consumers block the process until there is no more data to be consumed out of the stream.
 
@@ -152,7 +152,7 @@ var borges Person
 err := rivers.FromData(diego, borges).CollectLastAs(&diego)
 ```
 
-### Transformers ![Dispatching To Streams](docs/transformer.png)
+### Transformers ![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/transformer.png)
 
 Reads data from a particular stream applying a transformation function to it, optionally forwarding the result to an output channel. Transformers implement the interface `stream.Transformer`
 
@@ -166,7 +166,7 @@ There are a variety of transform operations built-in in rivers, to name a few: `
 
 Basic Stream Transformation Pipeline: `Producer -> Transformer -> Consumer`
 
-![Basic Stream](docs/stream-transformation.png)
+![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)
 
 Aiming extensibility, rivers allow you to implement your own version of `stream.Transformer`. The following code implements a `filter` in terms of `stream.Transformer`:
 
@@ -217,7 +217,7 @@ filter := &Filter{stream.Context, evensOnly}
 evens, err := stream.Apply(filter).Collect()
 ```
 
-In order to reduce some of the boilerplate, rivers provide a generic implementation of `stream.Transformer` that you can use to implement many use cases: `transformers.Observer`. The filter above can be rewritten as:
+In order to reduce some of the boilerplate, rivers provides a generic implementation of `stream.Transformer` that you can use to implement many use cases: `transformers.Observer`. The filter above can be rewritten as:
 
 ```go
 func NewFilter(fn stream.PredicateFn) stream.Transformer {
@@ -234,21 +234,50 @@ func NewFilter(fn stream.PredicateFn) stream.Transformer {
 evens, err := rivers.FromRange(1, 10).Apply(NewFilter(evensOnly)).Collect()
 ```
 
-### Combiners ![Dispatching To Streams](docs/combiner.png)
+The observer `OnNext` function may return `stream.Done` in order to finish its work explicitly stopping the pipeline. This is useful for implementing short-circuit operations such as `find`, `any`, etc...
 
-Combines two or more streams into a single stream. Combiners may apply different strategies such as FIFO, Zip, etc.
+### Combiners ![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/combiner.png)
 
-Combining Streams: `Producers -> Combiner -> Transformer -> Consumer`
+Combining streams is often a useful operation and rivers makes it easy with its pre-baked combiner implementations `FIFO`, `Zip` and `ZipBy`. A combiner implements `stream.Combiner` interface:
 
-![Combining Streams](docs/stream-combiner.png)
+```go
+type Combiner interface {
+	Combine(in ...Readable) (out Readable)
+}
+```
 
-### Dispatchers ![Dispatching To Streams](docs/dispatcher.png)
+It essentially takes one or more readable streams and gives you back a readable stream which is the result of combining all the inputs.
+
+Combining Streams Pipeline: `Producers -> Combiner -> Transformer -> Consumer`
+
+![Combining Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png)
+
+The following example combines data from 3 different streams into a single stream:
+
+```go
+facebookMentions := rivers.From(FacebookPosts(httpClient)).
+	Map(ExtractMentionsTo("diego.rborges"))
+
+twitterMentions := rivers.From(TwitterFeed(httpClient)).
+	Map(ExtractMentionsTo("dr_borges"))
+
+githubMentions := rivers.From(GithubRiversCommits(httpClient)).
+	Map(ExtractMentionsTo("drborges"))
+
+err := facebookMentions.Merge(
+	twitterMentions.Sink(),
+	githubMentions.Sink()).Take(mentionsFrom3DaysAgo).Each(prettyPrint).Drain()
+```
+
+Note that the `Sink` method of a `rivers.Stream` returns the underlying `stream.Readable`.
+
+### Dispatchers ![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/dispatcher.png)
 
 Forwards data from a particular stream to one or more streams. Dispatchers may dispatch data conditionally such as the rivers Partition operation.
 
 Dispatching to multiple streams: `Producer -> Dispatcher -> Transformers -> Consumers`
 
-![Dispatching To Streams](docs/stream-dispatcher.png)
+![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png)
 
 # Examples
 
