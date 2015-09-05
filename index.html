@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Rivers : Data Stream Processing API for GO">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Rivers</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/drborges/rivers">View on GitHub</a>
+
+          <h1 id="project_title">Rivers</h1>
+          <h2 id="project_tagline">Data Stream Processing API for GO</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/drborges/rivers/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/drborges/rivers/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="rivers-" class="anchor" href="#rivers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Rivers <img src="docs/rivers-logo.png" alt="Basic Stream">
+</h1>
+
+<p><a href="https://travis-ci.org/drborges/rivers"><img src="https://travis-ci.org/drborges/rivers.svg?branch=master" alt="Build Status"></a></p>
+
+<p>Data Stream Processing API for GO</p>
+
+<h1>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h1>
+
+<p>Rivers provide a simple though powerful API for processing streams of data built on top of <code>goroutines</code>, <code>channels</code> and the <a href="https://blog.golang.org/pipelines">pipeline pattern</a>.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">NewGithubRepositoryProducer</span>(httpClient)).
+    <span class="pl-c1">Filter</span>(hasForks).
+    <span class="pl-c1">Filter</span>(hasRecentActivity).
+    <span class="pl-c1">Drop</span>(<span class="pl-c1">ifStarsCountIsLessThan</span>(<span class="pl-c1">50</span>)).
+    <span class="pl-c1">Map</span>(extractAuthorInformation).
+    <span class="pl-c1">Batch</span>(<span class="pl-c1">200</span>).
+    <span class="pl-c1">Each</span>(saveBatch).
+    <span class="pl-c1">Drain</span>()</pre></div>
+
+<p>With a few basic building blocks based on the <code>Producer-Consumer</code> model, you can compose and create complex data processing pipelines for solving a variety of problems.</p>
+
+<h1>
+<a id="building-blocks" class="anchor" href="#building-blocks" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building Blocks</h1>
+
+<p>A particular stream pipeline may be built composing building blocks such as <code>producers</code>,  <code>consumers</code>,  <code>transformers</code>, <code>combiners</code> and <code>dispatchers</code>.</p>
+
+<h3>
+<a id="stream-" class="anchor" href="#stream-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stream <img src="docs/stream.png" alt="Basic Stream">
+</h3>
+
+<p>Streams are simply readable or writable channels where data flows through <code>asynchronously</code>. They are usually created by <code>producers</code> providing data from a particular data source, for example <code>files</code>, <code>network</code> (socket data, API responses), or even as simple as regular <code>slice</code> of data to be processed.</p>
+
+<p>Rivers provide a <code>stream</code> package with a constructor function for creating streams as follows:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">capacity</span> <span class="pl-k">:=</span> <span class="pl-c1">100</span>
+<span class="pl-smi">readable</span>, <span class="pl-smi">writable</span> <span class="pl-k">:=</span> stream.<span class="pl-c1">New</span>(capacity)</pre></div>
+
+<p>Streams are buffered and the <code>capacity</code> parameter dictates how many items can be produced into the stream without being consumed until the producer is blocked. This blocking mechanism is natively implemented by Go channels, and is a form of <code>back-pressuring</code> the pipeline.</p>
+
+<h3>
+<a id="producers-" class="anchor" href="#producers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Producers <img src="docs/producer.png" alt="Basic Stream">
+</h3>
+
+<p>Asynchronously emits data into a stream. Any struct implementing the <code>stream.Producer</code> interface can be used as a producer in rivers.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">Producer</span> <span class="pl-k">interface</span> {
+    <span class="pl-c1">Produce</span>() stream.<span class="pl-smi">Readable</span>
+}</pre></div>
+
+<p>Producers implement the <a href="https://blog.golang.org/pipelines">pipeline pattern</a> in order to asynchronously produce items that will be eventually consumed by a further stage in the pipeline. Rivers provides a few implementations of producers such as:</p>
+
+<ul>
+<li><code>rivers.FromRange(0, 1000)</code></li>
+<li><code>rivers.FromSlice(slice)</code></li>
+<li><code>rivers.FromData(1, 2, "a", "b", Person{Name:"Diego"})</code></li>
+<li><code>rivers.FromFile(aFile).ByLine()</code></li>
+<li><code>rivers.FromSocket("tcp", ":8484")</code></li>
+</ul>
+
+<p>A good producer implementation takes care of at least 3 important aspects:</p>
+
+<ol>
+<li>Checks if rivers context is still opened before emitting any item</li>
+<li>Defers the recover function from rivers context as part of the goroutine execution (For more see <code>Cancellation</code> topic)</li>
+<li>Closes the writable stream at the end of the go routine. By closing the channel further stages of the pipeline know when their work is done.</li>
+</ol>
+
+<p>Lets see how one would go about converting a slice of numbers into a stream with a simple Producer implementation:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">NumbersProducer</span> <span class="pl-k">struct</span> {
+    context stream.<span class="pl-smi">Context</span>
+    numbers []<span class="pl-k">int</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">producer</span> *<span class="pl-v">NumbersProducer</span>) <span class="pl-en">Produce</span></span>() <span class="pl-v">stream</span>.<span class="pl-v">Readable</span> {
+    <span class="pl-smi">readable</span>, <span class="pl-smi">writable</span> <span class="pl-k">:=</span> stream.<span class="pl-c1">New</span>(<span class="pl-c1">len</span>(producer.<span class="pl-smi">numbers</span>))
+
+    <span class="pl-k">go</span> <span class="pl-k">func</span>() {
+        <span class="pl-k">defer</span> producer.<span class="pl-smi">context</span>.<span class="pl-c1">Recover</span>()
+        <span class="pl-k">defer</span> <span class="pl-c1">close</span>(writable)
+
+        <span class="pl-k">for</span> <span class="pl-smi">_</span>, <span class="pl-smi">n</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> producer.<span class="pl-smi">numbers</span> {
+            <span class="pl-k">select</span> {
+            <span class="pl-k">case</span> <span class="pl-k">&lt;-</span>producer.<span class="pl-smi">context</span>.<span class="pl-smi">Closed</span>:
+                <span class="pl-k">return</span>
+            <span class="pl-k">default</span>:
+                writable <span class="pl-k">&lt;-</span> n
+            }
+        }
+    }()
+
+    <span class="pl-k">return</span> readable
+}</pre></div>
+
+<p>The code above is a complaint <code>rivers.Producer</code> implementation and it gives the developer full control of the process. Rivers also provides an <code>Observable</code> type that implements <code>stream.Producer</code> covering the basic 3 aspects mentioned above that you can use for most cases: <code>producers.Observable</code>.</p>
+
+<p>Our producer implementation in terms of an observable would then look like:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">func</span> <span class="pl-en">NewNumbersProducer</span>(<span class="pl-v">context</span> <span class="pl-v">stream</span>.<span class="pl-v">Context</span>, <span class="pl-v">numbers</span> []<span class="pl-v">int</span>) <span class="pl-v">stream</span>.<span class="pl-v">Producer</span> {
+    <span class="pl-k">return</span> &amp;Observable{
+        Capacity: <span class="pl-c1">len</span>(numbers),
+        Emit: <span class="pl-c1">func</span>(emitter stream.<span class="pl-smi">Emitter</span>) {
+            <span class="pl-k">for</span> <span class="pl-smi">_</span>, <span class="pl-smi">n</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> numbers {
+                emitter.<span class="pl-c1">Emit</span>(n)
+            }
+        },
+    }
+}</pre></div>
+
+<h3>
+<a id="consumers-" class="anchor" href="#consumers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Consumers <img src="docs/consumer.png" alt="Basic Stream">
+</h3>
+
+<p>Consumes data from a particular stream. Consumers block the process until there is no more data to be consumed out of the stream.</p>
+
+<p>You can use consumers to collect the items reaching the end of the pipeline, or any errors that might have happened during the execution.</p>
+
+<p>It is very likely you will most often need a final consumer in your pipeline for waiting for the pipeline result before moving on.</p>
+
+<p>Rivers has a few built-in consumers, among them you will find:</p>
+
+<ol>
+<li><p><code>Drainers</code> which block draining the stream until there is no more data flowing through and returning any possible errors.</p></li>
+<li><p><code>Collectors</code> collect all items that reached the end of the pipeline and any possible error.</p></li>
+</ol>
+
+<p>Say we have a stream where instances of <code>Person</code> are flowing through, then you can collect items off the stream like so:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">Person</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Name</span> <span class="pl-k">string</span>
+}
+
+<span class="pl-smi">diego</span> <span class="pl-k">:=</span> <span class="pl-v">Person</span>{<span class="pl-s"><span class="pl-pds">"</span>Diego<span class="pl-pds">"</span></span>}
+<span class="pl-smi">borges</span> <span class="pl-k">:=</span> <span class="pl-v">Person</span>{<span class="pl-s"><span class="pl-pds">"</span>Borges<span class="pl-pds">"</span></span>}
+
+<span class="pl-smi">items</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromData</span>(diego, borges).<span class="pl-c1">Collect</span>()
+<span class="pl-c">// items == []stream.T{Person{"Diego"}, Person{"Borges"}}</span>
+
+<span class="pl-smi">item</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromData</span>(diego, borges).<span class="pl-c1">CollectFirst</span>()
+<span class="pl-c">// item == Person{"Diego"}</span>
+
+<span class="pl-smi">item</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromData</span>(diego, borges).<span class="pl-c1">CollectLast</span>()
+<span class="pl-c">// item == Person{"Borges"}</span>
+
+<span class="pl-k">var</span> <span class="pl-smi">people</span> []<span class="pl-v">Person</span>
+<span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromData</span>(diego, borges).<span class="pl-c1">CollectAs</span>(&amp;people)
+<span class="pl-c">// people == []Person{{"Diego"}, {"Borges"}}</span>
+
+<span class="pl-k">var</span> <span class="pl-smi">diego</span> <span class="pl-v">Person</span>
+<span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromData</span>(diego, borges).<span class="pl-c1">CollectFirstAs</span>(&amp;diego)
+
+<span class="pl-k">var</span> <span class="pl-smi">borges</span> <span class="pl-v">Person</span>
+<span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromData</span>(diego, borges).<span class="pl-c1">CollectLastAs</span>(&amp;diego)</pre></div>
+
+<h3>
+<a id="transformers-" class="anchor" href="#transformers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Transformers <img src="docs/transformer.png" alt="Dispatching To Streams">
+</h3>
+
+<p>Reads data from a particular stream applying a transformation function to it, optionally forwarding the result to an output channel. Transformers implement the interface <code>stream.Transformer</code></p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">Transformer</span> <span class="pl-k">interface</span> {
+    <span class="pl-c1">Transform</span>(in stream.<span class="pl-smi">Readable</span>) (out stream.<span class="pl-smi">Readable</span>)
+}</pre></div>
+
+<p>There are a variety of transform operations built-in in rivers, to name a few: <code>Map</code>, <code>Filter</code>, <code>Each</code>, <code>Flatten</code>, <code>Drop</code>, <code>Take</code>, etc...</p>
+
+<p>Basic Stream Transformation Pipeline: <code>Producer -&gt; Transformer -&gt; Consumer</code></p>
+
+<p><img src="docs/stream-transformation.png" alt="Basic Stream"></p>
+
+<p>Aiming extensibility, rivers allow you to implement your own version of <code>stream.Transformer</code>. The following code implements a <code>filter</code> in terms of <code>stream.Transformer</code>:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">Filter</span> <span class="pl-k">struct</span> {
+    context stream.<span class="pl-smi">Context</span>
+    fn      stream.<span class="pl-smi">PredicateFn</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">filter</span> *<span class="pl-v">Filter</span>) <span class="pl-en">Transform</span></span>(<span class="pl-v">in</span> <span class="pl-v">stream</span>.<span class="pl-v">Readable</span>) <span class="pl-v">stream</span>.<span class="pl-v">Readable</span> {
+    <span class="pl-smi">readable</span>, <span class="pl-smi">writable</span> <span class="pl-k">:=</span> stream.<span class="pl-c1">New</span>(<span class="pl-c1">cap</span>(in))
+
+    <span class="pl-k">go</span> <span class="pl-k">func</span>() {
+        <span class="pl-k">defer</span> filter.<span class="pl-smi">context</span>.<span class="pl-c1">Recover</span>()
+        <span class="pl-k">defer</span> <span class="pl-c1">close</span>(writable)
+
+        <span class="pl-k">for</span> {
+            <span class="pl-k">select</span> {
+            <span class="pl-k">case</span> <span class="pl-k">&lt;-</span>filter.<span class="pl-smi">context</span>.<span class="pl-c1">Closed</span>():
+                <span class="pl-k">return</span>
+            <span class="pl-k">default</span>:
+                <span class="pl-smi">data</span>, <span class="pl-smi">more</span> <span class="pl-k">:=</span> <span class="pl-k">&lt;-</span>in
+                <span class="pl-k">if</span> !more {
+                    <span class="pl-k">return</span>
+                }
+                <span class="pl-k">if</span> filter.<span class="pl-c1">fn</span>(data) {
+                    writable <span class="pl-k">&lt;-</span> data
+                }
+            }
+        }
+    }()
+
+    <span class="pl-k">return</span> readable
+}</pre></div>
+
+<p>Note that the transformer above also takes care of those <code>3 aspects</code> mentioned in the <code>producer</code> implementation. You could use this transformer like so:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">stream</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromRange</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>)
+
+<span class="pl-smi">evensOnly</span> <span class="pl-k">:=</span> <span class="pl-c1">func</span>(data stream.<span class="pl-smi">T</span>) <span class="pl-k">bool</span> {
+    <span class="pl-k">return</span> data.(<span class="pl-k">int</span>) % <span class="pl-c1">2</span> == <span class="pl-c1">0</span>
+}
+
+<span class="pl-smi">filter</span> <span class="pl-k">:=</span> &amp;Filter{stream.<span class="pl-smi">Context</span>, evensOnly}
+
+<span class="pl-smi">evens</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> stream.<span class="pl-c1">Apply</span>(filter).<span class="pl-c1">Collect</span>()</pre></div>
+
+<p>In order to reduce some of the boilerplate, rivers provide a generic implementation of <code>stream.Transformer</code> that you can use to implement many use cases: <code>transformers.Observer</code>. The filter above can be rewritten as:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">func</span> <span class="pl-en">NewFilter</span>(<span class="pl-v">fn</span> <span class="pl-v">stream</span>.<span class="pl-v">PredicateFn</span>) <span class="pl-v">stream</span>.<span class="pl-v">Transformer</span> {
+    <span class="pl-k">return</span> &amp;Observer{
+        OnNext: <span class="pl-c1">func</span>(data stream.<span class="pl-smi">T</span>, emitter stream.<span class="pl-smi">Emitter</span>) <span class="pl-k">error</span> {
+            <span class="pl-k">if</span> <span class="pl-c1">fn</span>(data) {
+                emitter.<span class="pl-c1">Emit</span>(data)
+            }
+            <span class="pl-k">return</span> <span class="pl-c1">nil</span>
+        },
+    }
+}
+
+<span class="pl-smi">evens</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromRange</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>).<span class="pl-c1">Apply</span>(<span class="pl-c1">NewFilter</span>(evensOnly)).<span class="pl-c1">Collect</span>()</pre></div>
+
+<h3>
+<a id="combiners-" class="anchor" href="#combiners-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Combiners <img src="docs/combiner.png" alt="Dispatching To Streams">
+</h3>
+
+<p>Combines two or more streams into a single stream. Combiners may apply different strategies such as FIFO, Zip, etc.</p>
+
+<p>Combining Streams: <code>Producers -&gt; Combiner -&gt; Transformer -&gt; Consumer</code></p>
+
+<p><img src="docs/stream-combiner.png" alt="Combining Streams"></p>
+
+<h3>
+<a id="dispatchers-" class="anchor" href="#dispatchers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dispatchers <img src="docs/dispatcher.png" alt="Dispatching To Streams">
+</h3>
+
+<p>Forwards data from a particular stream to one or more streams. Dispatchers may dispatch data conditionally such as the rivers Partition operation.</p>
+
+<p>Dispatching to multiple streams: <code>Producer -&gt; Dispatcher -&gt; Transformers -&gt; Consumers</code></p>
+
+<p><img src="docs/stream-dispatcher.png" alt="Dispatching To Streams"></p>
+
+<h1>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples</h1>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">evensOnly</span> <span class="pl-k">:=</span> <span class="pl-c1">func</span>(data stream.<span class="pl-smi">T</span>) <span class="pl-k">bool</span> { <span class="pl-k">return</span> data.(<span class="pl-k">int</span>) % <span class="pl-c1">2</span> == <span class="pl-c1">0</span> }
+<span class="pl-smi">addOne</span> <span class="pl-k">:=</span> <span class="pl-c1">func</span>(data stream.<span class="pl-smi">T</span>) stream.<span class="pl-smi">T</span> { <span class="pl-k">return</span> data.(<span class="pl-k">int</span>) + <span class="pl-c1">1</span> }
+
+<span class="pl-smi">data</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromRange</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>).<span class="pl-c1">Filter</span>(evensOnly).<span class="pl-c1">Map</span>(addOne).<span class="pl-c1">Collect</span>()
+
+fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>data:<span class="pl-pds">"</span></span>, data)
+fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>err:<span class="pl-pds">"</span></span>, err)
+
+<span class="pl-c">// Output:</span>
+<span class="pl-c">// data: []stream.T{3, 5, 7, 9, 11}</span>
+<span class="pl-c">// err: nil</span></pre></div>
+
+<h1>
+<a id="built-in-filters-and-mappers" class="anchor" href="#built-in-filters-and-mappers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Built-in Filters and Mappers</h1>
+
+<h1>
+<a id="custom-producers" class="anchor" href="#custom-producers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Producers</h1>
+
+<h1>
+<a id="custom-transformers" class="anchor" href="#custom-transformers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Transformers</h1>
+
+<h1>
+<a id="the-cancellation-problem" class="anchor" href="#the-cancellation-problem" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Cancellation Problem</h1>
+
+<h1>
+<a id="troubleshooting" class="anchor" href="#troubleshooting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Troubleshooting</h1>
+
+<h1>
+<a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributing</h1>
+
+<h1>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h1>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Rivers maintained by <a href="https://github.com/drborges">drborges</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
