@@ -12,7 +12,6 @@ import (
 type Stream struct {
 	readable    stream.Readable
 	Context     stream.Context
-	consumers   *consumers.Builder
 	dispatchers *dispatchers.Builder
 }
 
@@ -70,7 +69,6 @@ func (s *Stream) newFrom(readable stream.Readable) *Stream {
 	return &Stream{
 		readable:    readable,
 		Context:     s.Context,
-		consumers:   s.consumers,
 		dispatchers: s.dispatchers,
 	}
 }
@@ -79,7 +77,6 @@ func NewWith(context stream.Context) *Stream {
 	return &Stream{
 		Context:     context,
 		readable:    stream.NewEmpty(),
-		consumers:   consumers.New(context),
 		dispatchers: dispatchers.New(context),
 	}
 }
@@ -151,7 +148,6 @@ func (s *Stream) Apply(transformer stream.Transformer) *Stream {
 	return &Stream{
 		readable:    transformer.Transform(s.readable),
 		Context:     s.Context,
-		consumers:   s.consumers,
 		dispatchers: s.dispatchers,
 	}
 }
@@ -213,6 +209,9 @@ func (s *Stream) Sink() stream.Readable {
 }
 
 func (s *Stream) Then(consumer stream.Consumer) error {
+	if bindable, ok := consumer.(stream.Bindable); ok {
+		bindable.Bind(s.Context)
+	}
 	consumer.Consume(s.readable)
 	return s.Context.Err()
 }
@@ -223,7 +222,7 @@ func (s *Stream) Collect() ([]stream.T, error) {
 }
 
 func (s *Stream) CollectAs(data interface{}) error {
-	return s.Then(s.consumers.ItemsCollector(data))
+	return s.Then(consumers.ItemsCollector(data))
 }
 
 func (s *Stream) CollectFirst() (stream.T, error) {
@@ -232,7 +231,7 @@ func (s *Stream) CollectFirst() (stream.T, error) {
 }
 
 func (s *Stream) CollectFirstAs(data interface{}) error {
-	return s.TakeFirst(1).Then(s.consumers.LastItemCollector(data))
+	return s.TakeFirst(1).Then(consumers.LastItemCollector(data))
 }
 
 func (s *Stream) CollectLast() (stream.T, error) {
@@ -241,9 +240,9 @@ func (s *Stream) CollectLast() (stream.T, error) {
 }
 
 func (s *Stream) CollectLastAs(data interface{}) error {
-	return s.Then(s.consumers.LastItemCollector(data))
+	return s.Then(consumers.LastItemCollector(data))
 }
 
 func (s *Stream) Drain() error {
-	return s.Then(s.consumers.Drainer())
+	return s.Then(consumers.Drainer())
 }

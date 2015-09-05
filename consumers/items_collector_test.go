@@ -20,7 +20,9 @@ func TestItemsCollector(t *testing.T) {
 
 			Convey("When I apply the collector consumer", func() {
 				var data []stream.T
-				consumers.New(context).ItemsCollector(&data).Consume(in)
+				consumer := consumers.ItemsCollector(&data)
+				consumer.(stream.Bindable).Bind(context)
+				consumer.Consume(in)
 
 				Convey("Then data is collected out of the stream", func() {
 					So(data, ShouldResemble, []stream.T{1, 2})
@@ -34,7 +36,7 @@ func TestItemsCollector(t *testing.T) {
 			Convey("When I apply the collector consuming data into a non slice pointer", func() {
 				var data []stream.T
 				collect := func() {
-					consumers.New(context).ItemsCollector(data)
+					consumers.ItemsCollector(data)
 				}
 
 				Convey("Then it panics", func() {

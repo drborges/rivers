@@ -10,6 +10,10 @@ type itemsCollector struct {
 	container reflect.Value
 }
 
+func (collector *itemsCollector) Bind(context stream.Context) {
+	collector.context = context
+}
+
 func (collector *itemsCollector) Consume(in stream.Readable) {
 	for {
 		select {

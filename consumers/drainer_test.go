@@ -19,7 +19,9 @@ func TestDrainer(t *testing.T) {
 			close(out)
 
 			Convey("When I apply the drainer consumer", func() {
-				consumers.New(context).Drainer().Consume(in)
+				consumer := consumers.Drainer()
+				consumer.(stream.Bindable).Bind(context)
+				consumer.Consume(in)
 
 				Convey("Then the stream is drained", func() {
 					data, opened := <-in

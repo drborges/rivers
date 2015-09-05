@@ -20,7 +20,9 @@ func TestLastItemCollector(t *testing.T) {
 
 			Convey("When I apply the collector consumer", func() {
 				var number int
-				consumers.New(context).LastItemCollector(&number).Consume(in)
+				consumer := consumers.LastItemCollector(&number)
+				consumer.(stream.Bindable).Bind(context)
+				consumer.Consume(in)
 
 				Convey("Then data is collected out of the stream", func() {
 					So(number, ShouldResemble, 2)
@@ -33,7 +35,7 @@ func TestLastItemCollector(t *testing.T) {
 			Convey("When I apply the collector consuming data into a non pointer", func() {
 				var number int
 				collect := func() {
-					consumers.New(context).LastItemCollector(number)
+					consumers.LastItemCollector(number)
 				}
 
 				Convey("Then it panics", func() {

@@ -11,19 +11,11 @@ var (
 	ErrNoSuchSlicePointer = errors.New("Element is not a pointer to a slice")
 )
 
-type Builder struct {
-	context stream.Context
+func Drainer() stream.Consumer {
+	return &drainer{}
 }
 
-func New(c stream.Context) *Builder {
-	return &Builder{c}
-}
-
-func (builder *Builder) Drainer() stream.Consumer {
-	return &drainer{builder.context}
-}
-
-func (builder *Builder) ItemsCollector(dst interface{}) stream.Consumer {
+func ItemsCollector(dst interface{}) stream.Consumer {
 	slicePtr := reflect.ValueOf(dst)
 
 	if slicePtr.Kind() != reflect.Ptr || slicePtr.Elem().Kind() != reflect.Slice {
@@ -31,12 +23,11 @@ func (builder *Builder) ItemsCollector(dst interface{}) stream.Consumer {
 	}
 
 	return &itemsCollector{
-		context:   builder.context,
 		container: slicePtr.Elem(),
 	}
 }
 
-func (builder *Builder) LastItemCollector(dst interface{}) stream.Consumer {
+func LastItemCollector(dst interface{}) stream.Consumer {
 	slicePtr := reflect.ValueOf(dst)
 
 	if slicePtr.Kind() != reflect.Ptr {
@@ -44,7 +35,6 @@ func (builder *Builder) LastItemCollector(dst interface{}) stream.Consumer {
 	}
 
 	return &itemCollector{
-		context: builder.context,
-		item:    slicePtr.Elem(),
+		item: slicePtr.Elem(),
 	}
 }
