@@ -87,8 +87,13 @@ func TestRiversAPI(t *testing.T) {
 				Map(add(2)).
 				Collect()
 
-			So(in.ReadAll(), ShouldResemble, []stream.T{2, 4})
-			So(notDispatched, ShouldResemble, []stream.T{3, 5, 7})
+			data := in.ReadAll()
+			So(data, ShouldContain, 2)
+			So(data, ShouldContain, 4)
+
+			So(notDispatched, ShouldContain, 3)
+			So(notDispatched, ShouldContain, 5)
+			So(notDispatched, ShouldContain, 7)
 		})
 
 		Convey("Zip -> Map", func() {
@@ -112,12 +117,16 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("Merge -> Map", func() {
-			numbers := rivers.FromData(1, 2, 3, 4)
-			moreNumbers := rivers.FromData(4, 4, 1)
+			numbers := rivers.FromData(1, 2)
+			moreNumbers := rivers.FromData(3, 4)
 
 			combined, _ := numbers.Merge(moreNumbers.Stream).Collect()
 
-			So(combined, ShouldResemble, []stream.T{1, 2, 3, 4, 4, 4, 1})
+			So(len(combined), ShouldEqual, 4)
+			So(combined, ShouldContain, 1)
+			So(combined, ShouldContain, 2)
+			So(combined, ShouldContain, 3)
+			So(combined, ShouldContain, 4)
 		})
 
 		Convey("From Data -> Drain", func() {
