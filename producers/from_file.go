@@ -8,7 +8,7 @@ import (
 )
 
 type fromFile struct {
-	file    *os.File
+	file *os.File
 }
 
 func (builder *fromFile) ByLine() stream.Producer {

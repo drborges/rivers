@@ -47,7 +47,7 @@ func TestBatcher(t *testing.T) {
 				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(next.Read(), ShouldResemble, []stream.T{[]stream.T{1, 2}, []stream.T{3}})
+					So(next.ReadAll(), ShouldResemble, []stream.T{[]stream.T{1, 2}, []stream.T{3}})
 				})
 			})
 
@@ -57,7 +57,7 @@ func TestBatcher(t *testing.T) {
 				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(next.Read(), ShouldResemble, []stream.T{[]stream.T{1}, []stream.T{2}, []stream.T{3}})
+					So(next.ReadAll(), ShouldResemble, []stream.T{[]stream.T{1}, []stream.T{2}, []stream.T{3}})
 				})
 			})
 
@@ -70,7 +70,7 @@ func TestBatcher(t *testing.T) {
 					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
-						So(next.Read(), ShouldBeEmpty)
+						So(next.ReadAll(), ShouldBeEmpty)
 					})
 				})
 			})

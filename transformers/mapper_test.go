@@ -26,7 +26,7 @@ func TestMapper(t *testing.T) {
 				transformed := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(transformed.Read(), ShouldResemble, []stream.T{2, 3})
+					So(transformed.ReadAll(), ShouldResemble, []stream.T{2, 3})
 				})
 			})
 
@@ -39,7 +39,7 @@ func TestMapper(t *testing.T) {
 					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
-						So(next.Read(), ShouldBeEmpty)
+						So(next.ReadAll(), ShouldBeEmpty)
 					})
 				})
 			})

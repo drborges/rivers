@@ -20,7 +20,7 @@ func TestFromRange(t *testing.T) {
 				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(readable.Read(), ShouldResemble, []stream.T{1, 2, 3})
+					So(readable.ReadAll(), ShouldResemble, []stream.T{1, 2, 3})
 				})
 			})
 		})

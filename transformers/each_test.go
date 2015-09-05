@@ -31,7 +31,7 @@ func TestEach(t *testing.T) {
 				next := transformer.Transform(in)
 
 				Convey("Then all items are sent to the next stage", func() {
-					So(next.Read(), ShouldResemble, []stream.T{1, 2})
+					So(next.ReadAll(), ShouldResemble, []stream.T{1, 2})
 
 					Convey("And all items are transformed", func() {
 						So(items, ShouldResemble, []stream.T{1, 2})
@@ -49,7 +49,7 @@ func TestEach(t *testing.T) {
 					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
-						So(next.Read(), ShouldBeEmpty)
+						So(next.ReadAll(), ShouldBeEmpty)
 
 						Convey("And no item is transformed", func() {
 							So(items, ShouldBeEmpty)

@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/drborges/rivers"
+	"github.com/drborges/rivers/producers"
 	"github.com/drborges/rivers/stream"
 	"github.com/fatih/color"
 	"log"
-	"github.com/drborges/rivers/producers"
 )
 
 var host = flag.String("host", "127.0.0.1", "The host to connect to")

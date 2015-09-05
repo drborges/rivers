@@ -29,7 +29,7 @@ func TestFifo(t *testing.T) {
 				combined := combiner.Combine(in1, in2)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(combined.Read(), ShouldResemble, []stream.T{1, 2, 3, 4})
+					So(combined.ReadAll(), ShouldResemble, []stream.T{1, 2, 3, 4})
 				})
 			})
 
@@ -42,7 +42,7 @@ func TestFifo(t *testing.T) {
 					combined := combiner.Combine(in1, in2)
 
 					Convey("Then no item is sent to the next stage", func() {
-						So(combined.Read(), ShouldBeEmpty)
+						So(combined.ReadAll(), ShouldBeEmpty)
 					})
 				})
 			})

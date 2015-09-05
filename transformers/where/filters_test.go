@@ -60,8 +60,8 @@ func TestStructHas(t *testing.T) {
 
 	convey.Convey("Given I have an instance of a particular struct", t, func() {
 		subject := &Account{
-			Name:  "Diego",
-			Email: "drborges.cic@gmail.com",
+			Name:   "Diego",
+			Email:  "drborges.cic@gmail.com",
 			Tokens: []string{"123", "321"},
 			Address: &Address{
 				Street: "Getulio Vargas",

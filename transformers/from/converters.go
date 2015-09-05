@@ -2,9 +2,9 @@ package from
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/drborges/rivers/stream"
 	"reflect"
-	"fmt"
 )
 
 func StructToJSON(data stream.T) stream.T {

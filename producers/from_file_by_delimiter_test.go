@@ -24,7 +24,7 @@ func TestFromFileByDelimiter(t *testing.T) {
 				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {
-					So(readable.Read(), ShouldResemble, []stream.T{"Hello", "there", "folks!"})
+					So(readable.ReadAll(), ShouldResemble, []stream.T{"Hello", "there", "folks!"})
 				})
 			})
 		})

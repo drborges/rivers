@@ -11,7 +11,7 @@ func NewEmpty() Readable {
 	return ch
 }
 
-func (readable Readable) Read() []T {
+func (readable Readable) ReadAll() []T {
 	read := []T{}
 	for data := range readable {
 		read = append(read, data)

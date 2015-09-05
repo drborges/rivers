@@ -26,10 +26,10 @@ func TestIfDispatcher(t *testing.T) {
 				sink := dispatchers.New(context).If(evens).Dispatch(in, evensOut)
 
 				Convey("Then items matching the condition are dispatched to the corresponding stream", func() {
-					So(evensIn.Read(), ShouldResemble, []stream.T{2, 4})
+					So(evensIn.ReadAll(), ShouldResemble, []stream.T{2, 4})
 
 					Convey("And items not matching the condition are dispatched to the sink stream", func() {
-						So(sink.Read(), ShouldResemble, []stream.T{3})
+						So(sink.ReadAll(), ShouldResemble, []stream.T{3})
 					})
 				})
 			})
@@ -40,11 +40,11 @@ func TestIfDispatcher(t *testing.T) {
 				sink := dispatchers.New(context).Always().Dispatch(in, streamOut1, streamOut2)
 
 				Convey("Then all items are dispatched to the corresponding streams", func() {
-					So(streamIn1.Read(), ShouldResemble, []stream.T{2, 3, 4})
-					So(streamIn2.Read(), ShouldResemble, []stream.T{2, 3, 4})
+					So(streamIn1.ReadAll(), ShouldResemble, []stream.T{2, 3, 4})
+					So(streamIn2.ReadAll(), ShouldResemble, []stream.T{2, 3, 4})
 
 					Convey("And no item is dispatched to the sink stream", func() {
-						So(sink.Read(), ShouldBeEmpty)
+						So(sink.ReadAll(), ShouldBeEmpty)
 					})
 				})
 			})
@@ -57,8 +57,8 @@ func TestIfDispatcher(t *testing.T) {
 					sink := dispatchers.New(context).If(evens).Dispatch(in, evensOut)
 
 					Convey("Then no item is sent to the next stage", func() {
-						So(evensIn.Read(), ShouldBeEmpty)
-						So(sink.Read(), ShouldBeEmpty)
+						So(evensIn.ReadAll(), ShouldBeEmpty)
+						So(sink.ReadAll(), ShouldBeEmpty)
 					})
 				})
 			})

@@ -25,7 +25,7 @@ func TestFlatten(t *testing.T) {
 				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(next.Read(), ShouldResemble, []stream.T{1, 2, 3, 4})
+					So(next.ReadAll(), ShouldResemble, []stream.T{1, 2, 3, 4})
 				})
 			})
 
@@ -38,7 +38,7 @@ func TestFlatten(t *testing.T) {
 					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {
-						So(next.Read(), ShouldBeEmpty)
+						So(next.ReadAll(), ShouldBeEmpty)
 					})
 				})
 			})
