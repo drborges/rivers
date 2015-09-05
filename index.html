@@ -123,7 +123,7 @@
 
         <span class="pl-k">for</span> <span class="pl-smi">_</span>, <span class="pl-smi">n</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> producer.<span class="pl-smi">numbers</span> {
             <span class="pl-k">select</span> {
-            <span class="pl-k">case</span> <span class="pl-k">&lt;-</span>producer.<span class="pl-smi">context</span>.<span class="pl-smi">Closed</span>:
+            <span class="pl-k">case</span> <span class="pl-k">&lt;-</span>producer.<span class="pl-smi">context</span>.<span class="pl-c1">Closed</span>():
                 <span class="pl-k">return</span>
             <span class="pl-k">default</span>:
                 writable <span class="pl-k">&lt;-</span> n
@@ -310,11 +310,27 @@
 <a id="dispatchers-" class="anchor" href="#dispatchers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dispatchers <img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/dispatcher.png" alt="Dispatching To Streams">
 </h3>
 
-<p>Forwards data from a particular stream to one or more streams. Dispatchers may dispatch data conditionally such as the rivers Partition operation.</p>
+<p>Dispatchers forward data from a readable stream to one or more writable streams returning a new readable stream from where the  non dispatched data can still be processed.</p>
 
-<p>Dispatching to multiple streams: <code>Producer -&gt; Dispatcher -&gt; Transformers -&gt; Consumers</code></p>
+<p>Dispatchers may conditionally dispatch data based on a <code>stream.PreficateFn</code>. The <code>Partition</code> operation is an example of conditional dispatcher.</p>
+
+<p>Rivers implement 3 types of dispatchers: <code>Split</code>, <code>SplitN</code> and <code>Partition</code>. Dispatchers implement <code>stream.Dispatcher</code> interface:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">Dispatcher</span> <span class="pl-k">interface</span> {
+    <span class="pl-c1">Dispatch</span>(from <span class="pl-v">Readable</span>, to ...<span class="pl-smi">Writable</span>) (out Readable)
+}</pre></div>
+
+<p>Dispatching data to multiple targets in a pipeline would look like: <code>Producer -&gt; Dispatcher -&gt; Transformers -&gt; Consumers</code></p>
 
 <p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png" alt="Dispatching To Streams"></p>
+
+<p>The following code show a use case for the <code>Partition</code> operation mentioned above:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">inactiveUsers</span>, <span class="pl-smi">activeUsers</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">UserSessionsAPI</span>(httpClient)).<span class="pl-c1">Partition</span>(inactiveForOver7Days)</pre></div>
+
+<p>The example above forks the original stream into two others based on the given <code>predicate</code>. Data is then dynamically dispatched to either stream based on the predicate result.</p>
+
+<p>Under the hood the partition operation makes use of a conditional dispatcher to redirect data to the resulting streams. For more detailed information on how to leverage the built-in dispatchers, take a look at the <code>dispatchers</code> package.  </p>
 
 <h1>
 <a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples</h1>
