@@ -95,7 +95,7 @@ func TestRiversAPI(t *testing.T) {
 			numbers := rivers.FromData(1, 2, 3, 4)
 			letters := rivers.FromData("a", "b", "c")
 
-			combined, _ := rivers.Zip(numbers, letters).
+			combined, _ := numbers.Zip(letters.Sink()).
 				Map(addOrAppend(1, "_")).Collect()
 
 			So(combined, ShouldResemble, []stream.T{2, "a_", 3, "b_", 4, "c_", 5})
@@ -105,7 +105,7 @@ func TestRiversAPI(t *testing.T) {
 			numbers := rivers.FromData(1, 2, 3, 4)
 			moreNumbers := rivers.FromData(4, 4, 1)
 
-			combined, err := rivers.ZipBy(sum, numbers, moreNumbers).Filter(evensOnly).Collect()
+			combined, err := numbers.ZipBy(sum, moreNumbers.Sink()).Filter(evensOnly).Collect()
 
 			So(err, ShouldBeNil)
 			So(combined, ShouldResemble, []stream.T{6, 4, 4})
@@ -115,7 +115,7 @@ func TestRiversAPI(t *testing.T) {
 			numbers := rivers.FromData(1, 2, 3, 4)
 			moreNumbers := rivers.FromData(4, 4, 1)
 
-			combined, _ := rivers.Merge(numbers, moreNumbers).Collect()
+			combined, _ := numbers.Merge(moreNumbers.Sink()).Collect()
 
 			So(combined, ShouldResemble, []stream.T{1, 2, 3, 4, 4, 4, 1})
 		})

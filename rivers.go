@@ -40,30 +40,6 @@ func FromSlice(slice stream.T) *Stream {
 	return From(producers.FromSlice(slice))
 }
 
-func Merge(streams ...*Stream) *Stream {
-	readables := []stream.Readable{}
-	for _, s := range streams {
-		readables = append(readables, s.Sink())
-	}
-	return NewWith(NewContext()).Merge(readables...)
-}
-
-func Zip(streams ...*Stream) *Stream {
-	readables := []stream.Readable{}
-	for _, s := range streams {
-		readables = append(readables, s.Sink())
-	}
-	return NewWith(NewContext()).Zip(readables...)
-}
-
-func ZipBy(fn stream.ReduceFn, streams ...*Stream) *Stream {
-	readables := []stream.Readable{}
-	for _, s := range streams {
-		readables = append(readables, s.Sink())
-	}
-	return NewWith(NewContext()).ZipBy(fn, readables...)
-}
-
 func (s *Stream) newStream(readable stream.Readable) *Stream {
 	return &Stream{
 		readable: readable,
@@ -107,8 +83,10 @@ func (s *Stream) Merge(readables ...stream.Readable) *Stream {
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
 	}
-	readables = append(readables, s.readable)
-	return s.newStream(combiner.Combine(readables...))
+
+	toBeMerged := []stream.Readable{s.readable}
+	toBeMerged = append(toBeMerged, readables...)
+	return s.newStream(combiner.Combine(toBeMerged...))
 }
 
 func (s *Stream) Zip(readables ...stream.Readable) *Stream {
@@ -116,8 +94,10 @@ func (s *Stream) Zip(readables ...stream.Readable) *Stream {
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
 	}
-	readables = append(readables, s.readable)
-	return s.newStream(combiner.Combine(readables...))
+
+	toBeZipped := []stream.Readable{s.readable}
+	toBeZipped = append(toBeZipped, readables...)
+	return s.newStream(combiner.Combine(toBeZipped...))
 }
 
 func (s *Stream) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Stream {
@@ -125,8 +105,10 @@ func (s *Stream) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Stream
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
 	}
-	readables = append(readables, s.readable)
-	return s.newStream(combiner.Combine(readables...))
+
+	toBeZipped := []stream.Readable{s.readable}
+	toBeZipped = append(toBeZipped, readables...)
+	return s.newStream(combiner.Combine(toBeZipped...))
 }
 
 func (s *Stream) Dispatch(writables ...stream.Writable) *Stream {
