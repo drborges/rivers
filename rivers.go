@@ -239,6 +239,10 @@ func (s *Stream) CollectLastAs(data interface{}) error {
 	return s.Then(consumers.LastItemCollector(data))
 }
 
+func (s *Stream) CollectBy(fn stream.EachFn) error {
+	return s.Then(consumers.CollectBy(fn))
+}
+
 func (s *Stream) Drain() error {
 	return s.Then(consumers.Drainer())
 }

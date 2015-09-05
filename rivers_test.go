@@ -22,7 +22,7 @@ func TestRiversAPI(t *testing.T) {
 		return func(data stream.T) stream.T { return data.(int) + n }
 	}
 
-	append := func(c string) stream.MapFn {
+	concat := func(c string) stream.MapFn {
 		return func(data stream.T) stream.T { return data.(string) + c }
 	}
 
@@ -67,7 +67,7 @@ func TestRiversAPI(t *testing.T) {
 		Convey("From Data -> Flatten -> Map -> Sort By -> Batch -> Sink", func() {
 			data, _ := rivers.FromData([]stream.T{"a", "c"}, "b", []stream.T{"d", "e"}).
 				Flatten().
-				Map(append("_")).
+				Map(concat("_")).
 				SortBy(alphabeticOrder).
 				Batch(2).
 				Collect()
@@ -278,6 +278,16 @@ func TestRiversAPI(t *testing.T) {
 			items := rivers.FromData([]byte(`{"Name":"Diego"}`)).Map(from.JSONToStruct(Account{})).Sink().Read()
 
 			So(items, ShouldResemble, []stream.T{Account{"Diego"}})
+		})
+
+		Convey("From Range -> Collect By", func() {
+			items := []stream.T{}
+			err := rivers.FromRange(1, 5).CollectBy(func(data stream.T) {
+				items = append(items, data)
+			})
+
+			So(err, ShouldBeNil)
+			So(items, ShouldResemble, []stream.T{1, 2, 3, 4, 5})
 		})
 	})
 }

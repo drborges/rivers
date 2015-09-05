@@ -38,3 +38,9 @@ func LastItemCollector(dst interface{}) stream.Consumer {
 		item: slicePtr.Elem(),
 	}
 }
+
+func CollectBy(fn stream.EachFn) stream.Consumer {
+	return &collectBy{
+		fn: fn,
+	}
+}
