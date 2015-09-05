@@ -264,6 +264,8 @@
 
 <span class="pl-smi">evens</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromRange</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>).<span class="pl-c1">Apply</span>(<span class="pl-c1">NewFilter</span>(evensOnly)).<span class="pl-c1">Collect</span>()</pre></div>
 
+<p>The observer <code>OnNext</code> function may return <code>stream.Done</code> in order to finish its work explicitly stopping the pipeline. This is useful for implementing short-circuit operations such as <code>find</code>, <code>any</code>, etc...</p>
+
 <h3>
 <a id="combiners-" class="anchor" href="#combiners-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Combiners <img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/combiner.png" alt="Dispatching To Streams">
 </h3>
