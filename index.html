@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html>
-
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Rivers : Data Stream Processing API for GO">
-
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Rivers</title>
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Rivers by drborges</title>
   </head>
 
   <body>
+    <div id="container">
+      <div class="inner">
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/drborges/rivers">View on GitHub</a>
-
-          <h1 id="project_title">Rivers</h1>
-          <h2 id="project_tagline">Data Stream Processing API for GO</h2>
-
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/drborges/rivers/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/drborges/rivers/tarball/master">Download this project as a tar.gz file</a>
-            </section>
+        <header>
+          <h1>Rivers</h1>
+          <h2>Data Stream Processing API for GO</h2>
         </header>
-    </div>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h1>
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/drborges/rivers/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/drborges/rivers/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/drborges/rivers" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
 <a id="rivers-" class="anchor" href="#rivers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Rivers <img src="https://raw.githubusercontent.com/drborges/rivers/master/https://raw.githubusercontent.com/drborges/rivers/master/docs/rivers-logo.png" alt="Basic Stream">
 </h1>
 
@@ -42,7 +42,7 @@
 <h1>
 <a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h1>
 
-<p>Rivers provide a simple though powerful API for processing streams of data built on top of <code>goroutines</code>, <code>channels</code> and the <a href="https://blog.golang.org/pipelines">pipeline pattern</a>.</p>
+<p>Rivers provides a simple though powerful API for processing streams of data built on top of <code>goroutines</code>, <code>channels</code> and the <a href="https://blog.golang.org/pipelines">pipeline pattern</a>.</p>
 
 <div class="highlight highlight-go"><pre><span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">NewGithubRepositoryProducer</span>(httpClient)).
     <span class="pl-c1">Filter</span>(hasForks).
@@ -66,7 +66,7 @@
 
 <p>Streams are simply readable or writable channels where data flows through <code>asynchronously</code>. They are usually created by <code>producers</code> providing data from a particular data source, for example <code>files</code>, <code>network</code> (socket data, API responses), or even as simple as regular <code>slice</code> of data to be processed.</p>
 
-<p>Rivers provide a <code>stream</code> package with a constructor function for creating streams as follows:</p>
+<p>Rivers provides a <code>stream</code> package with a constructor function for creating streams as follows:</p>
 
 <div class="highlight highlight-go"><pre><span class="pl-smi">capacity</span> <span class="pl-k">:=</span> <span class="pl-c1">100</span>
 <span class="pl-smi">readable</span>, <span class="pl-smi">writable</span> <span class="pl-k">:=</span> stream.<span class="pl-c1">New</span>(capacity)</pre></div>
@@ -249,7 +249,7 @@
 
 <span class="pl-smi">evens</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> stream.<span class="pl-c1">Apply</span>(filter).<span class="pl-c1">Collect</span>()</pre></div>
 
-<p>In order to reduce some of the boilerplate, rivers provide a generic implementation of <code>stream.Transformer</code> that you can use to implement many use cases: <code>transformers.Observer</code>. The filter above can be rewritten as:</p>
+<p>In order to reduce some of the boilerplate, rivers provides a generic implementation of <code>stream.Transformer</code> that you can use to implement many use cases: <code>transformers.Observer</code>. The filter above can be rewritten as:</p>
 
 <div class="highlight highlight-go"><pre><span class="pl-k">func</span> <span class="pl-en">NewFilter</span>(<span class="pl-v">fn</span> <span class="pl-v">stream</span>.<span class="pl-v">PredicateFn</span>) <span class="pl-v">stream</span>.<span class="pl-v">Transformer</span> {
     <span class="pl-k">return</span> &amp;Observer{
@@ -262,7 +262,9 @@
     }
 }
 
-<span class="pl-smi">evens</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromRange</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>).<span class="pl-c1">Apply</span>(<span class="pl-c1">NewFilter</span>(evensOnly)).<span class="pl-c1">Collect</span>()</pre></div>
+<span class="pl-smi">evens</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromRange</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>).
+    <span class="pl-c1">Apply</span>(<span class="pl-c1">NewFilter</span>(evensOnly)).
+    <span class="pl-c1">Collect</span>()</pre></div>
 
 <p>The observer <code>OnNext</code> function may return <code>stream.Done</code> in order to finish its work explicitly stopping the pipeline. This is useful for implementing short-circuit operations such as <code>find</code>, <code>any</code>, etc...</p>
 
@@ -270,11 +272,33 @@
 <a id="combiners-" class="anchor" href="#combiners-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Combiners <img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/combiner.png" alt="Dispatching To Streams">
 </h3>
 
-<p>Combines two or more streams into a single stream. Combiners may apply different strategies such as FIFO, Zip, etc.</p>
+<p>Combining streams is often a useful operation and rivers makes it easy with its pre-baked combiner implementations <code>FIFO</code>, <code>Zip</code> and <code>ZipBy</code>. A combiner implements <code>stream.Combiner</code> interface:</p>
 
-<p>Combining Streams: <code>Producers -&gt; Combiner -&gt; Transformer -&gt; Consumer</code></p>
+<div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">Combiner</span> <span class="pl-k">interface</span> {
+    <span class="pl-c1">Combine</span>(in ...<span class="pl-smi">Readable</span>) (out Readable)
+}</pre></div>
+
+<p>It essentially takes one or more readable streams and gives you back a readable stream which is the result of combining all the inputs.</p>
+
+<p>Combining Streams Pipeline: <code>Producers -&gt; Combiner -&gt; Transformer -&gt; Consumer</code></p>
 
 <p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png" alt="Combining Streams"></p>
+
+<p>The following example combines data from 3 different streams into a single stream:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">facebookMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">FacebookPosts</span>(httpClient)).
+    <span class="pl-c1">Map</span>(<span class="pl-c1">ExtractMentionsTo</span>(<span class="pl-s"><span class="pl-pds">"</span>diego.rborges<span class="pl-pds">"</span></span>))
+
+<span class="pl-smi">twitterMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">TwitterFeed</span>(httpClient)).
+    <span class="pl-c1">Map</span>(<span class="pl-c1">ExtractMentionsTo</span>(<span class="pl-s"><span class="pl-pds">"</span>dr_borges<span class="pl-pds">"</span></span>)).<span class="pl-smi">Stream</span>
+
+<span class="pl-smi">githubMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">GithubRiversCommits</span>(httpClient)).
+    <span class="pl-c1">Map</span>(<span class="pl-c1">ExtractMentionsTo</span>(<span class="pl-s"><span class="pl-pds">"</span>drborges<span class="pl-pds">"</span></span>)).<span class="pl-smi">Stream</span>
+
+<span class="pl-smi">err</span> <span class="pl-k">:=</span> facebookMentions.<span class="pl-c1">Merge</span>(twitterMentions, githubMentions).
+    <span class="pl-c1">Take</span>(mentionsFrom3DaysAgo).
+    <span class="pl-c1">Each</span>(prettyPrint).
+    <span class="pl-c1">Drain</span>()</pre></div>
 
 <h3>
 <a id="dispatchers-" class="anchor" href="#dispatchers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dispatchers <img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/dispatcher.png" alt="Dispatching To Streams">
@@ -292,7 +316,10 @@
 <div class="highlight highlight-go"><pre><span class="pl-smi">evensOnly</span> <span class="pl-k">:=</span> <span class="pl-c1">func</span>(data stream.<span class="pl-smi">T</span>) <span class="pl-k">bool</span> { <span class="pl-k">return</span> data.(<span class="pl-k">int</span>) % <span class="pl-c1">2</span> == <span class="pl-c1">0</span> }
 <span class="pl-smi">addOne</span> <span class="pl-k">:=</span> <span class="pl-c1">func</span>(data stream.<span class="pl-smi">T</span>) stream.<span class="pl-smi">T</span> { <span class="pl-k">return</span> data.(<span class="pl-k">int</span>) + <span class="pl-c1">1</span> }
 
-<span class="pl-smi">data</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromRange</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>).<span class="pl-c1">Filter</span>(evensOnly).<span class="pl-c1">Map</span>(addOne).<span class="pl-c1">Collect</span>()
+<span class="pl-smi">data</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">FromRange</span>(<span class="pl-c1">1</span>, <span class="pl-c1">10</span>).
+    <span class="pl-c1">Filter</span>(evensOnly).
+    <span class="pl-c1">Map</span>(addOne).
+    <span class="pl-c1">Collect</span>()
 
 fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>data:<span class="pl-pds">"</span></span>, data)
 fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>err:<span class="pl-pds">"</span></span>, err)
@@ -321,18 +348,14 @@ fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"
 
 <h1>
 <a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h1>
-      </section>
-    </div>
+        </section>
 
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Rivers maintained by <a href="https://github.com/drborges">drborges</a></p>
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
+        <footer>
+          Rivers is maintained by <a href="https://github.com/drborges">drborges</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
 
-              <script type="text/javascript">
+                  <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
@@ -343,6 +366,7 @@ fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"
             } catch(err) {}
           </script>
 
-
+      </div>
+    </div>
   </body>
 </html>
