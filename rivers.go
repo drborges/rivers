@@ -10,9 +10,8 @@ import (
 )
 
 type Stream struct {
-	readable    stream.Readable
-	Context     stream.Context
-	dispatchers *dispatchers.Builder
+	Context  stream.Context
+	readable stream.Readable
 }
 
 func From(producer stream.Producer) *Stream {
@@ -22,11 +21,11 @@ func From(producer stream.Producer) *Stream {
 		bindable.Bind(context)
 	}
 
-	return NewWith(context).newFrom(producer.Produce())
+	return NewWith(context).newStream(producer.Produce())
 }
 
 func FromStream(readable stream.Readable) *Stream {
-	return NewWith(NewContext()).newFrom(readable)
+	return NewWith(NewContext()).newStream(readable)
 }
 
 func FromRange(from, to int) *Stream {
@@ -65,19 +64,17 @@ func ZipBy(fn stream.ReduceFn, streams ...*Stream) *Stream {
 	return NewWith(NewContext()).ZipBy(fn, readables...)
 }
 
-func (s *Stream) newFrom(readable stream.Readable) *Stream {
+func (s *Stream) newStream(readable stream.Readable) *Stream {
 	return &Stream{
-		readable:    readable,
-		Context:     s.Context,
-		dispatchers: s.dispatchers,
+		readable: readable,
+		Context:  s.Context,
 	}
 }
 
 func NewWith(context stream.Context) *Stream {
 	return &Stream{
-		Context:     context,
-		readable:    stream.NewEmpty(),
-		dispatchers: dispatchers.New(context),
+		Context:  context,
+		readable: stream.NewEmpty(),
 	}
 }
 
@@ -91,18 +88,18 @@ func (s *Stream) SplitN(n int) []*Stream {
 	writables := make([]stream.Writable, n)
 	for i := 0; i < n; i++ {
 		readable, writable := stream.New(cap(s.readable))
-		streams[i] = s.newFrom(readable)
+		streams[i] = s.newStream(readable)
 		writables[i] = writable
 	}
-	s.dispatchers.Always().Dispatch(s.readable, writables...)
+	dispatchers.New(s.Context).Always().Dispatch(s.readable, writables...)
 	return streams
 }
 
 func (s *Stream) Partition(fn stream.PredicateFn) (*Stream, *Stream) {
 	lhsIn, lhsOut := stream.New(cap(s.readable))
-	rhsIn := s.dispatchers.If(fn).Dispatch(s.readable, lhsOut)
+	rhsIn := dispatchers.New(s.Context).If(fn).Dispatch(s.readable, lhsOut)
 
-	return s.newFrom(lhsIn), s.newFrom(rhsIn)
+	return s.newStream(lhsIn), s.newStream(rhsIn)
 }
 
 func (s *Stream) Merge(readables ...stream.Readable) *Stream {
@@ -111,7 +108,7 @@ func (s *Stream) Merge(readables ...stream.Readable) *Stream {
 		bindable.Bind(s.Context)
 	}
 	readables = append(readables, s.readable)
-	return s.newFrom(combiner.Combine(readables...))
+	return s.newStream(combiner.Combine(readables...))
 }
 
 func (s *Stream) Zip(readables ...stream.Readable) *Stream {
@@ -120,7 +117,7 @@ func (s *Stream) Zip(readables ...stream.Readable) *Stream {
 		bindable.Bind(s.Context)
 	}
 	readables = append(readables, s.readable)
-	return s.newFrom(combiner.Combine(readables...))
+	return s.newStream(combiner.Combine(readables...))
 }
 
 func (s *Stream) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Stream {
@@ -129,15 +126,15 @@ func (s *Stream) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Stream
 		bindable.Bind(s.Context)
 	}
 	readables = append(readables, s.readable)
-	return s.newFrom(combiner.Combine(readables...))
+	return s.newStream(combiner.Combine(readables...))
 }
 
 func (s *Stream) Dispatch(writables ...stream.Writable) *Stream {
-	return s.newFrom(s.dispatchers.Always().Dispatch(s.readable, writables...))
+	return s.newStream(dispatchers.New(s.Context).Always().Dispatch(s.readable, writables...))
 }
 
 func (s *Stream) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Stream {
-	return s.newFrom(s.dispatchers.If(fn).Dispatch(s.readable, writables...))
+	return s.newStream(dispatchers.New(s.Context).If(fn).Dispatch(s.readable, writables...))
 }
 
 func (s *Stream) Apply(transformer stream.Transformer) *Stream {
@@ -146,9 +143,8 @@ func (s *Stream) Apply(transformer stream.Transformer) *Stream {
 	}
 
 	return &Stream{
-		readable:    transformer.Transform(s.readable),
-		Context:     s.Context,
-		dispatchers: s.dispatchers,
+		readable: transformer.Transform(s.readable),
+		Context:  s.Context,
 	}
 }
 
