@@ -176,11 +176,11 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Range -> Slipt N", func() {
-			stages := rivers.FromRange(1, 2).SplitN(3)
+			pipelines := rivers.FromRange(1, 2).SplitN(3)
 
-			data0 := stages[0].Stream.ReadAll()
-			data1 := stages[1].Stream.ReadAll()
-			data2 := stages[2].Stream.ReadAll()
+			data0 := pipelines[0].Stream.ReadAll()
+			data1 := pipelines[1].Stream.ReadAll()
+			data2 := pipelines[2].Stream.ReadAll()
 
 			So(data0, ShouldContain, 1)
 			So(data0, ShouldContain, 2)
@@ -193,13 +193,13 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Range -> OnData", func() {
-			stage := rivers.FromRange(1, 4).OnData(func(data stream.T, emitter stream.Emitter) {
+			pipeline := rivers.FromRange(1, 4).OnData(func(data stream.T, emitter stream.Emitter) {
 				if data.(int)%2 == 0 {
 					emitter.Emit(data)
 				}
 			})
 
-			So(stage.Stream.ReadAll(), ShouldResemble, []stream.T{2, 4})
+			So(pipeline.Stream.ReadAll(), ShouldResemble, []stream.T{2, 4})
 		})
 
 		Convey("From Range -> TakeFirst N -> Collect", func() {
@@ -209,21 +209,21 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Range -> Take", func() {
-			stage := rivers.FromRange(1, 4).Take(evensOnly)
+			pipeline := rivers.FromRange(1, 4).Take(evensOnly)
 
-			So(stage.Stream.ReadAll(), ShouldResemble, []stream.T{2, 4})
+			So(pipeline.Stream.ReadAll(), ShouldResemble, []stream.T{2, 4})
 		})
 
 		Convey("From Range -> Drop", func() {
-			stage := rivers.FromRange(1, 4).Drop(evensOnly)
+			pipeline := rivers.FromRange(1, 4).Drop(evensOnly)
 
-			So(stage.Stream.ReadAll(), ShouldResemble, []stream.T{1, 3})
+			So(pipeline.Stream.ReadAll(), ShouldResemble, []stream.T{1, 3})
 		})
 
 		Convey("From Range -> Drop First 2", func() {
-			stage := rivers.FromRange(1, 5).DropFirst(2)
+			pipeline := rivers.FromRange(1, 5).DropFirst(2)
 
-			So(stage.Stream.ReadAll(), ShouldResemble, []stream.T{3, 4, 5})
+			So(pipeline.Stream.ReadAll(), ShouldResemble, []stream.T{3, 4, 5})
 		})
 
 		Convey("From Range -> Collect", func() {

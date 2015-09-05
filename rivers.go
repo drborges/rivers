@@ -9,58 +9,58 @@ import (
 	"github.com/drborges/rivers/transformers"
 )
 
-type Stage struct {
-	Context  stream.Context
-	Stream stream.Readable
+type Pipeline struct {
+	Context stream.Context
+	Stream  stream.Readable
 }
 
-func From(producer stream.Producer) *Stage {
+func From(producer stream.Producer) *Pipeline {
 	context := NewContext()
 
 	if bindable, ok := producer.(stream.Bindable); ok {
 		bindable.Bind(context)
 	}
 
-	return NewStage(context).newStage(producer.Produce())
+	return NewPipeline(context).newStage(producer.Produce())
 }
 
-func FromStream(readable stream.Readable) *Stage {
-	return NewStage(NewContext()).newStage(readable)
+func FromStream(readable stream.Readable) *Pipeline {
+	return NewPipeline(NewContext()).newStage(readable)
 }
 
-func FromRange(from, to int) *Stage {
+func FromRange(from, to int) *Pipeline {
 	return From(producers.FromRange(from, to))
 }
 
-func FromData(data ...stream.T) *Stage {
+func FromData(data ...stream.T) *Pipeline {
 	return From(producers.FromData(data...))
 }
 
-func FromSlice(slice stream.T) *Stage {
+func FromSlice(slice stream.T) *Pipeline {
 	return From(producers.FromSlice(slice))
 }
 
-func (s *Stage) newStage(readable stream.Readable) *Stage {
-	return &Stage{
-		Stream: readable,
-		Context:  s.Context,
+func (s *Pipeline) newStage(readable stream.Readable) *Pipeline {
+	return &Pipeline{
+		Stream:  readable,
+		Context: s.Context,
 	}
 }
 
-func NewStage(context stream.Context) *Stage {
-	return &Stage{
-		Context:  context,
-		Stream: stream.NewEmpty(),
+func NewPipeline(context stream.Context) *Pipeline {
+	return &Pipeline{
+		Context: context,
+		Stream:  stream.NewEmpty(),
 	}
 }
 
-func (s *Stage) Split() (*Stage, *Stage) {
+func (s *Pipeline) Split() (*Pipeline, *Pipeline) {
 	streams := s.SplitN(2)
 	return streams[0], streams[1]
 }
 
-func (s *Stage) SplitN(n int) []*Stage {
-	streams := make([]*Stage, n)
+func (s *Pipeline) SplitN(n int) []*Pipeline {
+	streams := make([]*Pipeline, n)
 	writables := make([]stream.Writable, n)
 	for i := 0; i < n; i++ {
 		readable, writable := stream.New(cap(s.Stream))
@@ -71,14 +71,14 @@ func (s *Stage) SplitN(n int) []*Stage {
 	return streams
 }
 
-func (s *Stage) Partition(fn stream.PredicateFn) (*Stage, *Stage) {
+func (s *Pipeline) Partition(fn stream.PredicateFn) (*Pipeline, *Pipeline) {
 	lhsIn, lhsOut := stream.New(cap(s.Stream))
 	rhsIn := dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, lhsOut)
 
 	return s.newStage(lhsIn), s.newStage(rhsIn)
 }
 
-func (s *Stage) Merge(readables ...stream.Readable) *Stage {
+func (s *Pipeline) Merge(readables ...stream.Readable) *Pipeline {
 	combiner := combiners.FIFO()
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
@@ -89,7 +89,7 @@ func (s *Stage) Merge(readables ...stream.Readable) *Stage {
 	return s.newStage(combiner.Combine(toBeMerged...))
 }
 
-func (s *Stage) Zip(readables ...stream.Readable) *Stage {
+func (s *Pipeline) Zip(readables ...stream.Readable) *Pipeline {
 	combiner := combiners.Zip()
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
@@ -100,7 +100,7 @@ func (s *Stage) Zip(readables ...stream.Readable) *Stage {
 	return s.newStage(combiner.Combine(toBeZipped...))
 }
 
-func (s *Stage) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Stage {
+func (s *Pipeline) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Pipeline {
 	combiner := combiners.ZipBy(fn)
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
@@ -111,82 +111,82 @@ func (s *Stage) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Stage {
 	return s.newStage(combiner.Combine(toBeZipped...))
 }
 
-func (s *Stage) Dispatch(writables ...stream.Writable) *Stage {
+func (s *Pipeline) Dispatch(writables ...stream.Writable) *Pipeline {
 	return s.newStage(dispatchers.New(s.Context).Always().Dispatch(s.Stream, writables...))
 }
 
-func (s *Stage) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Stage {
+func (s *Pipeline) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Pipeline {
 	return s.newStage(dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, writables...))
 }
 
-func (s *Stage) Apply(transformer stream.Transformer) *Stage {
+func (s *Pipeline) Apply(transformer stream.Transformer) *Pipeline {
 	if bindable, ok := transformer.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
 	}
 
-	return &Stage{
-		Stream: transformer.Transform(s.Stream),
-		Context:  s.Context,
+	return &Pipeline{
+		Stream:  transformer.Transform(s.Stream),
+		Context: s.Context,
 	}
 }
 
-func (s *Stage) Filter(fn stream.PredicateFn) *Stage {
+func (s *Pipeline) Filter(fn stream.PredicateFn) *Pipeline {
 	return s.Apply(transformers.Filter(fn))
 }
 
-func (s *Stage) OnData(fn stream.OnDataFn) *Stage {
+func (s *Pipeline) OnData(fn stream.OnDataFn) *Pipeline {
 	return s.Apply(transformers.OnData(fn))
 }
 
-func (s *Stage) Map(fn stream.MapFn) *Stage {
+func (s *Pipeline) Map(fn stream.MapFn) *Pipeline {
 	return s.Apply(transformers.Map(fn))
 }
 
-func (s *Stage) Each(fn stream.EachFn) *Stage {
+func (s *Pipeline) Each(fn stream.EachFn) *Pipeline {
 	return s.Apply(transformers.Each(fn))
 }
 
-func (s *Stage) FindBy(fn stream.PredicateFn) *Stage {
+func (s *Pipeline) FindBy(fn stream.PredicateFn) *Pipeline {
 	return s.Apply(transformers.FindBy(fn))
 }
 
-func (s *Stage) TakeFirst(n int) *Stage {
+func (s *Pipeline) TakeFirst(n int) *Pipeline {
 	return s.Apply(transformers.TakeFirst(n))
 }
 
-func (s *Stage) Take(fn stream.PredicateFn) *Stage {
+func (s *Pipeline) Take(fn stream.PredicateFn) *Pipeline {
 	return s.Apply(transformers.Take(fn))
 }
 
-func (s *Stage) DropFirst(n int) *Stage {
+func (s *Pipeline) DropFirst(n int) *Pipeline {
 	return s.Apply(transformers.DropFirst(n))
 }
 
-func (s *Stage) Drop(fn stream.PredicateFn) *Stage {
+func (s *Pipeline) Drop(fn stream.PredicateFn) *Pipeline {
 	return s.Apply(transformers.Drop(fn))
 }
 
-func (s *Stage) Reduce(acc stream.T, fn stream.ReduceFn) *Stage {
+func (s *Pipeline) Reduce(acc stream.T, fn stream.ReduceFn) *Pipeline {
 	return s.Apply(transformers.Reduce(acc, fn))
 }
 
-func (s *Stage) Flatten() *Stage {
+func (s *Pipeline) Flatten() *Pipeline {
 	return s.Apply(transformers.Flatten())
 }
 
-func (s *Stage) SortBy(fn stream.SortByFn) *Stage {
+func (s *Pipeline) SortBy(fn stream.SortByFn) *Pipeline {
 	return s.Apply(transformers.SortBy(fn))
 }
 
-func (s *Stage) Batch(size int) *Stage {
+func (s *Pipeline) Batch(size int) *Pipeline {
 	return s.Apply(transformers.Batch(size))
 }
 
-func (s *Stage) BatchBy(batch stream.Batch) *Stage {
+func (s *Pipeline) BatchBy(batch stream.Batch) *Pipeline {
 	return s.Apply(transformers.BatchBy(batch))
 }
 
-func (s *Stage) Then(consumer stream.Consumer) error {
+func (s *Pipeline) Then(consumer stream.Consumer) error {
 	if bindable, ok := consumer.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
 	}
@@ -194,37 +194,37 @@ func (s *Stage) Then(consumer stream.Consumer) error {
 	return s.Context.Err()
 }
 
-func (s *Stage) Collect() ([]stream.T, error) {
+func (s *Pipeline) Collect() ([]stream.T, error) {
 	var data []stream.T
 	return data, s.CollectAs(&data)
 }
 
-func (s *Stage) CollectAs(data interface{}) error {
+func (s *Pipeline) CollectAs(data interface{}) error {
 	return s.Then(consumers.ItemsCollector(data))
 }
 
-func (s *Stage) CollectFirst() (stream.T, error) {
+func (s *Pipeline) CollectFirst() (stream.T, error) {
 	var data stream.T
 	return data, s.CollectFirstAs(&data)
 }
 
-func (s *Stage) CollectFirstAs(data interface{}) error {
+func (s *Pipeline) CollectFirstAs(data interface{}) error {
 	return s.TakeFirst(1).Then(consumers.LastItemCollector(data))
 }
 
-func (s *Stage) CollectLast() (stream.T, error) {
+func (s *Pipeline) CollectLast() (stream.T, error) {
 	var data stream.T
 	return data, s.CollectLastAs(&data)
 }
 
-func (s *Stage) CollectLastAs(data interface{}) error {
+func (s *Pipeline) CollectLastAs(data interface{}) error {
 	return s.Then(consumers.LastItemCollector(data))
 }
 
-func (s *Stage) CollectBy(fn stream.EachFn) error {
+func (s *Pipeline) CollectBy(fn stream.EachFn) error {
 	return s.Then(consumers.CollectBy(fn))
 }
 
-func (s *Stage) Drain() error {
+func (s *Pipeline) Drain() error {
 	return s.Then(consumers.Drainer())
 }
