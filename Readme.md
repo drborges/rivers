@@ -21,6 +21,12 @@ err := rivers.From(NewGithubRepositoryProducer(httpClient)).
 
 With a few basic building blocks based on the `Producer-Consumer` model, you can compose and create complex data processing pipelines for solving a variety of problems.
 
+A pipeline often assumes the following format: `Producer`, one or more `Transformers` and an optional `Consumer`
+
+![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)
+
+For more complex formats check the `Combiners` and `Dispatchers` sections.
+
 # Building Blocks
 
 A particular stream pipeline may be built composing building blocks such as `producers`,  `consumers`,  `transformers`, `combiners` and `dispatchers`.
@@ -79,7 +85,7 @@ func (producer *NumbersProducer) Produce() stream.Readable {
 
 		for _, n := range producer.numbers {
 			select {
-			case <-producer.context.Closed:
+			case <-producer.context.Closed():
 				return
 			default:
 				writable <- n
@@ -231,7 +237,9 @@ func NewFilter(fn stream.PredicateFn) stream.Transformer {
 	}
 }
 
-evens, err := rivers.FromRange(1, 10).Apply(NewFilter(evensOnly)).Collect()
+evens, err := rivers.FromRange(1, 10).
+	Apply(NewFilter(evensOnly)).
+	Collect()
 ```
 
 The observer `OnNext` function may return `stream.Done` in order to finish its work explicitly stopping the pipeline. This is useful for implementing short-circuit operations such as `find`, `any`, etc...
@@ -259,25 +267,44 @@ facebookMentions := rivers.From(FacebookPosts(httpClient)).
 	Map(ExtractMentionsTo("diego.rborges"))
 
 twitterMentions := rivers.From(TwitterFeed(httpClient)).
-	Map(ExtractMentionsTo("dr_borges"))
+	Map(ExtractMentionsTo("dr_borges")).Stream
 
 githubMentions := rivers.From(GithubRiversCommits(httpClient)).
-	Map(ExtractMentionsTo("drborges"))
+	Map(ExtractMentionsTo("drborges")).Stream
 
-err := facebookMentions.Merge(
-	twitterMentions.Sink(),
-	githubMentions.Sink()).Take(mentionsFrom3DaysAgo).Each(prettyPrint).Drain()
+err := facebookMentions.Merge(twitterMentions, githubMentions).
+	Take(mentionsFrom3DaysAgo).
+	Each(prettyPrint).
+	Drain()
 ```
-
-Note that the `Sink` method of a `rivers.Stream` returns the underlying `stream.Readable`.
 
 ### Dispatchers ![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/dispatcher.png)
 
-Forwards data from a particular stream to one or more streams. Dispatchers may dispatch data conditionally such as the rivers Partition operation.
+Dispatchers forward data from a readable stream to one or more writable streams returning a new readable stream from where the  non dispatched data can still be processed.
 
-Dispatching to multiple streams: `Producer -> Dispatcher -> Transformers -> Consumers`
+Dispatchers may conditionally dispatch data based on a `stream.PreficateFn`. The `Partition` operation is an example of conditional dispatcher.
+
+Rivers implement 3 types of dispatchers: `Split`, `SplitN` and `Partition`. Dispatchers implement `stream.Dispatcher` interface:
+
+```go
+type Dispatcher interface {
+	Dispatch(from Readable, to ...Writable) (out Readable)
+}
+```
+
+Dispatching data to multiple targets in a pipeline would look like: `Producer -> Dispatcher -> Transformers -> Consumers`
 
 ![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png)
+
+The following code show a use case for the `Partition` operation mentioned above:
+
+```go
+inactiveUsers, activeUsers := rivers.From(UserSessionsAPI(httpClient)).Partition(inactiveForOver7Days)
+```
+
+The example above forks the original stream into two others based on the given `predicate`. Data is then dynamically dispatched to either stream based on the predicate result.
+
+Under the hood the partition operation makes use of a conditional dispatcher to redirect data to the resulting streams. For more detailed information on how to leverage the built-in dispatchers, take a look at the `dispatchers` package.  
 
 # Examples
 
@@ -285,7 +312,10 @@ Dispatching to multiple streams: `Producer -> Dispatcher -> Transformers -> Cons
 evensOnly := func(data stream.T) bool { return data.(int) % 2 == 0 }
 addOne := func(data stream.T) stream.T { return data.(int) + 1 }
 
-data, err := rivers.FromRange(1, 10).Filter(evensOnly).Map(addOne).Collect()
+data, err := rivers.FromRange(1, 10).
+	Filter(evensOnly).
+	Map(addOne).
+	Collect()
 
 fmt.Println("data:", data)
 fmt.Println("err:", err)

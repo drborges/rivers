@@ -41,7 +41,7 @@ type Combiner interface {
 }
 
 type Dispatcher interface {
-	Dispatch(from Readable, to ...Writable) (sink Readable)
+	Dispatch(from Readable, to ...Writable) (out Readable)
 }
 
 type Emitter interface {
