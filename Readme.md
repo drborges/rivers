@@ -48,12 +48,18 @@ type Producer interface {
 }
 ```
 
-Producers implement the [pipeline pattern](https://blog.golang.org/pipelines) in order to asynchronously produce items that will be eventually consumed by a further stage in the pipeline.
+Producers implement the [pipeline pattern](https://blog.golang.org/pipelines) in order to asynchronously produce items that will be eventually consumed by a further stage in the pipeline. Rivers provides a few implementations of producers such as:
+
+- `rivers.FromRange(0, 1000)`
+- `rivers.FromSlice(slice)`
+- `rivers.FromData(1, 2, "a", "b", Person{Name:"Diego"})`
+- `rivers.FromFile(aFile).ByLine()`
+- `rivers.FromSocket("tcp", ":8484")`
 
 A good producer implementation takes care of at least 3 important aspects:
 
 1. Checks if rivers context is still opened before emitting any item
-2. Defers the recover function from rivers context as part of the goroutine execution
+2. Defers the recover function from rivers context as part of the goroutine execution (For more see `Cancellation` topic)
 3. Closes the writable stream at the end of the go routine. By closing the channel further stages of the pipeline know when their work is done.
 
 Lets see how one would go about converting a slice of numbers into a stream with a simple Producer implementation:
@@ -92,7 +98,6 @@ Our producer implementation in terms of an observable would then look like:
 ```go
 func NewNumbersProducer(context stream.Context, numbers []int) stream.Producer {
 	return &Observable{
-		Context:  context,
 		Capacity: len(numbers),
 		Emit: func(emitter stream.Emitter) {
 			for _, n := range numbers {
@@ -103,17 +108,15 @@ func NewNumbersProducer(context stream.Context, numbers []int) stream.Producer {
 }
 ```
 
-You can get a hold of a `stream.Context` like so: `context := rivers.NewContext()`
-
 ### Consumers ![Basic Stream](docs/consumer.png)
 
-Consumes data from a particular stream. Consumers blocks the process until there is no more data to be consumed out of the stream.
+Consumes data from a particular stream. Consumers block the process until there is no more data to be consumed out of the stream.
 
 You can use consumers to collect the items reaching the end of the pipeline, or any errors that might have happened during the execution.
 
 It is very likely you will most often need a final consumer in your pipeline for waiting for the pipeline result before moving on.
 
-Examples of consumers would be:
+Rivers has a few built-in consumers, among them you will find:
 
 1. `Drainers` which block draining the stream until there is no more data flowing through and returning any possible errors.
 
@@ -130,11 +133,17 @@ diego := Person{"Diego"}
 borges := Person{"Borges"}
 
 items, err := rivers.FromData(diego, borges).Collect()
+// items == []stream.T{Person{"Diego"}, Person{"Borges"}}
+
 item, err := rivers.FromData(diego, borges).CollectFirst()
+// item == Person{"Diego"}
+
 item, err := rivers.FromData(diego, borges).CollectLast()
+// item == Person{"Borges"}
 
 var people []Person
 err := rivers.FromData(diego, borges).CollectAs(&people)
+// people == []Person{{"Diego"}, {"Borges"}}
 
 var diego Person
 err := rivers.FromData(diego, borges).CollectFirstAs(&diego)
@@ -145,11 +154,85 @@ err := rivers.FromData(diego, borges).CollectLastAs(&diego)
 
 ### Transformers ![Dispatching To Streams](docs/transformer.png)
 
-Reads data from a particular stream applying a transformation function to it, optionally forwarding the result to an output channel. Transformers are both `Producers` and `Consumers`.
+Reads data from a particular stream applying a transformation function to it, optionally forwarding the result to an output channel. Transformers implement the interface `stream.Transformer`
+
+```go
+type Transformer interface {
+	Transform(in stream.Readable) (out stream.Readable)
+}
+```
+
+There are a variety of transform operations built-in in rivers, to name a few: `Map`, `Filter`, `Each`, `Flatten`, `Drop`, `Take`, etc...
 
 Basic Stream Transformation Pipeline: `Producer -> Transformer -> Consumer`
 
 ![Basic Stream](docs/stream-transformation.png)
+
+Aiming extensibility, rivers allow you to implement your own version of `stream.Transformer`. The following code implements a `filter` in terms of `stream.Transformer`:
+
+```go
+type Filter struct {
+	context stream.Context
+	fn      stream.PredicateFn
+}
+
+func (filter *Filter) Transform(in stream.Readable) stream.Readable {
+	readable, writable := stream.New(cap(in))
+
+	go func() {
+		defer filter.context.Recover()
+		defer close(writable)
+
+		for {
+			select {
+			case <-filter.context.Closed():
+				return
+			default:
+				data, more := <-in
+				if !more {
+					return
+				}
+				if filter.fn(data) {
+					writable <- data
+				}
+			}
+		}
+	}()
+
+	return readable
+}
+```
+
+Note that the transformer above also takes care of those `3 aspects` mentioned in the `producer` implementation. You could use this transformer like so:
+
+```go
+stream := rivers.FromRange(1, 10)
+
+evensOnly := func(data stream.T) bool {
+	return data.(int) % 2 == 0
+}
+
+filter := &Filter{stream.Context, evensOnly}
+
+evens, err := stream.Apply(filter).Collect()
+```
+
+In order to reduce some of the boilerplate, rivers provide a generic implementation of `stream.Transformer` that you can use to implement many use cases: `transformers.Observer`. The filter above can be rewritten as:
+
+```go
+func NewFilter(fn stream.PredicateFn) stream.Transformer {
+	return &Observer{
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
+			if fn(data) {
+				emitter.Emit(data)
+			}
+			return nil
+		},
+	}
+}
+
+evens, err := rivers.FromRange(1, 10).Apply(NewFilter(evensOnly)).Collect()
+```
 
 ### Combiners ![Dispatching To Streams](docs/combiner.png)
 
