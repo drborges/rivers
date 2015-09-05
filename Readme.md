@@ -23,7 +23,7 @@ With a few basic building blocks based on the `Producer-Consumer` model, you can
 
 A pipeline often assumes the following format: `Producer`, one or more `Transformers` and an optional `Consumer`
 
-![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)
+->![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)<-
 
 For more complex formats check the `Combiners` and `Dispatchers` sections.
 
@@ -46,7 +46,7 @@ Streams are buffered and the `capacity` parameter dictates how many items can be
 
 ### Producers ![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/producer.png)
 
-Asynchronously emits data into a stream. Any struct implementing the `stream.Producer` interface can be used as a producer in rivers.
+Asynchronously emits data into a stream. Any type implementing the `stream.Producer` interface can be used as a producer in rivers.
 
 ```go
 type Producer interface {
@@ -172,7 +172,7 @@ There are a variety of transform operations built-in in rivers, to name a few: `
 
 Basic Stream Transformation Pipeline: `Producer -> Transformer -> Consumer`
 
-![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)
+->![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)<-
 
 Aiming extensibility, rivers allow you to implement your own version of `stream.Transformer`. The following code implements a `filter` in terms of `stream.Transformer`:
 
@@ -258,7 +258,7 @@ It essentially takes one or more readable streams and gives you back a readable 
 
 Combining Streams Pipeline: `Producers -> Combiner -> Transformer -> Consumer`
 
-![Combining Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png)
+->![Combining Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png)<-
 
 The following example combines data from 3 different streams into a single stream:
 
@@ -294,12 +294,13 @@ type Dispatcher interface {
 
 Dispatching data to multiple targets in a pipeline would look like: `Producer -> Dispatcher -> Transformers -> Consumers`
 
-![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png)
+->![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png)<-
 
 The following code show a use case for the `Partition` operation mentioned above:
 
 ```go
-inactiveUsers, activeUsers := rivers.From(UserSessionsAPI(httpClient)).Partition(inactiveForOver7Days)
+inactiveUsers, activeUsers := rivers.From(UserSessionsAPI(httpClient)).
+	Partition(inactiveForOver7Days)
 ```
 
 The example above forks the original stream into two others based on the given `predicate`. Data is then dynamically dispatched to either stream based on the predicate result.
@@ -327,11 +328,9 @@ fmt.Println("err:", err)
 
 # Built-in Filters and Mappers
 
-# Custom Producers
-
-# Custom Transformers
-
 # The Cancellation Problem
+
+
 
 # Troubleshooting
 
