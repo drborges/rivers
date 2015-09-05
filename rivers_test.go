@@ -192,13 +192,13 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Range -> OnData -> Sink", func() {
-			processor := rivers.FromRange(1, 4).OnData(func(data stream.T, emitter stream.Emitter) {
+			pipe := rivers.FromRange(1, 4).OnData(func(data stream.T, emitter stream.Emitter) {
 				if data.(int)%2 == 0 {
 					emitter.Emit(data)
 				}
 			})
 
-			So(processor.Sink().Read(), ShouldResemble, []stream.T{2, 4})
+			So(pipe.Sink().Read(), ShouldResemble, []stream.T{2, 4})
 		})
 
 		Convey("From Range -> TakeFirst N -> Sink", func() {
@@ -208,15 +208,21 @@ func TestRiversAPI(t *testing.T) {
 		})
 
 		Convey("From Range -> Take -> Sink", func() {
-			processor := rivers.FromRange(1, 4).Take(evensOnly)
+			pipe := rivers.FromRange(1, 4).Take(evensOnly)
 
-			So(processor.Sink().Read(), ShouldResemble, []stream.T{2, 4})
+			So(pipe.Sink().Read(), ShouldResemble, []stream.T{2, 4})
 		})
 
 		Convey("From Range -> Drop -> Sink", func() {
-			processor := rivers.FromRange(1, 4).Drop(evensOnly)
+			pipe := rivers.FromRange(1, 4).Drop(evensOnly)
 
-			So(processor.Sink().Read(), ShouldResemble, []stream.T{1, 3})
+			So(pipe.Sink().Read(), ShouldResemble, []stream.T{1, 3})
+		})
+
+		Convey("From Range -> Drop First 2 -> Sink", func() {
+			pipe := rivers.FromRange(1, 5).DropFirst(2)
+
+			So(pipe.Sink().Read(), ShouldResemble, []stream.T{3, 4, 5})
 		})
 
 		Convey("From Range -> Collect -> Sink", func() {

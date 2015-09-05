@@ -176,6 +176,10 @@ func (s *Stream) Take(fn stream.PredicateFn) *Stream {
 	return s.Apply(transformers.Take(fn))
 }
 
+func (s *Stream) DropFirst(n int) *Stream {
+	return s.Apply(transformers.DropFirst(n))
+}
+
 func (s *Stream) Drop(fn stream.PredicateFn) *Stream {
 	return s.Apply(transformers.Drop(fn))
 }

@@ -47,6 +47,21 @@ func Take(fn stream.PredicateFn) stream.Transformer {
 	return Filter(fn)
 }
 
+func DropFirst(n int) stream.Transformer {
+	dropped := 0
+	return &Observer{
+		OnNext: func(data stream.T, emitter stream.Emitter) error {
+			if dropped < n {
+				dropped++
+				return nil
+			}
+
+			emitter.Emit(data)
+			return nil
+		},
+	}
+}
+
 func Drop(fn stream.PredicateFn) stream.Transformer {
 	return Filter(func(data stream.T) bool { return !fn(data) })
 }
