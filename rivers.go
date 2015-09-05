@@ -212,14 +212,18 @@ func (s *Stream) Sink() stream.Readable {
 	return s.readable
 }
 
+func (s *Stream) Then(consumer stream.Consumer) error {
+	consumer.Consume(s.readable)
+	return s.Context.Err()
+}
+
 func (s *Stream) Collect() ([]stream.T, error) {
 	var data []stream.T
 	return data, s.CollectAs(&data)
 }
 
 func (s *Stream) CollectAs(data interface{}) error {
-	s.consumers.ItemsCollector(data).Consume(s.readable)
-	return s.Context.Err()
+	return s.Then(s.consumers.ItemsCollector(data))
 }
 
 func (s *Stream) CollectFirst() (stream.T, error) {
@@ -228,8 +232,7 @@ func (s *Stream) CollectFirst() (stream.T, error) {
 }
 
 func (s *Stream) CollectFirstAs(data interface{}) error {
-	s.consumers.LastItemCollector(data).Consume(s.TakeFirst(1).Sink())
-	return s.Context.Err()
+	return s.TakeFirst(1).Then(s.consumers.LastItemCollector(data))
 }
 
 func (s *Stream) CollectLast() (stream.T, error) {
@@ -238,11 +241,9 @@ func (s *Stream) CollectLast() (stream.T, error) {
 }
 
 func (s *Stream) CollectLastAs(data interface{}) error {
-	s.consumers.LastItemCollector(data).Consume(s.readable)
-	return s.Context.Err()
+	return s.Then(s.consumers.LastItemCollector(data))
 }
 
 func (s *Stream) Drain() error {
-	s.consumers.Drainer().Consume(s.readable)
-	return s.Context.Err()
+	return s.Then(s.consumers.Drainer())
 }
