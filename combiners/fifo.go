@@ -36,7 +36,7 @@ func (c *fifo) Combine(in ...stream.Readable) stream.Readable {
 			defer wg.Done()
 
 			select {
-			case <-c.context.Closed():
+			case <-c.context.Done():
 				return
 			default:
 				for data := range r {

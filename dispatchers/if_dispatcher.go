@@ -34,7 +34,7 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, out ...stream.Writa
 
 		for data := range in {
 			select {
-			case <-dispatcher.context.Closed():
+			case <-dispatcher.context.Done():
 				return
 			default:
 				if dispatcher.fn(data) {

@@ -23,7 +23,7 @@ type Context interface {
 	Recover()
 	Err() error
 	// TODO rename to Done and change return type to struct{}
-	Closed() <-chan error
+	Done() <-chan struct{}
 }
 
 // a.k.a Source

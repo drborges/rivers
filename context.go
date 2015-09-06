@@ -10,13 +10,13 @@ import (
 var DebugEnabled = false
 
 type context struct {
-	closed chan error
+	closed chan struct{}
 	err    error
 }
 
 func NewContext() stream.Context {
 	return &context{
-		closed: make(chan error),
+		closed: make(chan struct{}),
 	}
 }
 
@@ -33,7 +33,7 @@ func (c *context) Err() error {
 	return c.err
 }
 
-func (c *context) Closed() <-chan error {
+func (c *context) Done() <-chan struct{} {
 	return c.closed
 }
 

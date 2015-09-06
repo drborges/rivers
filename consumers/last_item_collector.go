@@ -17,7 +17,7 @@ func (collector *itemCollector) Bind(context stream.Context) {
 func (collector *itemCollector) Consume(in stream.Readable) {
 	for {
 		select {
-		case <-collector.context.Closed():
+		case <-collector.context.Done():
 			return
 		case item, more := <-in:
 			if !more {

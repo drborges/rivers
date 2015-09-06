@@ -31,7 +31,7 @@ func (c *zip) Combine(in ...stream.Readable) stream.Readable {
 
 		for {
 			select {
-			case <-c.context.Closed():
+			case <-c.context.Done():
 				return
 			default:
 				doneCount := 0
