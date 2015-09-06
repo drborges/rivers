@@ -23,7 +23,7 @@ With a few basic building blocks based on the `Producer-Consumer` model, you can
 
 A pipeline often assumes the following format: `Producer`, one or more `Transformers` and an optional `Consumer`
 
-->![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)<-
+![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)
 
 For more complex formats check the `Combiners` and `Dispatchers` sections.
 
@@ -172,7 +172,7 @@ There are a variety of transform operations built-in in rivers, to name a few: `
 
 Basic Stream Transformation Pipeline: `Producer -> Transformer -> Consumer`
 
-->![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)<-
+![Basic Stream](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png)
 
 Aiming extensibility, rivers allow you to implement your own version of `stream.Transformer`. The following code implements a `filter` in terms of `stream.Transformer`:
 
@@ -258,7 +258,7 @@ It essentially takes one or more readable streams and gives you back a readable 
 
 Combining Streams Pipeline: `Producers -> Combiner -> Transformer -> Consumer`
 
-->![Combining Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png)<-
+![Combining Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png)
 
 The following example combines data from 3 different streams into a single stream:
 
@@ -294,7 +294,7 @@ type Dispatcher interface {
 
 Dispatching data to multiple targets in a pipeline would look like: `Producer -> Dispatcher -> Transformers -> Consumers`
 
-->![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png)<-
+![Dispatching To Streams](https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png)
 
 The following code show a use case for the `Partition` operation mentioned above:
 
@@ -328,12 +328,52 @@ fmt.Println("err:", err)
 
 # Built-in Filters and Mappers
 
+TODO
+
 # The Cancellation Problem
 
+Imagine you have a program that fires off a great deal of concurrent execution threads, in Go that translates to `goroutines`. Making sure each one of these goroutines come to an end by normally finishing their execution or more importantly canceling themselves upon any fatal failure in the pipeline is an interesting challenge. That is called the `cancellation` problem. 
 
+Keeping track of all potential `goroutines` running in a system might not scale very well specially in scenarios where the number of concurrent goroutines might get to the hundreds of thousands. The concurrency model based on `goroutines` implemented by Go along with its primitives for working with `channels` and panic recovering allow developers to handle problems like this in a very elegant manner.
+
+Rivers solves the `cancellation` problem by applying one of the properties of `closed channels`: [A closed channel is always ready to receive](http://golang.org/ref/spec#Receive_operator).
+
+Every rivers operation before producing, consuming or transforming incoming data, first checks whether or not the context is `Done` within a [select channel block](https://gobyexample.com/non-blocking-channel-operations), take the `filter` example previously mentioned:
+
+```go
+go func() {
+	defer filter.context.Recover()
+	defer close(writable)
+
+	select {
+	case <-filter.context.Done():
+		return
+	default:
+		data, more := <-in
+		if !more {
+			return
+		}
+		if filter.fn(data) {
+			writable <- data
+		}
+	}
+}()
+```
+
+Note that before it filters the incoming data -- default block -- it tries to read from the context `Done` channel. If it is able to read from it then the context Done channel is already closed therefore always read to receive. That causes the select block to peek the context done case, returning and finishing the goroutine right away.
+
+Rivers will close the done channel whenever it recovers from a panic anywhere in the pipeline -- as long as the panicing goroutine defers `context.Recover()`.
+
+Now imagine every single goroutine fired by rivers applying this pattern, the whole system continuation/cancellation logic can be controlled by simply closing or not a single channel. No need to keep track nor synchronize hundreds of thousands of execution threads, just a single close statement for the rescue. That is how powerful Go concurrency model is <3
 
 # Troubleshooting
 
+TODO `rivers.DebugEnabled`
+
 # Contributing
 
+TODO
+
 # License
+
+TODO
