@@ -12,8 +12,7 @@ func NewEmitter(context Context, w Writable) Emitter {
 func (emitter *emitter) Emit(data T) {
 	select {
 	case <-emitter.context.Done():
-		// TODO extract to an actual error type: stream.ErrClosedContext
-		panic("Context is closed")
+		panic(Done)
 	default:
 		emitter.writable <- data
 	}

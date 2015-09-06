@@ -40,7 +40,7 @@ func TestZipperBy(t *testing.T) {
 			})
 
 			Convey("When I close the context", func() {
-				context.Close()
+				context.Close(nil)
 
 				Convey("And I apply the transformer to the stream", func() {
 					combiner := combiners.ZipBy(adder)

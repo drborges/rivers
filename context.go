@@ -10,42 +10,50 @@ import (
 var DebugEnabled = false
 
 type context struct {
-	closed chan struct{}
-	err    error
+	requests chan error
+	closed   chan struct{}
+	err      error
 }
 
 func NewContext() stream.Context {
 	return &context{
-		closed: make(chan struct{}),
+		requests: make(chan error, 1),
+		closed:   make(chan struct{}),
 	}
 }
 
-func (c *context) Close() {
+func (context *context) Close(err error) {
+	context.requests <- err
 	select {
-	case <-c.closed:
+	// TODO timeout?
+	case <-context.closed:
 		return
+	case err := <-context.requests:
+		context.err = err
+		close(context.closed)
 	default:
-		close(c.closed)
+		// Not expected to ever happen
+		panic("Close request reached default block")
 	}
 }
 
-func (c *context) Err() error {
-	return c.err
+func (context *context) Err() error {
+	return context.err
 }
 
-func (c *context) Done() <-chan struct{} {
-	return c.closed
+func (context *context) Done() <-chan struct{} {
+	return context.closed
 }
 
-func (c *context) Recover() {
-	if r := recover(); r != nil {
-		c.Close()
+func (context *context) Recover() {
+	if r := recover(); r != nil && r != stream.Done {
 		if DebugEnabled {
 			debug.PrintStack()
 		}
-		c.err = errors.New(fmt.Sprintf("Recovered from %v", r))
+		err := errors.New(fmt.Sprintf("Recovered from %v", r))
 		if e, ok := r.(error); ok {
-			c.err = e
+			err = e
 		}
+		context.Close(err)
 	}
 }
