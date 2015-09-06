@@ -70,59 +70,61 @@ func (s *Pipeline) Partition(fn stream.PredicateFn) (*Pipeline, *Pipeline) {
 	return &Pipeline{s.Context, lhsIn}, &Pipeline{s.Context, rhsIn}
 }
 
-func (s *Pipeline) Merge(readables ...stream.Readable) *Pipeline {
+func (s *Pipeline) readables(pipelines ...*Pipeline) []stream.Readable {
+	readables := []stream.Readable{s.Stream}
+	for _, p := range pipelines {
+		readables = append(readables, p.Stream)
+	}
+	return readables
+}
+
+func (s *Pipeline) Merge(pipelines ...*Pipeline) *Pipeline {
 	combiner := combiners.FIFO()
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
 	}
 
-	toBeMerged := []stream.Readable{s.Stream}
-	toBeMerged = append(toBeMerged, readables...)
 	return &Pipeline{
 		Context: s.Context,
-		Stream: combiner.Combine(toBeMerged...),
+		Stream:  combiner.Combine(s.readables(pipelines...)...),
 	}
 }
 
-func (s *Pipeline) Zip(readables ...stream.Readable) *Pipeline {
+func (s *Pipeline) Zip(pipelines ...*Pipeline) *Pipeline {
 	combiner := combiners.Zip()
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
 	}
 
-	toBeZipped := []stream.Readable{s.Stream}
-	toBeZipped = append(toBeZipped, readables...)
 	return &Pipeline{
 		Context: s.Context,
-		Stream: combiner.Combine(toBeZipped...),
+		Stream:  combiner.Combine(s.readables(pipelines...)...),
 	}
 }
 
-func (s *Pipeline) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Pipeline {
+func (s *Pipeline) ZipBy(fn stream.ReduceFn, pipelines ...*Pipeline) *Pipeline {
 	combiner := combiners.ZipBy(fn)
 	if bindable, ok := combiner.(stream.Bindable); ok {
 		bindable.Bind(s.Context)
 	}
 
-	toBeZipped := []stream.Readable{s.Stream}
-	toBeZipped = append(toBeZipped, readables...)
 	return &Pipeline{
 		Context: s.Context,
-		Stream:  combiner.Combine(toBeZipped...),
+		Stream:  combiner.Combine(s.readables(pipelines...)...),
 	}
 }
 
 func (s *Pipeline) Dispatch(writables ...stream.Writable) *Pipeline {
 	return &Pipeline{
 		Context: s.Context,
-		Stream: dispatchers.New(s.Context).Always().Dispatch(s.Stream, writables...),
+		Stream:  dispatchers.New(s.Context).Always().Dispatch(s.Stream, writables...),
 	}
 }
 
 func (s *Pipeline) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Pipeline {
 	return &Pipeline{
 		Context: s.Context,
-		Stream: dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, writables...),
+		Stream:  dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, writables...),
 	}
 }
 
