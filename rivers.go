@@ -46,194 +46,194 @@ func FromSlice(slice stream.T) *Pipeline {
 	return From(producers.FromSlice(slice))
 }
 
-func (s *Pipeline) Split() (*Pipeline, *Pipeline) {
-	streams := s.SplitN(2)
-	return streams[0], streams[1]
+func (pipeline *Pipeline) Split() (*Pipeline, *Pipeline) {
+	pipelines := pipeline.SplitN(2)
+	return pipelines[0], pipelines[1]
 }
 
-func (s *Pipeline) SplitN(n int) []*Pipeline {
+func (pipeline *Pipeline) SplitN(n int) []*Pipeline {
 	pipelines := make([]*Pipeline, n)
 	writables := make([]stream.Writable, n)
 	for i := 0; i < n; i++ {
-		readable, writable := stream.New(cap(s.Stream))
-		pipelines[i] = &Pipeline{s.Context, readable}
+		readable, writable := stream.New(cap(pipeline.Stream))
+		pipelines[i] = &Pipeline{pipeline.Context, readable}
 		writables[i] = writable
 	}
-	dispatchers.New(s.Context).Always().Dispatch(s.Stream, writables...)
+	dispatchers.New(pipeline.Context).Always().Dispatch(pipeline.Stream, writables...)
 	return pipelines
 }
 
-func (s *Pipeline) Partition(fn stream.PredicateFn) (*Pipeline, *Pipeline) {
-	lhsIn, lhsOut := stream.New(cap(s.Stream))
-	rhsIn := dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, lhsOut)
+func (pipeline *Pipeline) Partition(fn stream.PredicateFn) (*Pipeline, *Pipeline) {
+	lhsIn, lhsOut := stream.New(cap(pipeline.Stream))
+	rhsIn := dispatchers.New(pipeline.Context).If(fn).Dispatch(pipeline.Stream, lhsOut)
 
-	return &Pipeline{s.Context, lhsIn}, &Pipeline{s.Context, rhsIn}
+	return &Pipeline{pipeline.Context, lhsIn}, &Pipeline{pipeline.Context, rhsIn}
 }
 
-func (s *Pipeline) readables(pipelines ...*Pipeline) []stream.Readable {
-	readables := []stream.Readable{s.Stream}
+func (pipeline *Pipeline) readableFrom(pipelines ...*Pipeline) []stream.Readable {
+	readables := []stream.Readable{pipeline.Stream}
 	for _, p := range pipelines {
 		readables = append(readables, p.Stream)
 	}
 	return readables
 }
 
-func (s *Pipeline) Merge(pipelines ...*Pipeline) *Pipeline {
+func (pipeline *Pipeline) Merge(pipelines ...*Pipeline) *Pipeline {
 	combiner := combiners.FIFO()
 	if bindable, ok := combiner.(stream.Bindable); ok {
-		bindable.Bind(s.Context)
+		bindable.Bind(pipeline.Context)
 	}
 
 	return &Pipeline{
-		Context: s.Context,
-		Stream:  combiner.Combine(s.readables(pipelines...)...),
+		Context: pipeline.Context,
+		Stream:  combiner.Combine(pipeline.readableFrom(pipelines...)...),
 	}
 }
 
-func (s *Pipeline) Zip(pipelines ...*Pipeline) *Pipeline {
+func (pipeline *Pipeline) Zip(pipelines ...*Pipeline) *Pipeline {
 	combiner := combiners.Zip()
 	if bindable, ok := combiner.(stream.Bindable); ok {
-		bindable.Bind(s.Context)
+		bindable.Bind(pipeline.Context)
 	}
 
 	return &Pipeline{
-		Context: s.Context,
-		Stream:  combiner.Combine(s.readables(pipelines...)...),
+		Context: pipeline.Context,
+		Stream:  combiner.Combine(pipeline.readableFrom(pipelines...)...),
 	}
 }
 
-func (s *Pipeline) ZipBy(fn stream.ReduceFn, pipelines ...*Pipeline) *Pipeline {
+func (pipeline *Pipeline) ZipBy(fn stream.ReduceFn, pipelines ...*Pipeline) *Pipeline {
 	combiner := combiners.ZipBy(fn)
 	if bindable, ok := combiner.(stream.Bindable); ok {
-		bindable.Bind(s.Context)
+		bindable.Bind(pipeline.Context)
 	}
 
 	return &Pipeline{
-		Context: s.Context,
-		Stream:  combiner.Combine(s.readables(pipelines...)...),
+		Context: pipeline.Context,
+		Stream:  combiner.Combine(pipeline.readableFrom(pipelines...)...),
 	}
 }
 
-func (s *Pipeline) Dispatch(writables ...stream.Writable) *Pipeline {
+func (pipeline *Pipeline) Dispatch(writables ...stream.Writable) *Pipeline {
 	return &Pipeline{
-		Context: s.Context,
-		Stream:  dispatchers.New(s.Context).Always().Dispatch(s.Stream, writables...),
+		Context: pipeline.Context,
+		Stream:  dispatchers.New(pipeline.Context).Always().Dispatch(pipeline.Stream, writables...),
 	}
 }
 
-func (s *Pipeline) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Pipeline {
+func (pipeline *Pipeline) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Pipeline {
 	return &Pipeline{
-		Context: s.Context,
-		Stream:  dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, writables...),
+		Context: pipeline.Context,
+		Stream:  dispatchers.New(pipeline.Context).If(fn).Dispatch(pipeline.Stream, writables...),
 	}
 }
 
-func (s *Pipeline) Apply(transformer stream.Transformer) *Pipeline {
+func (pipeline *Pipeline) Apply(transformer stream.Transformer) *Pipeline {
 	if bindable, ok := transformer.(stream.Bindable); ok {
-		bindable.Bind(s.Context)
+		bindable.Bind(pipeline.Context)
 	}
 
 	return &Pipeline{
-		Stream:  transformer.Transform(s.Stream),
-		Context: s.Context,
+		Stream:  transformer.Transform(pipeline.Stream),
+		Context: pipeline.Context,
 	}
 }
 
-func (s *Pipeline) Filter(fn stream.PredicateFn) *Pipeline {
-	return s.Apply(transformers.Filter(fn))
+func (pipeline *Pipeline) Filter(fn stream.PredicateFn) *Pipeline {
+	return pipeline.Apply(transformers.Filter(fn))
 }
 
-func (s *Pipeline) OnData(fn stream.OnDataFn) *Pipeline {
-	return s.Apply(transformers.OnData(fn))
+func (pipeline *Pipeline) OnData(fn stream.OnDataFn) *Pipeline {
+	return pipeline.Apply(transformers.OnData(fn))
 }
 
-func (s *Pipeline) Map(fn stream.MapFn) *Pipeline {
-	return s.Apply(transformers.Map(fn))
+func (pipeline *Pipeline) Map(fn stream.MapFn) *Pipeline {
+	return pipeline.Apply(transformers.Map(fn))
 }
 
-func (s *Pipeline) Each(fn stream.EachFn) *Pipeline {
-	return s.Apply(transformers.Each(fn))
+func (pipeline *Pipeline) Each(fn stream.EachFn) *Pipeline {
+	return pipeline.Apply(transformers.Each(fn))
 }
 
-func (s *Pipeline) FindBy(fn stream.PredicateFn) *Pipeline {
-	return s.Apply(transformers.FindBy(fn))
+func (pipeline *Pipeline) FindBy(fn stream.PredicateFn) *Pipeline {
+	return pipeline.Apply(transformers.FindBy(fn))
 }
 
-func (s *Pipeline) TakeFirst(n int) *Pipeline {
-	return s.Apply(transformers.TakeFirst(n))
+func (pipeline *Pipeline) TakeFirst(n int) *Pipeline {
+	return pipeline.Apply(transformers.TakeFirst(n))
 }
 
-func (s *Pipeline) Take(fn stream.PredicateFn) *Pipeline {
-	return s.Apply(transformers.Take(fn))
+func (pipeline *Pipeline) Take(fn stream.PredicateFn) *Pipeline {
+	return pipeline.Apply(transformers.Take(fn))
 }
 
-func (s *Pipeline) DropFirst(n int) *Pipeline {
-	return s.Apply(transformers.DropFirst(n))
+func (pipeline *Pipeline) DropFirst(n int) *Pipeline {
+	return pipeline.Apply(transformers.DropFirst(n))
 }
 
-func (s *Pipeline) Drop(fn stream.PredicateFn) *Pipeline {
-	return s.Apply(transformers.Drop(fn))
+func (pipeline *Pipeline) Drop(fn stream.PredicateFn) *Pipeline {
+	return pipeline.Apply(transformers.Drop(fn))
 }
 
-func (s *Pipeline) Reduce(acc stream.T, fn stream.ReduceFn) *Pipeline {
-	return s.Apply(transformers.Reduce(acc, fn))
+func (pipeline *Pipeline) Reduce(acc stream.T, fn stream.ReduceFn) *Pipeline {
+	return pipeline.Apply(transformers.Reduce(acc, fn))
 }
 
-func (s *Pipeline) Flatten() *Pipeline {
-	return s.Apply(transformers.Flatten())
+func (pipeline *Pipeline) Flatten() *Pipeline {
+	return pipeline.Apply(transformers.Flatten())
 }
 
-func (s *Pipeline) SortBy(fn stream.SortByFn) *Pipeline {
-	return s.Apply(transformers.SortBy(fn))
+func (pipeline *Pipeline) SortBy(fn stream.SortByFn) *Pipeline {
+	return pipeline.Apply(transformers.SortBy(fn))
 }
 
-func (s *Pipeline) Batch(size int) *Pipeline {
-	return s.Apply(transformers.Batch(size))
+func (pipeline *Pipeline) Batch(size int) *Pipeline {
+	return pipeline.Apply(transformers.Batch(size))
 }
 
-func (s *Pipeline) BatchBy(batch stream.Batch) *Pipeline {
-	return s.Apply(transformers.BatchBy(batch))
+func (pipeline *Pipeline) BatchBy(batch stream.Batch) *Pipeline {
+	return pipeline.Apply(transformers.BatchBy(batch))
 }
 
-func (s *Pipeline) Then(consumer stream.Consumer) error {
+func (pipeline *Pipeline) Then(consumer stream.Consumer) error {
 	if bindable, ok := consumer.(stream.Bindable); ok {
-		bindable.Bind(s.Context)
+		bindable.Bind(pipeline.Context)
 	}
-	consumer.Consume(s.Stream)
-	return s.Context.Err()
+	consumer.Consume(pipeline.Stream)
+	return pipeline.Context.Err()
 }
 
-func (s *Pipeline) Collect() ([]stream.T, error) {
+func (pipeline *Pipeline) Collect() ([]stream.T, error) {
 	var data []stream.T
-	return data, s.CollectAs(&data)
+	return data, pipeline.CollectAs(&data)
 }
 
-func (s *Pipeline) CollectAs(data interface{}) error {
-	return s.Then(consumers.ItemsCollector(data))
+func (pipeline *Pipeline) CollectAs(data interface{}) error {
+	return pipeline.Then(consumers.ItemsCollector(data))
 }
 
-func (s *Pipeline) CollectFirst() (stream.T, error) {
+func (pipeline *Pipeline) CollectFirst() (stream.T, error) {
 	var data stream.T
-	return data, s.CollectFirstAs(&data)
+	return data, pipeline.CollectFirstAs(&data)
 }
 
-func (s *Pipeline) CollectFirstAs(data interface{}) error {
-	return s.TakeFirst(1).Then(consumers.LastItemCollector(data))
+func (pipeline *Pipeline) CollectFirstAs(data interface{}) error {
+	return pipeline.TakeFirst(1).Then(consumers.LastItemCollector(data))
 }
 
-func (s *Pipeline) CollectLast() (stream.T, error) {
+func (pipeline *Pipeline) CollectLast() (stream.T, error) {
 	var data stream.T
-	return data, s.CollectLastAs(&data)
+	return data, pipeline.CollectLastAs(&data)
 }
 
-func (s *Pipeline) CollectLastAs(data interface{}) error {
-	return s.Then(consumers.LastItemCollector(data))
+func (pipeline *Pipeline) CollectLastAs(data interface{}) error {
+	return pipeline.Then(consumers.LastItemCollector(data))
 }
 
-func (s *Pipeline) CollectBy(fn stream.EachFn) error {
-	return s.Then(consumers.CollectBy(fn))
+func (pipeline *Pipeline) CollectBy(fn stream.EachFn) error {
+	return pipeline.Then(consumers.CollectBy(fn))
 }
 
-func (s *Pipeline) Drain() error {
-	return s.Then(consumers.Drainer())
+func (pipeline *Pipeline) Drain() error {
+	return pipeline.Then(consumers.Drainer())
 }
