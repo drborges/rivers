@@ -57,7 +57,7 @@
 
 <p>A pipeline often assumes the following format: <code>Producer</code>, one or more <code>Transformers</code> and an optional <code>Consumer</code></p>
 
-<p>-&gt;<img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png" alt="Basic Stream">&lt;-</p>
+<p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png" alt="Basic Stream"></p>
 
 <p>For more complex formats check the <code>Combiners</code> and <code>Dispatchers</code> sections.</p>
 
@@ -83,7 +83,7 @@
 <a id="producers-" class="anchor" href="#producers-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Producers <img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/producer.png" alt="Basic Stream">
 </h3>
 
-<p>Asynchronously emits data into a stream. Any struct implementing the <code>stream.Producer</code> interface can be used as a producer in rivers.</p>
+<p>Asynchronously emits data into a stream. Any type implementing the <code>stream.Producer</code> interface can be used as a producer in rivers.</p>
 
 <div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">Producer</span> <span class="pl-k">interface</span> {
     <span class="pl-c1">Produce</span>() stream.<span class="pl-smi">Readable</span>
@@ -208,7 +208,7 @@
 
 <p>Basic Stream Transformation Pipeline: <code>Producer -&gt; Transformer -&gt; Consumer</code></p>
 
-<p>-&gt;<img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png" alt="Basic Stream">&lt;-</p>
+<p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-transformation.png" alt="Basic Stream">&lt;-</p>
 
 <p>Aiming extensibility, rivers allow you to implement your own version of <code>stream.Transformer</code>. The following code implements a <code>filter</code> in terms of <code>stream.Transformer</code>:</p>
 
@@ -288,7 +288,7 @@
 
 <p>Combining Streams Pipeline: <code>Producers -&gt; Combiner -&gt; Transformer -&gt; Consumer</code></p>
 
-<p>-&gt;<img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png" alt="Combining Streams">&lt;-</p>
+<p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-combiner.png" alt="Combining Streams"></p>
 
 <p>The following example combines data from 3 different streams into a single stream:</p>
 
@@ -322,7 +322,7 @@
 
 <p>Dispatching data to multiple targets in a pipeline would look like: <code>Producer -&gt; Dispatcher -&gt; Transformers -&gt; Consumers</code></p>
 
-<p>-&gt;<img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png" alt="Dispatching To Streams">&lt;-</p>
+<p><img src="https://raw.githubusercontent.com/drborges/rivers/master/docs/stream-dispatcher.png" alt="Dispatching To Streams"></p>
 
 <p>The following code show a use case for the <code>Partition</code> operation mentioned above:</p>
 
@@ -354,23 +354,57 @@ fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"
 <h1>
 <a id="built-in-filters-and-mappers" class="anchor" href="#built-in-filters-and-mappers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Built-in Filters and Mappers</h1>
 
-<h1>
-<a id="custom-producers" class="anchor" href="#custom-producers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Producers</h1>
-
-<h1>
-<a id="custom-transformers" class="anchor" href="#custom-transformers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Transformers</h1>
+<p>TODO</p>
 
 <h1>
 <a id="the-cancellation-problem" class="anchor" href="#the-cancellation-problem" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Cancellation Problem</h1>
 
+<p>Imagine you have a program that fires off a great deal of concurrent execution threads, in Go that translates to <code>goroutines</code>. Making sure each one of these goroutines come to an end by normally finishing their execution or more importantly canceling themselves upon any fatal failure in the pipeline is an interesting challenge. That is called the <code>cancellation</code> problem. </p>
+
+<p>Keeping track of all potential <code>goroutines</code> running in a system might not scale very well specially in scenarios where the number of concurrent goroutines might get to the hundreds of thousands. The concurrency model based on <code>goroutines</code> implemented by Go along with its primitives for working with <code>channels</code> and panic recovering allow developers to handle problems like this in a very elegant manner.</p>
+
+<p>Rivers solves the <code>cancellation</code> problem by applying one of the properties of <code>closed channels</code>: <a href="http://golang.org/ref/spec#Receive_operator">A closed channel is always ready to receive</a>.</p>
+
+<p>Every rivers operation before producing, consuming or transforming incoming data, first checks whether or not the context is <code>Done</code> within a <a href="https://gobyexample.com/non-blocking-channel-operations">select channel block</a>, take the <code>filter</code> example previously mentioned:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">go</span> <span class="pl-k">func</span>() {
+    <span class="pl-k">defer</span> filter.<span class="pl-smi">context</span>.<span class="pl-c1">Recover</span>()
+    <span class="pl-k">defer</span> <span class="pl-c1">close</span>(writable)
+
+    <span class="pl-k">select</span> {
+    <span class="pl-k">case</span> <span class="pl-k">&lt;-</span>filter.<span class="pl-smi">context</span>.<span class="pl-c1">Done</span>():
+        <span class="pl-k">return</span>
+    <span class="pl-k">default</span>:
+        <span class="pl-smi">data</span>, <span class="pl-smi">more</span> <span class="pl-k">:=</span> <span class="pl-k">&lt;-</span>in
+        <span class="pl-k">if</span> !more {
+            <span class="pl-k">return</span>
+        }
+        <span class="pl-k">if</span> filter.<span class="pl-c1">fn</span>(data) {
+            writable <span class="pl-k">&lt;-</span> data
+        }
+    }
+}()</pre></div>
+
+<p>Note that before it filters the incoming data -- default block -- it tries to read from the context <code>Done</code> channel. If it is able to read from it then the context Done channel is already closed therefore always read to receive. That causes the select block to peek the context done case, returning and finishing the goroutine right away.</p>
+
+<p>Rivers will close the done channel whenever it recovers from a panic anywhere in the pipeline -- as long as the panicing goroutine defers <code>context.Recover()</code>.</p>
+
+<p>Now imagine every single goroutine fired by rivers applying this pattern, the whole system continuation/cancellation logic can be controlled by simply closing or not a single channel. No need to keep track nor synchronize hundreds of thousands of execution threads, just a single close statement for the rescue. That is how powerful Go concurrency model is &lt;3</p>
+
 <h1>
 <a id="troubleshooting" class="anchor" href="#troubleshooting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Troubleshooting</h1>
+
+<p>TODO <code>rivers.DebugEnabled</code></p>
 
 <h1>
 <a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributing</h1>
 
+<p>TODO</p>
+
 <h1>
 <a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h1>
+
+<p>TODO</p>
         </section>
 
         <footer>
