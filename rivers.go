@@ -70,50 +70,6 @@ func (pipeline *Pipeline) Partition(fn stream.PredicateFn) (*Pipeline, *Pipeline
 	return &Pipeline{pipeline.Context, lhsIn}, &Pipeline{pipeline.Context, rhsIn}
 }
 
-func (pipeline *Pipeline) readableFrom(pipelines ...*Pipeline) []stream.Readable {
-	readables := []stream.Readable{pipeline.Stream}
-	for _, p := range pipelines {
-		readables = append(readables, p.Stream)
-	}
-	return readables
-}
-
-func (pipeline *Pipeline) Merge(pipelines ...*Pipeline) *Pipeline {
-	combiner := combiners.FIFO()
-	if bindable, ok := combiner.(stream.Bindable); ok {
-		bindable.Bind(pipeline.Context)
-	}
-
-	return &Pipeline{
-		Context: pipeline.Context,
-		Stream:  combiner.Combine(pipeline.readableFrom(pipelines...)...),
-	}
-}
-
-func (pipeline *Pipeline) Zip(pipelines ...*Pipeline) *Pipeline {
-	combiner := combiners.Zip()
-	if bindable, ok := combiner.(stream.Bindable); ok {
-		bindable.Bind(pipeline.Context)
-	}
-
-	return &Pipeline{
-		Context: pipeline.Context,
-		Stream:  combiner.Combine(pipeline.readableFrom(pipelines...)...),
-	}
-}
-
-func (pipeline *Pipeline) ZipBy(fn stream.ReduceFn, pipelines ...*Pipeline) *Pipeline {
-	combiner := combiners.ZipBy(fn)
-	if bindable, ok := combiner.(stream.Bindable); ok {
-		bindable.Bind(pipeline.Context)
-	}
-
-	return &Pipeline{
-		Context: pipeline.Context,
-		Stream:  combiner.Combine(pipeline.readableFrom(pipelines...)...),
-	}
-}
-
 func (pipeline *Pipeline) Dispatch(writables ...stream.Writable) *Pipeline {
 	return &Pipeline{
 		Context: pipeline.Context,
@@ -125,6 +81,34 @@ func (pipeline *Pipeline) DispatchIf(fn stream.PredicateFn, writables ...stream.
 	return &Pipeline{
 		Context: pipeline.Context,
 		Stream:  dispatchers.New(pipeline.Context).If(fn).Dispatch(pipeline.Stream, writables...),
+	}
+}
+
+func (pipeline *Pipeline) Merge(pipelines ...*Pipeline) *Pipeline {
+	return pipeline.Combine(combiners.FIFO(), pipelines)
+}
+
+func (pipeline *Pipeline) Zip(pipelines ...*Pipeline) *Pipeline {
+	return pipeline.Combine(combiners.Zip(), pipelines)
+}
+
+func (pipeline *Pipeline) ZipBy(fn stream.ReduceFn, pipelines ...*Pipeline) *Pipeline {
+	return pipeline.Combine(combiners.ZipBy(fn), pipelines)
+}
+
+func (pipeline *Pipeline) Combine(combiner stream.Combiner, pipelines []*Pipeline) *Pipeline {
+	if bindable, ok := combiner.(stream.Bindable); ok {
+		bindable.Bind(pipeline.Context)
+	}
+
+	readables := []stream.Readable{pipeline.Stream}
+	for _, p := range pipelines {
+		readables = append(readables, p.Stream)
+	}
+
+	return &Pipeline{
+		Context: pipeline.Context,
+		Stream:  combiner.Combine(readables...),
 	}
 }
 
