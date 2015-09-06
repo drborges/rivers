@@ -21,11 +21,17 @@ func From(producer stream.Producer) *Pipeline {
 		bindable.Bind(context)
 	}
 
-	return NewPipeline(context).newStage(producer.Produce())
+	return &Pipeline{
+		Context: context,
+		Stream:  producer.Produce(),
+	}
 }
 
 func FromStream(readable stream.Readable) *Pipeline {
-	return NewPipeline(NewContext()).newStage(readable)
+	return &Pipeline{
+		Context: NewContext(),
+		Stream:  readable,
+	}
 }
 
 func FromRange(from, to int) *Pipeline {
@@ -40,42 +46,28 @@ func FromSlice(slice stream.T) *Pipeline {
 	return From(producers.FromSlice(slice))
 }
 
-func (s *Pipeline) newStage(readable stream.Readable) *Pipeline {
-	return &Pipeline{
-		Stream:  readable,
-		Context: s.Context,
-	}
-}
-
-func NewPipeline(context stream.Context) *Pipeline {
-	return &Pipeline{
-		Context: context,
-		Stream:  stream.NewEmpty(),
-	}
-}
-
 func (s *Pipeline) Split() (*Pipeline, *Pipeline) {
 	streams := s.SplitN(2)
 	return streams[0], streams[1]
 }
 
 func (s *Pipeline) SplitN(n int) []*Pipeline {
-	streams := make([]*Pipeline, n)
+	pipelines := make([]*Pipeline, n)
 	writables := make([]stream.Writable, n)
 	for i := 0; i < n; i++ {
 		readable, writable := stream.New(cap(s.Stream))
-		streams[i] = s.newStage(readable)
+		pipelines[i] = &Pipeline{s.Context, readable}
 		writables[i] = writable
 	}
 	dispatchers.New(s.Context).Always().Dispatch(s.Stream, writables...)
-	return streams
+	return pipelines
 }
 
 func (s *Pipeline) Partition(fn stream.PredicateFn) (*Pipeline, *Pipeline) {
 	lhsIn, lhsOut := stream.New(cap(s.Stream))
 	rhsIn := dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, lhsOut)
 
-	return s.newStage(lhsIn), s.newStage(rhsIn)
+	return &Pipeline{s.Context, lhsIn}, &Pipeline{s.Context, rhsIn}
 }
 
 func (s *Pipeline) Merge(readables ...stream.Readable) *Pipeline {
@@ -86,7 +78,10 @@ func (s *Pipeline) Merge(readables ...stream.Readable) *Pipeline {
 
 	toBeMerged := []stream.Readable{s.Stream}
 	toBeMerged = append(toBeMerged, readables...)
-	return s.newStage(combiner.Combine(toBeMerged...))
+	return &Pipeline{
+		Context: s.Context,
+		Stream: combiner.Combine(toBeMerged...),
+	}
 }
 
 func (s *Pipeline) Zip(readables ...stream.Readable) *Pipeline {
@@ -97,7 +92,10 @@ func (s *Pipeline) Zip(readables ...stream.Readable) *Pipeline {
 
 	toBeZipped := []stream.Readable{s.Stream}
 	toBeZipped = append(toBeZipped, readables...)
-	return s.newStage(combiner.Combine(toBeZipped...))
+	return &Pipeline{
+		Context: s.Context,
+		Stream: combiner.Combine(toBeZipped...),
+	}
 }
 
 func (s *Pipeline) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Pipeline {
@@ -108,15 +106,24 @@ func (s *Pipeline) ZipBy(fn stream.ReduceFn, readables ...stream.Readable) *Pipe
 
 	toBeZipped := []stream.Readable{s.Stream}
 	toBeZipped = append(toBeZipped, readables...)
-	return s.newStage(combiner.Combine(toBeZipped...))
+	return &Pipeline{
+		Context: s.Context,
+		Stream:  combiner.Combine(toBeZipped...),
+	}
 }
 
 func (s *Pipeline) Dispatch(writables ...stream.Writable) *Pipeline {
-	return s.newStage(dispatchers.New(s.Context).Always().Dispatch(s.Stream, writables...))
+	return &Pipeline{
+		Context: s.Context,
+		Stream: dispatchers.New(s.Context).Always().Dispatch(s.Stream, writables...),
+	}
 }
 
 func (s *Pipeline) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Pipeline {
-	return s.newStage(dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, writables...))
+	return &Pipeline{
+		Context: s.Context,
+		Stream: dispatchers.New(s.Context).If(fn).Dispatch(s.Stream, writables...),
+	}
 }
 
 func (s *Pipeline) Apply(transformer stream.Transformer) *Pipeline {

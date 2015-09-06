@@ -15,9 +15,14 @@ type OnDataFn func(data T, emitter Emitter)
 type ReduceFn func(acc, next T) (result T)
 
 type Context interface {
+	// TODO Remove
+	// goroutines should not be able to cancel a context, instead they can only signal
+	// a cancellation request
+	// For more see: https://blog.golang.org/context
 	Close()
 	Recover()
 	Err() error
+	// TODO rename to Done and change return type to struct{}
 	Closed() <-chan error
 }
 
