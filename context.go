@@ -28,12 +28,9 @@ func (context *context) Close(err error) {
 	// TODO timeout?
 	case <-context.closed:
 		return
-	case err := <-context.requests:
-		context.err = err
-		close(context.closed)
 	default:
-		// Not expected to ever happen
-		panic("Close request reached default block")
+		close(context.closed)
+		context.err = <-context.requests
 	}
 }
 
