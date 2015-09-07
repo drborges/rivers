@@ -23,7 +23,7 @@ func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
 	max := func(rs ...stream.Readable) int {
 		max := 0
 		for _, r := range rs {
-			capacity := cap(r)
+			capacity := r.Capacity()
 			if max < capacity {
 				max = capacity
 			}

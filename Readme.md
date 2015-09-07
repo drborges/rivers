@@ -183,7 +183,7 @@ type Filter struct {
 }
 
 func (filter *Filter) Transform(in stream.Readable) stream.Readable {
-	readable, writable := stream.New(cap(in))
+	readable, writable := stream.New(in.Capacity())
 
 	go func() {
 		defer filter.context.Recover()

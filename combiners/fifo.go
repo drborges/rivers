@@ -21,7 +21,7 @@ func (c *fifo) Combine(in ...stream.Readable) stream.Readable {
 	capacity := func(in ...stream.Readable) int {
 		capacity := 0
 		for _, r := range in {
-			capacity += cap(r)
+			capacity += r.Capacity()
 		}
 		return capacity
 	}

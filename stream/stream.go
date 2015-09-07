@@ -18,3 +18,7 @@ func (readable Readable) ReadAll() []T {
 	}
 	return read
 }
+
+func (readable Readable) Capacity() int {
+	return cap(readable)
+}

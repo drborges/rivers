@@ -11,7 +11,7 @@ type ifDispatcher struct {
 }
 
 func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, out ...stream.Writable) stream.Readable {
-	reader, writer := stream.New(cap(in))
+	reader, writer := stream.New(in.Capacity())
 
 	wg := make(map[stream.Writable]*sync.WaitGroup)
 	closeWritables := func() {

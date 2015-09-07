@@ -55,7 +55,7 @@ func (pipeline *Pipeline) SplitN(n int) []*Pipeline {
 	pipelines := make([]*Pipeline, n)
 	writables := make([]stream.Writable, n)
 	for i := 0; i < n; i++ {
-		readable, writable := stream.New(cap(pipeline.Stream))
+		readable, writable := stream.New(pipeline.Stream.Capacity())
 		pipelines[i] = &Pipeline{pipeline.Context, readable}
 		writables[i] = writable
 	}
@@ -64,7 +64,7 @@ func (pipeline *Pipeline) SplitN(n int) []*Pipeline {
 }
 
 func (pipeline *Pipeline) Partition(fn stream.PredicateFn) (*Pipeline, *Pipeline) {
-	lhsIn, lhsOut := stream.New(cap(pipeline.Stream))
+	lhsIn, lhsOut := stream.New(pipeline.Stream.Capacity())
 	rhsIn := dispatchers.New(pipeline.Context).If(fn).Dispatch(pipeline.Stream, lhsOut)
 
 	return &Pipeline{pipeline.Context, lhsIn}, &Pipeline{pipeline.Context, rhsIn}

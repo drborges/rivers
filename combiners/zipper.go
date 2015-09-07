@@ -18,7 +18,7 @@ func (c *zip) Combine(in ...stream.Readable) stream.Readable {
 	capacity := func(rs ...stream.Readable) int {
 		capacity := 0
 		for _, r := range rs {
-			capacity += cap(r)
+			capacity += r.Capacity()
 		}
 		return capacity
 	}

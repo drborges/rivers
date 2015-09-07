@@ -13,7 +13,7 @@ func (observer *Observer) Bind(context stream.Context) {
 }
 
 func (observer *Observer) Transform(in stream.Readable) stream.Readable {
-	readable, writable := stream.New(cap(in))
+	readable, writable := stream.New(in.Capacity())
 	emitter := stream.NewEmitter(observer.context, writable)
 
 	go func() {
