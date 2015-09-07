@@ -304,5 +304,19 @@ func TestRiversAPI(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(items, ShouldResemble, []stream.T{1, 2, 3, 4, 5})
 		})
+
+		Convey("From Range -> Find", func() {
+			data, err := rivers.FromRange(1, 5).Find(2).Collect()
+
+			So(err, ShouldBeNil)
+			So(data, ShouldResemble, []stream.T{2})
+		})
+
+		Convey("From Range -> Find By", func() {
+			data, err := rivers.FromRange(1, 5).FindBy(func(subject stream.T) bool { return subject == 2 }).Collect()
+
+			So(err, ShouldBeNil)
+			So(data, ShouldResemble, []stream.T{2})
+		})
 	})
 }

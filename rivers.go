@@ -139,6 +139,12 @@ func (pipeline *Pipeline) Each(fn stream.EachFn) *Pipeline {
 	return pipeline.Apply(transformers.Each(fn))
 }
 
+func (pipeline *Pipeline) Find(subject stream.T) *Pipeline {
+	return pipeline.Apply(transformers.FindBy(func(data stream.T) bool {
+		return data == subject
+	}))
+}
+
 func (pipeline *Pipeline) FindBy(fn stream.PredicateFn) *Pipeline {
 	return pipeline.Apply(transformers.FindBy(fn))
 }
