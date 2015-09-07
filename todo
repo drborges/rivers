@@ -1,4 +1,0 @@
-8. make MapFn, EachFn, etc... type interface{} with method Validate() error that checks whether their signature are valid or not
-9. adapt rivers.API to take generic method handlers from 8
-10. improve error handling. Recover mechanism omits a lot of information making debugging very hard
-11. Implement GroupBy operation
