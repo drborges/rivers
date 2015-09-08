@@ -6,10 +6,11 @@ import (
 	"github.com/drborges/rivers/scanners"
 	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers/from"
-	. "github.com/smartystreets/goconvey/convey"
 	"net"
 	"strings"
 	"testing"
+	"time"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestRiversAPI(t *testing.T) {
@@ -317,6 +318,17 @@ func TestRiversAPI(t *testing.T) {
 
 			So(err, ShouldBeNil)
 			So(data, ShouldResemble, []stream.T{2})
+		})
+
+		Convey("From Range -> Parallel -> Each", func() {
+			start := time.Now()
+			err := rivers.FromRange(1, 10).Parallel().Each(func(data stream.T) {
+				time.Sleep(500 * time.Millisecond)
+			}).Drain()
+			end := time.Since(start)
+
+			So(err, ShouldBeNil)
+			So(end.Seconds(), ShouldBeLessThanOrEqualTo, 1)
 		})
 	})
 }

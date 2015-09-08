@@ -10,8 +10,9 @@ import (
 )
 
 type Pipeline struct {
-	Context stream.Context
-	Stream  stream.Readable
+	Context  stream.Context
+	Stream   stream.Readable
+	parallel bool
 }
 
 func From(producer stream.Producer) *Pipeline {
@@ -46,6 +47,11 @@ func FromSlice(slice stream.T) *Pipeline {
 	return From(producers.FromSlice(slice))
 }
 
+func (pipeline *Pipeline) Parallel() *Pipeline {
+	pipeline.parallel = true
+	return pipeline
+}
+
 func (pipeline *Pipeline) Split() (*Pipeline, *Pipeline) {
 	pipelines := pipeline.SplitN(2)
 	return pipelines[0], pipelines[1]
@@ -56,8 +62,12 @@ func (pipeline *Pipeline) SplitN(n int) []*Pipeline {
 	writables := make([]stream.Writable, n)
 	for i := 0; i < n; i++ {
 		readable, writable := stream.New(pipeline.Stream.Capacity())
-		pipelines[i] = &Pipeline{pipeline.Context, readable}
 		writables[i] = writable
+		pipelines[i] = &Pipeline{
+			Context:  pipeline.Context,
+			Stream:   readable,
+			parallel: true,
+		}
 	}
 	dispatchers.New(pipeline.Context).Always().Dispatch(pipeline.Stream, writables...)
 	return pipelines
@@ -66,21 +76,24 @@ func (pipeline *Pipeline) SplitN(n int) []*Pipeline {
 func (pipeline *Pipeline) Partition(fn stream.PredicateFn) (*Pipeline, *Pipeline) {
 	lhsIn, lhsOut := stream.New(pipeline.Stream.Capacity())
 	rhsIn := dispatchers.New(pipeline.Context).If(fn).Dispatch(pipeline.Stream, lhsOut)
-
-	return &Pipeline{pipeline.Context, lhsIn}, &Pipeline{pipeline.Context, rhsIn}
+	lhsPipeline := &Pipeline{Context: pipeline.Context, Stream: lhsIn, parallel: pipeline.parallel}
+	rhsPipeline := &Pipeline{Context: pipeline.Context, Stream: rhsIn, parallel: pipeline.parallel}
+	return lhsPipeline, rhsPipeline
 }
 
 func (pipeline *Pipeline) Dispatch(writables ...stream.Writable) *Pipeline {
 	return &Pipeline{
-		Context: pipeline.Context,
-		Stream:  dispatchers.New(pipeline.Context).Always().Dispatch(pipeline.Stream, writables...),
+		Context:  pipeline.Context,
+		Stream:   dispatchers.New(pipeline.Context).Always().Dispatch(pipeline.Stream, writables...),
+		parallel: pipeline.parallel,
 	}
 }
 
 func (pipeline *Pipeline) DispatchIf(fn stream.PredicateFn, writables ...stream.Writable) *Pipeline {
 	return &Pipeline{
-		Context: pipeline.Context,
-		Stream:  dispatchers.New(pipeline.Context).If(fn).Dispatch(pipeline.Stream, writables...),
+		Context:  pipeline.Context,
+		Stream:   dispatchers.New(pipeline.Context).If(fn).Dispatch(pipeline.Stream, writables...),
+		parallel: pipeline.parallel,
 	}
 }
 
@@ -107,8 +120,9 @@ func (pipeline *Pipeline) Combine(combiner stream.Combiner, pipelines []*Pipelin
 	}
 
 	return &Pipeline{
-		Context: pipeline.Context,
-		Stream:  combiner.Combine(readables...),
+		Context:  pipeline.Context,
+		Stream:   combiner.Combine(readables...),
+		parallel: pipeline.parallel,
 	}
 }
 
@@ -118,9 +132,24 @@ func (pipeline *Pipeline) Apply(transformer stream.Transformer) *Pipeline {
 	}
 
 	return &Pipeline{
-		Stream:  transformer.Transform(pipeline.Stream),
-		Context: pipeline.Context,
+		Stream:   transformer.Transform(pipeline.Stream),
+		Context:  pipeline.Context,
+		parallel: pipeline.parallel,
 	}
+}
+
+func (pipeline *Pipeline) ApplyParallel(transformer stream.Transformer) *Pipeline {
+	parallelPipelineCount := 0
+	if pipeline.parallel {
+		parallelPipelineCount = pipeline.Stream.Capacity() - 1
+	}
+
+	parallelPipelines := make([]*Pipeline, parallelPipelineCount)
+	for i, _ := range parallelPipelines {
+		parallelPipelines[i] = pipeline.Apply(transformer)
+	}
+
+	return pipeline.Apply(transformer).Merge(parallelPipelines...)
 }
 
 func (pipeline *Pipeline) Filter(fn stream.PredicateFn) *Pipeline {
@@ -136,7 +165,7 @@ func (pipeline *Pipeline) Map(fn stream.MapFn) *Pipeline {
 }
 
 func (pipeline *Pipeline) Each(fn stream.EachFn) *Pipeline {
-	return pipeline.Apply(transformers.Each(fn))
+	return pipeline.ApplyParallel(transformers.Each(fn))
 }
 
 func (pipeline *Pipeline) Find(subject stream.T) *Pipeline {
