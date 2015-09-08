@@ -218,7 +218,7 @@
 }
 
 <span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">filter</span> *<span class="pl-v">Filter</span>) <span class="pl-en">Transform</span></span>(<span class="pl-v">in</span> <span class="pl-v">stream</span>.<span class="pl-v">Readable</span>) <span class="pl-v">stream</span>.<span class="pl-v">Readable</span> {
-    <span class="pl-smi">readable</span>, <span class="pl-smi">writable</span> <span class="pl-k">:=</span> stream.<span class="pl-c1">New</span>(<span class="pl-c1">cap</span>(in))
+    <span class="pl-smi">readable</span>, <span class="pl-smi">writable</span> <span class="pl-k">:=</span> stream.<span class="pl-c1">New</span>(in.<span class="pl-c1">Capacity</span>())
 
     <span class="pl-k">go</span> <span class="pl-k">func</span>() {
         <span class="pl-k">defer</span> filter.<span class="pl-smi">context</span>.<span class="pl-c1">Recover</span>()
@@ -292,13 +292,13 @@
 
 <p>The following example combines data from 3 different streams into a single stream:</p>
 
-<div class="highlight highlight-go"><pre><span class="pl-smi">facebookMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">FacebookPosts</span>(httpClient)).
+<div class="highlight highlight-go"><pre><span class="pl-smi">facebookMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">FacebookPostsProducer</span>(httpClient)).
     <span class="pl-c1">Map</span>(<span class="pl-c1">ExtractMentionsTo</span>(<span class="pl-s"><span class="pl-pds">"</span>diego.rborges<span class="pl-pds">"</span></span>))
 
-<span class="pl-smi">twitterMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">TwitterFeed</span>(httpClient)).
+<span class="pl-smi">twitterMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">TwitterFeedProducer</span>(httpClient)).
     <span class="pl-c1">Map</span>(<span class="pl-c1">ExtractMentionsTo</span>(<span class="pl-s"><span class="pl-pds">"</span>dr_borges<span class="pl-pds">"</span></span>)).<span class="pl-smi">Stream</span>
 
-<span class="pl-smi">githubMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">GithubRiversCommits</span>(httpClient)).
+<span class="pl-smi">githubMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">GithubRiversCommitsProducer</span>(httpClient)).
     <span class="pl-c1">Map</span>(<span class="pl-c1">ExtractMentionsTo</span>(<span class="pl-s"><span class="pl-pds">"</span>drborges<span class="pl-pds">"</span></span>)).<span class="pl-smi">Stream</span>
 
 <span class="pl-smi">err</span> <span class="pl-k">:=</span> facebookMentions.<span class="pl-c1">Merge</span>(twitterMentions, githubMentions).
@@ -392,9 +392,38 @@ fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"
 <p>Now imagine every single goroutine fired by rivers applying this pattern, the whole system continuation/cancellation logic can be controlled by simply closing or not a single channel. No need to keep track nor synchronize hundreds of thousands of execution threads, just a single close statement for the rescue. That is how powerful Go concurrency model is &lt;3</p>
 
 <h1>
+<a id="going-parallel" class="anchor" href="#going-parallel" aria-hidden="true"><span class="octicon octicon-link"></span></a>Going Parallel</h1>
+
+<p>Rivers parallelization support is an experimental feature and it is under active development. Currently the following operations suport parallelization: <code>Each</code>, <code>Map</code>, <code>Filter</code> and <code>OnData</code>.</p>
+
+<p>When parallelizing an opearation, lets say <code>Each</code>, rivers will create a new parallel transformer (<code>Each</code> transformer in this case) for each slot in the pipeline capacity (a.k.a the producer's capacity), each of these transformers will be consuming data out of the same input readable stream having their output streams merged into a single pipeline where you can attach new pipeline operations to it.  </p>
+
+<p>Enabling parallelization is feirly simple, take the following code for instance:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">facebookMentions</span> <span class="pl-k">:=</span> rivers.<span class="pl-c1">From</span>(<span class="pl-c1">FacebookPostsProducer</span>(httpClient)).
+    <span class="pl-c1">Map</span>(<span class="pl-c1">ExtractMentionsTo</span>(<span class="pl-s"><span class="pl-pds">"</span>diego.rborges<span class="pl-pds">"</span></span>))
+
+<span class="pl-smi">err</span> <span class="pl-k">:=</span> facebookMentions.<span class="pl-c1">Parallel</span>().
+    <span class="pl-c1">Drop</span>(ifAlreadyInDatabase).
+    <span class="pl-c1">Batch</span>(<span class="pl-c1">500</span>).
+    <span class="pl-c1">Each</span>(saveBatchInDatabase).
+    <span class="pl-c1">Each</span>(indexBatchInElasticsearch).
+    <span class="pl-c1">Drain</span>()</pre></div>
+
+<p>In the example above the <code>Drop</code>, and <code>Each</code> operations will be <code>parallelized</code>. Assuming the <code>FacebookPostsProducer</code> capacity is <code>1000</code> items then 1000 parallel transformers will be created for the <code>Drop</code> stage and a <code>1000</code> more parallel transformers for the <code>Each</code> stage.</p>
+
+<h1>
 <a id="troubleshooting" class="anchor" href="#troubleshooting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Troubleshooting</h1>
 
 <p>TODO <code>rivers.DebugEnabled</code></p>
+
+<h1>
+<a id="future-work--improvements" class="anchor" href="#future-work--improvements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Future Work / Improvements</h1>
+
+<ul>
+<li>[ ] Dynamic back-pressure?</li>
+<li>[ ] Monitoring?</li>
+</ul>
 
 <h1>
 <a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributing</h1>
