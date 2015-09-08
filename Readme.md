@@ -263,13 +263,13 @@ Combining Streams Pipeline: `Producers -> Combiner -> Transformer -> Consumer`
 The following example combines data from 3 different streams into a single stream:
 
 ```go
-facebookMentions := rivers.From(FacebookPosts(httpClient)).
+facebookMentions := rivers.From(FacebookPostsProducer(httpClient)).
 	Map(ExtractMentionsTo("diego.rborges"))
 
-twitterMentions := rivers.From(TwitterFeed(httpClient)).
+twitterMentions := rivers.From(TwitterFeedProducer(httpClient)).
 	Map(ExtractMentionsTo("dr_borges")).Stream
 
-githubMentions := rivers.From(GithubRiversCommits(httpClient)).
+githubMentions := rivers.From(GithubRiversCommitsProducer(httpClient)).
 	Map(ExtractMentionsTo("drborges")).Stream
 
 err := facebookMentions.Merge(twitterMentions, githubMentions).
@@ -366,9 +366,36 @@ Rivers will close the done channel whenever it recovers from a panic anywhere in
 
 Now imagine every single goroutine fired by rivers applying this pattern, the whole system continuation/cancellation logic can be controlled by simply closing or not a single channel. No need to keep track nor synchronize hundreds of thousands of execution threads, just a single close statement for the rescue. That is how powerful Go concurrency model is <3
 
+# Going Parallel
+
+Rivers parallelization support is an experimental feature and it is under active development. Currently the following operations suport parallelization: `Each`, `Map`, `Filter` and `OnData`.
+
+When parallelizing an opearation, lets say `Each`, rivers will create a new parallel transformer (`Each` transformer in this case) for each slot in the pipeline capacity (a.k.a the producer's capacity), each of these transformers will be consuming data out of the same input readable stream having their output streams merged into a single pipeline where you can attach new pipeline operations to it.  
+
+Enabling parallelization is feirly simple, take the following code for instance:
+
+```go
+facebookMentions := rivers.From(FacebookPostsProducer(httpClient)).
+	Map(ExtractMentionsTo("diego.rborges"))
+
+err := facebookMentions.Parallel().
+	Drop(ifAlreadyInDatabase).
+	Batch(500).
+	Each(saveBatchInDatabase).
+	Each(indexBatchInElasticsearch).
+	Drain()
+```
+
+In the example above the `Drop`, and `Each` operations will be `parallelized`. Assuming the `FacebookPostsProducer` capacity is `1000` items then 1000 parallel transformers will be created for the `Drop` stage and a `1000` more parallel transformers for the `Each` stage.
+
 # Troubleshooting
 
 TODO `rivers.DebugEnabled`
+
+# Future Work / Improvements
+
+- [ ] Dynamic back-pressure?
+- [ ] Monitoring?
 
 # Contributing
 
