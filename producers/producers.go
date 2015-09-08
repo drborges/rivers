@@ -10,7 +10,7 @@ import (
 
 func FromRange(from, to int) stream.Producer {
 	return &Observable{
-		Capacity: to - from,
+		Capacity: to - from + 1,
 		Emit: func(emitter stream.Emitter) {
 			for i := from; i <= to; i++ {
 				emitter.Emit(i)
