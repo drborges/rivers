@@ -153,15 +153,15 @@ func (pipeline *Pipeline) ApplyParallel(transformer stream.Transformer) *Pipelin
 }
 
 func (pipeline *Pipeline) Filter(fn stream.PredicateFn) *Pipeline {
-	return pipeline.Apply(transformers.Filter(fn))
+	return pipeline.ApplyParallel(transformers.Filter(fn))
 }
 
 func (pipeline *Pipeline) OnData(fn stream.OnDataFn) *Pipeline {
-	return pipeline.Apply(transformers.OnData(fn))
+	return pipeline.ApplyParallel(transformers.OnData(fn))
 }
 
 func (pipeline *Pipeline) Map(fn stream.MapFn) *Pipeline {
-	return pipeline.Apply(transformers.Map(fn))
+	return pipeline.ApplyParallel(transformers.Map(fn))
 }
 
 func (pipeline *Pipeline) Each(fn stream.EachFn) *Pipeline {
@@ -183,7 +183,7 @@ func (pipeline *Pipeline) TakeFirst(n int) *Pipeline {
 }
 
 func (pipeline *Pipeline) Take(fn stream.PredicateFn) *Pipeline {
-	return pipeline.Apply(transformers.Take(fn))
+	return pipeline.Filter(fn)
 }
 
 func (pipeline *Pipeline) DropFirst(n int) *Pipeline {
@@ -191,7 +191,7 @@ func (pipeline *Pipeline) DropFirst(n int) *Pipeline {
 }
 
 func (pipeline *Pipeline) Drop(fn stream.PredicateFn) *Pipeline {
-	return pipeline.Apply(transformers.Drop(fn))
+	return pipeline.Take(func(data stream.T) bool { return !fn(data) })
 }
 
 func (pipeline *Pipeline) Reduce(acc stream.T, fn stream.ReduceFn) *Pipeline {
