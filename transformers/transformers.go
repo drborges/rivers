@@ -43,10 +43,6 @@ func TakeFirst(n int) stream.Transformer {
 	}
 }
 
-func Take(fn stream.PredicateFn) stream.Transformer {
-	return Filter(fn)
-}
-
 func DropFirst(n int) stream.Transformer {
 	dropped := 0
 	return &Observer{
@@ -60,10 +56,6 @@ func DropFirst(n int) stream.Transformer {
 			return nil
 		},
 	}
-}
-
-func Drop(fn stream.PredicateFn) stream.Transformer {
-	return Filter(func(data stream.T) bool { return !fn(data) })
 }
 
 func Map(fn stream.MapFn) stream.Transformer {
