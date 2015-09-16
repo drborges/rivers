@@ -338,5 +338,21 @@ func TestRiversAPI(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(end.Seconds(), ShouldBeLessThanOrEqualTo, 1)
 		})
+
+		Convey("From Slow Producer -> Find", func() {
+			slowProducer := &producers.Observable{
+				Capacity: 2,
+				Emit: func(emitter stream.Emitter) {
+					for i := 0; i < 5; i++ {
+						emitter.Emit(i)
+						time.Sleep(time.Second)
+					}
+				},
+			}
+
+			items, err := rivers.From(slowProducer).Find(2).Collect()
+			So(err, ShouldBeNil)
+			So(items, ShouldResemble, []stream.T{2})
+		})
 	})
 }

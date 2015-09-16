@@ -2,7 +2,7 @@ package stream
 
 import "errors"
 
-var Done = errors.New("Context closed")
+var Done = errors.New("Context is done")
 
 type T interface{}
 type Readable <-chan T
@@ -19,6 +19,7 @@ type Context interface {
 	Recover()
 	Err() error
 	Failure() <-chan struct{}
+	Done() <-chan struct{}
 }
 
 // a.k.a Source

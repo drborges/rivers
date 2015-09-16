@@ -11,25 +11,32 @@ var DebugEnabled = false
 
 type context struct {
 	requests chan error
-	closed   chan struct{}
+	success  chan struct{}
+	failure  chan struct{}
 	err      error
 }
 
 func NewContext() stream.Context {
 	return &context{
 		requests: make(chan error, 1),
-		closed:   make(chan struct{}),
+		success:  make(chan struct{}),
+		failure:  make(chan struct{}),
 	}
 }
 
 func (context *context) Close(err error) {
 	context.requests <- err
+	ch := context.success
+	if err != nil {
+		ch = context.failure
+	}
+
 	select {
 	// TODO timeout?
-	case <-context.closed:
+	case <-ch:
 		return
 	default:
-		close(context.closed)
+		close(ch)
 		context.err = <-context.requests
 	}
 }
@@ -39,12 +46,16 @@ func (context *context) Err() error {
 }
 
 func (context *context) Failure() <-chan struct{} {
-	return context.closed
+	return context.failure
+}
+
+func (context *context) Done() <-chan struct{} {
+	return context.success
 }
 
 func (context *context) Recover() {
-	if r := recover(); r != nil && r != stream.Done {
-		if DebugEnabled {
+	if r := recover(); r != nil {
+		if DebugEnabled && r != stream.Done {
 			debug.PrintStack()
 		}
 		err := errors.New(fmt.Sprintf("Recovered from %v", r))

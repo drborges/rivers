@@ -32,7 +32,7 @@ func TestReducer(t *testing.T) {
 			})
 
 			Convey("When I close the context", func() {
-				context.Close(nil)
+				context.Close(stream.Done)
 
 				Convey("And I apply the transformer to the stream", func() {
 					transformer := transformers.Reduce(0, sum)
