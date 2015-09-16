@@ -6,11 +6,11 @@ import (
 	"github.com/drborges/rivers/scanners"
 	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers/from"
+	. "github.com/smartystreets/goconvey/convey"
 	"net"
 	"strings"
 	"testing"
 	"time"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestRiversAPI(t *testing.T) {
@@ -82,8 +82,8 @@ func TestRiversAPI(t *testing.T) {
 
 		Convey("From Data -> FlatMap", func() {
 			data, _ := rivers.FromRange(1, 3).
-			FlatMap(func(data stream.T) stream.T { return []stream.T{data, data.(int) + 1 } }).
-			Collect()
+				FlatMap(func(data stream.T) stream.T { return []stream.T{data, data.(int) + 1} }).
+				Collect()
 
 			So(data, ShouldResemble, []stream.T{1, 2, 2, 3, 3, 4})
 		})

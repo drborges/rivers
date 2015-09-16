@@ -10,7 +10,7 @@ type ifDispatcher struct {
 }
 
 func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream.Writable) stream.Readable {
-	notDispatchedReadable, notDistpatchedWritable := stream.New(in.Capacity())
+	notDispatchedReadable, notDispatchedWritable := stream.New(in.Capacity())
 
 	dispatchedCount := 0
 	done := make(chan bool, len(writables))
@@ -35,7 +35,7 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream
 
 	go func() {
 		defer dispatcher.context.Recover()
-		defer close(notDistpatchedWritable)
+		defer close(notDispatchedWritable)
 		defer closeWritables()
 
 		for data := range in {
@@ -55,7 +55,7 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream
 						}(writable, data)
 					}
 				} else {
-					notDistpatchedWritable <- data
+					notDispatchedWritable <- data
 				}
 			}
 		}
