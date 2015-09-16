@@ -2,7 +2,6 @@ package dispatchers
 
 import (
 	"github.com/drborges/rivers/stream"
-	"sync"
 )
 
 type ifDispatcher struct {
@@ -10,27 +9,34 @@ type ifDispatcher struct {
 	fn      stream.PredicateFn
 }
 
-func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, out ...stream.Writable) stream.Readable {
-	reader, writer := stream.New(in.Capacity())
+func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream.Writable) stream.Readable {
+	notDispatchedReadable, notDistpatchedWritable := stream.New(in.Capacity())
 
-	wg := make(map[stream.Writable]*sync.WaitGroup)
+	dispatchedCount := 0
+	done := make(chan bool, len(writables))
+
 	closeWritables := func() {
-		close(writer)
-		for _, writable := range out {
-			go func(s stream.Writable) {
-				wg[s].Wait()
-				close(s)
-			}(writable)
+		defer func() {
+			for _, writable := range writables {
+				close(writable)
+			}
+		}()
+
+		expectedDoneMessages := dispatchedCount * len(writables)
+		for i := 0; i < expectedDoneMessages; i++ {
+			select {
+			case <-dispatcher.context.Done():
+				return
+			case <-done:
+				continue
+			}
 		}
 	}
 
 	go func() {
 		defer dispatcher.context.Recover()
+		defer close(notDistpatchedWritable)
 		defer closeWritables()
-
-		for _, s := range out {
-			wg[s] = &sync.WaitGroup{}
-		}
 
 		for data := range in {
 			select {
@@ -38,22 +44,22 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, out ...stream.Writa
 				return
 			default:
 				if dispatcher.fn(data) {
-					for _, writable := range out {
-						wg[writable].Add(1)
+					dispatchedCount++
+					for _, writable := range writables {
 						// dispatch data asynchronously so that
 						// slow receivers don't block the dispatch
 						// process
-						go func(s stream.Writable, d stream.T) {
-							s <- d
-							wg[s].Done()
+						go func(w stream.Writable, d stream.T) {
+							w <- d
+							done <- true
 						}(writable, data)
 					}
 				} else {
-					writer <- data
+					notDistpatchedWritable <- data
 				}
 			}
 		}
 	}()
 
-	return reader
+	return notDispatchedReadable
 }

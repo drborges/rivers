@@ -36,7 +36,7 @@ func TestIfDispatcher(t *testing.T) {
 
 			Convey("When I apply an always dispatcher", func() {
 				streamIn1, streamOut1 := stream.New(3)
-				streamIn2, streamOut2 := stream.New(2)
+				streamIn2, streamOut2 := stream.New(3)
 				sink := dispatchers.New(context).Always().Dispatch(in, streamOut1, streamOut2)
 
 				Convey("Then all items are dispatched to the corresponding streams", func() {
@@ -53,7 +53,7 @@ func TestIfDispatcher(t *testing.T) {
 				context.Close(nil)
 
 				Convey("And I apply the transformer to the stream", func() {
-					evensIn, evensOut := stream.New(2)
+					evensIn, evensOut := stream.New(3)
 					sink := dispatchers.New(context).If(evens).Dispatch(in, evensOut)
 
 					Convey("Then no item is sent to the next stage", func() {
