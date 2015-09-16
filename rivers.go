@@ -164,6 +164,10 @@ func (pipeline *Pipeline) Map(fn stream.MapFn) *Pipeline {
 	return pipeline.ApplyParallel(transformers.Map(fn))
 }
 
+func (pipeline *Pipeline) FlatMap(fn stream.MapFn) *Pipeline {
+	return pipeline.ApplyParallel(transformers.Map(fn)).Flatten()
+}
+
 func (pipeline *Pipeline) Each(fn stream.EachFn) *Pipeline {
 	return pipeline.ApplyParallel(transformers.Each(fn))
 }
@@ -199,7 +203,7 @@ func (pipeline *Pipeline) Reduce(acc stream.T, fn stream.ReduceFn) *Pipeline {
 }
 
 func (pipeline *Pipeline) Flatten() *Pipeline {
-	return pipeline.Apply(transformers.Flatten())
+	return pipeline.ApplyParallel(transformers.Flatten())
 }
 
 func (pipeline *Pipeline) SortBy(fn stream.SortByFn) *Pipeline {
