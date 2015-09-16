@@ -66,7 +66,7 @@ func (pipeline *Pipeline) SplitN(n int) []*Pipeline {
 		pipelines[i] = &Pipeline{
 			Context:  pipeline.Context,
 			Stream:   readable,
-			parallel: true,
+			parallel: pipeline.parallel,
 		}
 	}
 	dispatchers.New(pipeline.Context).Always().Dispatch(pipeline.Stream, writables...)
