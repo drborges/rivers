@@ -11,7 +11,7 @@ func NewEmitter(context Context, w Writable) Emitter {
 
 func (emitter *emitter) Emit(data T) {
 	select {
-	case <-emitter.context.Done():
+	case <-emitter.context.Failure():
 		panic(Done)
 	default:
 		emitter.writable <- data

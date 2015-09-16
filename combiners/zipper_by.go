@@ -42,7 +42,7 @@ func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
 
 		for len(doneIndexes) < len(in) {
 			select {
-			case <-c.context.Done():
+			case <-c.context.Failure():
 				return
 			default:
 				for i, readable := range in {

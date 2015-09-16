@@ -38,7 +38,7 @@ func (context *context) Err() error {
 	return context.err
 }
 
-func (context *context) Done() <-chan struct{} {
+func (context *context) Failure() <-chan struct{} {
 	return context.closed
 }
 

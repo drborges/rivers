@@ -18,7 +18,7 @@ type Context interface {
 	Close(err error)
 	Recover()
 	Err() error
-	Done() <-chan struct{}
+	Failure() <-chan struct{}
 }
 
 // a.k.a Source

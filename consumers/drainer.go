@@ -13,7 +13,7 @@ func (drainer *drainer) Bind(context stream.Context) {
 func (drainer *drainer) Consume(in stream.Readable) {
 	for {
 		select {
-		case <-drainer.context.Done():
+		case <-drainer.context.Failure():
 			return
 		default:
 			if _, more := <-in; !more {

@@ -14,7 +14,7 @@ func (collector *collectBy) Bind(context stream.Context) {
 func (collector *collectBy) Consume(in stream.Readable) {
 	for {
 		select {
-		case <-collector.context.Done():
+		case <-collector.context.Failure():
 			return
 		default:
 			data, more := <-in

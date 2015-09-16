@@ -25,7 +25,7 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream
 		expectedDoneMessages := dispatchedCount * len(writables)
 		for i := 0; i < expectedDoneMessages; i++ {
 			select {
-			case <-dispatcher.context.Done():
+			case <-dispatcher.context.Failure():
 				return
 			case <-done:
 				continue
@@ -40,7 +40,7 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream
 
 		for data := range in {
 			select {
-			case <-dispatcher.context.Done():
+			case <-dispatcher.context.Failure():
 				return
 			default:
 				if dispatcher.fn(data) {

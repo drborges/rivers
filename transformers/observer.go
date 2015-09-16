@@ -22,7 +22,7 @@ func (observer *Observer) Transform(in stream.Readable) stream.Readable {
 
 		for {
 			select {
-			case <-observer.context.Done():
+			case <-observer.context.Failure():
 				return
 			default:
 				data, more := <-in
