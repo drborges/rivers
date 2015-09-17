@@ -12,35 +12,41 @@ var (
 )
 
 func Drainer() stream.Consumer {
-	return &drainer{}
+	return &Sink{}
 }
 
 func ItemsCollector(dst interface{}) stream.Consumer {
-	slicePtr := reflect.ValueOf(dst)
+	ptr := reflect.ValueOf(dst)
 
-	if slicePtr.Kind() != reflect.Ptr || slicePtr.Elem().Kind() != reflect.Slice {
+	if ptr.Kind() != reflect.Ptr || ptr.Elem().Kind() != reflect.Slice {
 		panic(ErrNoSuchSlicePointer)
 	}
 
-	return &itemsCollector{
-		container: slicePtr.Elem(),
+	container := ptr.Elem()
+	return &Sink{
+		OnNext: func(data stream.T) {
+			container.Set(reflect.Append(container, reflect.ValueOf(data)))
+		},
 	}
 }
 
 func LastItemCollector(dst interface{}) stream.Consumer {
-	slicePtr := reflect.ValueOf(dst)
+	ptr := reflect.ValueOf(dst)
 
-	if slicePtr.Kind() != reflect.Ptr {
+	if ptr.Kind() != reflect.Ptr {
 		panic(ErrNoSuchPointer)
 	}
 
-	return &itemCollector{
-		item: slicePtr.Elem(),
+	val := ptr.Elem()
+	return &Sink{
+		OnNext: func(data stream.T) {
+			val.Set(reflect.ValueOf(data))
+		},
 	}
 }
 
 func CollectBy(fn stream.EachFn) stream.Consumer {
-	return &collectBy{
-		fn: fn,
+	return &Sink{
+		OnNext: fn,
 	}
 }

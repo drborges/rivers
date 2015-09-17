@@ -5,13 +5,13 @@ import (
 	"github.com/drborges/rivers/producers"
 	"github.com/drborges/rivers/scanners"
 	"github.com/drborges/rivers/stream"
+	"github.com/drborges/rivers/transformers"
 	"github.com/drborges/rivers/transformers/from"
 	. "github.com/smartystreets/goconvey/convey"
 	"net"
 	"strings"
 	"testing"
 	"time"
-	"github.com/drborges/rivers/transformers"
 )
 
 func TestRiversAPI(t *testing.T) {
