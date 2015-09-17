@@ -29,13 +29,6 @@ func From(producer stream.Producer) *Pipeline {
 	}
 }
 
-func FromStream(readable stream.Readable) *Pipeline {
-	return &Pipeline{
-		Context: NewContext(),
-		Stream:  readable,
-	}
-}
-
 func FromRange(from, to int) *Pipeline {
 	return From(producers.FromRange(from, to))
 }
