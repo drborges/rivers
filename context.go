@@ -27,22 +27,6 @@ func NewContext() stream.Context {
 	}
 }
 
-func (context *context) Close(err error) {
-	context.requests <- err
-	ch := context.success
-	if err != nil {
-		ch = context.failure
-	}
-
-	select {
-	case <-ch:
-		return
-	default:
-		close(ch)
-		context.err = <-context.requests
-	}
-}
-
 func (context *context) Err() error {
 	return context.err
 }
@@ -61,6 +45,22 @@ func (context *context) Failure() <-chan struct{} {
 
 func (context *context) Done() <-chan struct{} {
 	return context.success
+}
+
+func (context *context) Close(err error) {
+	context.requests <- err
+	ch := context.success
+	if err != nil {
+		ch = context.failure
+	}
+
+	select {
+	case <-ch:
+		return
+	default:
+		close(ch)
+		context.err = <-context.requests
+	}
 }
 
 func (context *context) Recover() {
