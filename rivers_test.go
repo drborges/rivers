@@ -3,21 +3,15 @@ package rivers_test
 import (
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/producers"
-	"github.com/drborges/rivers/scanners"
 	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
 	"github.com/drborges/rivers/transformers/from"
 	. "github.com/smartystreets/goconvey/convey"
-	"net"
-	"strings"
 	"testing"
 	"time"
 )
 
 func TestRiversAPI(t *testing.T) {
-	toString := func(data stream.T) stream.T { return string(data.([]byte)) }
-	nonEmptyLines := func(data stream.T) bool { return data.(string) != "" }
-	splitWord := func(data stream.T) stream.T { return strings.Split(data.(string), " ") }
 	evensOnly := func(data stream.T) bool { return data.(int)%2 == 0 }
 	sum := func(a, b stream.T) stream.T { return a.(int) + b.(int) }
 	add := func(n int) stream.MapFn {
@@ -42,16 +36,6 @@ func TestRiversAPI(t *testing.T) {
 
 	alphabeticOrder := func(a, b stream.T) bool {
 		return a.(string) < b.(string)
-	}
-
-	listen := func() (net.Listener, string) {
-		port := ":8282"
-		ln, err := net.Listen("tcp", port)
-		if err != nil {
-			port = ":8383"
-			ln, _ = net.Listen("tcp", port)
-		}
-		return ln, port
 	}
 
 	Convey("rivers API", t, func() {
@@ -145,28 +129,6 @@ func TestRiversAPI(t *testing.T) {
 			data, opened := <-numbers.Stream
 			So(data, ShouldBeNil)
 			So(opened, ShouldBeFalse)
-		})
-
-		Convey("From Socket -> Map -> Filter -> Map -> Flatten", func() {
-			ln, port := listen()
-
-			go func() {
-				conn, _ := ln.Accept()
-				defer conn.Close()
-				conn.Write([]byte("Hello there\n"))
-				conn.Write([]byte("\n"))
-				conn.Write([]byte("rivers!\n"))
-				conn.Write([]byte("super cool!\n"))
-			}()
-
-			words := rivers.From(producers.FromSocket("tcp", port, scanners.NewLineScanner())).
-				Map(toString).
-				Filter(nonEmptyLines).
-				Map(splitWord).
-				Flatten().
-				Stream
-
-			So(words.ReadAll(), ShouldResemble, []stream.T{"Hello", "there", "rivers!", "super", "cool!"})
 		})
 
 		Convey("From Range -> Partition", func() {

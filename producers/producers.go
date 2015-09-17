@@ -1,9 +1,7 @@
 package producers
 
 import (
-	"github.com/drborges/rivers/scanners"
 	"github.com/drborges/rivers/stream"
-	"net"
 	"os"
 	"reflect"
 )
@@ -46,25 +44,4 @@ func FromData(data ...stream.T) stream.Producer {
 
 func FromFile(f *os.File) *fromFile {
 	return &fromFile{f}
-}
-
-func FromSocket(protocol, addr string, scanner scanners.Scanner) stream.Producer {
-	return &Observable{
-		Capacity: 100,
-		Emit: func(emitter stream.Emitter) {
-			conn, err := net.Dial(protocol, addr)
-			if err != nil {
-				return
-			}
-
-			scanner.Attach(conn)
-			for {
-				if message, err := scanner.Scan(); err == nil {
-					emitter.Emit(message)
-					continue
-				}
-				return
-			}
-		},
-	}
 }
