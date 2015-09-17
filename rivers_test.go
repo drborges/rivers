@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"github.com/drborges/rivers/transformers"
 )
 
 func TestRiversAPI(t *testing.T) {
@@ -345,7 +346,7 @@ func TestRiversAPI(t *testing.T) {
 				Emit: func(emitter stream.Emitter) {
 					for i := 0; i < 5; i++ {
 						emitter.Emit(i)
-						time.Sleep(time.Second)
+						time.Sleep(300 * time.Millisecond)
 					}
 				},
 			}
@@ -353,6 +354,36 @@ func TestRiversAPI(t *testing.T) {
 			items, err := rivers.From(slowProducer).Find(2).Collect()
 			So(err, ShouldBeNil)
 			So(items, ShouldResemble, []stream.T{2})
+		})
+
+		Convey("Producer times out", func() {
+			slowProducer := &producers.Observable{
+				Capacity: 2,
+				Emit: func(emitter stream.Emitter) {
+					for i := 0; i < 5; i++ {
+						emitter.Emit(i)
+						time.Sleep(2 * time.Second)
+					}
+				},
+			}
+
+			items, err := rivers.From(slowProducer).Deadline(300 * time.Millisecond).Find(2).Collect()
+			So(err, ShouldEqual, stream.Timeout)
+			So(items, ShouldBeNil)
+		})
+
+		Convey("Transformer times out", func() {
+			slowTransformer := &transformers.Observer{
+				OnNext: func(data stream.T, emitter stream.Emitter) error {
+					time.Sleep(2 * time.Second)
+					emitter.Emit(data)
+					return nil
+				},
+			}
+
+			items, err := rivers.FromRange(1, 3).Deadline(300 * time.Millisecond).Apply(slowTransformer).Collect()
+			So(err, ShouldEqual, stream.Timeout)
+			So(items, ShouldBeNil)
 		})
 	})
 }

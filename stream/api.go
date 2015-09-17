@@ -1,8 +1,14 @@
 package stream
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
-var Done = errors.New("Context is done")
+var (
+	Done    = errors.New("Context is done")
+	Timeout = errors.New("Context has timed out")
+)
 
 type T interface{}
 type Readable <-chan T
@@ -18,6 +24,8 @@ type Context interface {
 	Close(err error)
 	Recover()
 	Err() error
+	Deadline() time.Duration
+	SetDeadline(time.Duration)
 	Failure() <-chan struct{}
 	Done() <-chan struct{}
 }

@@ -3,6 +3,7 @@ package consumers
 import (
 	"github.com/drborges/rivers/stream"
 	"reflect"
+	"time"
 )
 
 type itemCollector struct {
@@ -15,10 +16,14 @@ func (collector *itemCollector) Bind(context stream.Context) {
 }
 
 func (collector *itemCollector) Consume(in stream.Readable) {
+	defer collector.context.Recover()
+
 	for {
 		select {
 		case <-collector.context.Failure():
 			return
+		case <-time.After(collector.context.Deadline()):
+			panic(stream.Timeout)
 		case item, more := <-in:
 			if !more {
 				return

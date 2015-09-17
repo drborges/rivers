@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/drborges/rivers/stream"
 	"runtime/debug"
+	"time"
 )
 
 var DebugEnabled = false
@@ -13,6 +14,7 @@ type context struct {
 	requests chan error
 	success  chan struct{}
 	failure  chan struct{}
+	deadline time.Duration
 	err      error
 }
 
@@ -21,6 +23,7 @@ func NewContext() stream.Context {
 		requests: make(chan error, 1),
 		success:  make(chan struct{}),
 		failure:  make(chan struct{}),
+		deadline: 10 * time.Second,
 	}
 }
 
@@ -43,6 +46,14 @@ func (context *context) Close(err error) {
 
 func (context *context) Err() error {
 	return context.err
+}
+
+func (context *context) Deadline() time.Duration {
+	return context.deadline
+}
+
+func (context *context) SetDeadline(duration time.Duration) {
+	context.deadline = duration
 }
 
 func (context *context) Failure() <-chan struct{} {

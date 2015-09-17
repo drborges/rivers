@@ -1,6 +1,9 @@
 package combiners
 
-import "github.com/drborges/rivers/stream"
+import (
+	"github.com/drborges/rivers/stream"
+	"time"
+)
 
 type zip struct {
 	context stream.Context
@@ -10,11 +13,11 @@ func Zip() stream.Combiner {
 	return &zip{}
 }
 
-func (c *zip) Bind(context stream.Context) {
-	c.context = context
+func (combiner *zip) Bind(context stream.Context) {
+	combiner.context = context
 }
 
-func (c *zip) Combine(in ...stream.Readable) stream.Readable {
+func (combiner *zip) Combine(in ...stream.Readable) stream.Readable {
 	capacity := func(rs ...stream.Readable) int {
 		capacity := 0
 		for _, r := range rs {
@@ -26,13 +29,15 @@ func (c *zip) Combine(in ...stream.Readable) stream.Readable {
 	reader, writer := stream.New(capacity(in...))
 
 	go func() {
-		defer c.context.Recover()
+		defer combiner.context.Recover()
 		defer close(writer)
 
 		for {
 			select {
-			case <-c.context.Failure():
+			case <-combiner.context.Failure():
 				return
+			case <-time.After(combiner.context.Deadline()):
+				panic(stream.Timeout)
 			default:
 				doneCount := 0
 				for _, readable := range in {

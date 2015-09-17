@@ -2,8 +2,6 @@ package producers
 
 import "github.com/drborges/rivers/stream"
 
-// TODO Implement Bindable interface to avoid users having to explicitly provide a context
-// rivers could take care of that instead.
 type Observable struct {
 	context  stream.Context
 	Capacity int

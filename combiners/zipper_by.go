@@ -2,6 +2,7 @@ package combiners
 
 import (
 	"github.com/drborges/rivers/stream"
+	"time"
 )
 
 type zipBy struct {
@@ -15,11 +16,11 @@ func ZipBy(fn stream.ReduceFn) stream.Combiner {
 	}
 }
 
-func (c *zipBy) Bind(context stream.Context) {
-	c.context = context
+func (combiner *zipBy) Bind(context stream.Context) {
+	combiner.context = context
 }
 
-func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
+func (combiner *zipBy) Combine(in ...stream.Readable) stream.Readable {
 	max := func(rs ...stream.Readable) int {
 		max := 0
 		for _, r := range rs {
@@ -34,7 +35,7 @@ func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
 	reader, writer := stream.New(max(in...))
 
 	go func() {
-		defer c.context.Recover()
+		defer combiner.context.Recover()
 		defer close(writer)
 
 		var zipped stream.T
@@ -42,8 +43,10 @@ func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
 
 		for len(doneIndexes) < len(in) {
 			select {
-			case <-c.context.Failure():
+			case <-combiner.context.Failure():
 				return
+			case <-time.After(combiner.context.Deadline()):
+				panic(stream.Timeout)
 			default:
 				for i, readable := range in {
 					data, opened := <-readable
@@ -58,7 +61,7 @@ func (c *zipBy) Combine(in ...stream.Readable) stream.Readable {
 					if zipped == nil {
 						zipped = data
 					} else {
-						zipped = c.fn(zipped, data)
+						zipped = combiner.fn(zipped, data)
 					}
 				}
 

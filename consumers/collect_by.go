@@ -1,6 +1,9 @@
 package consumers
 
-import "github.com/drborges/rivers/stream"
+import (
+	"github.com/drborges/rivers/stream"
+	"time"
+)
 
 type collectBy struct {
 	context stream.Context
@@ -12,10 +15,14 @@ func (collector *collectBy) Bind(context stream.Context) {
 }
 
 func (collector *collectBy) Consume(in stream.Readable) {
+	defer collector.context.Recover()
+
 	for {
 		select {
 		case <-collector.context.Failure():
 			return
+		case <-time.After(collector.context.Deadline()):
+			panic(stream.Timeout)
 		default:
 			data, more := <-in
 			if !more {

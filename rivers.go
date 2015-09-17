@@ -7,6 +7,7 @@ import (
 	"github.com/drborges/rivers/producers"
 	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
+	"time"
 )
 
 type Pipeline struct {
@@ -49,6 +50,11 @@ func FromSlice(slice stream.T) *Pipeline {
 
 func (pipeline *Pipeline) Parallel() *Pipeline {
 	pipeline.parallel = true
+	return pipeline
+}
+
+func (pipeline *Pipeline) Deadline(duration time.Duration) *Pipeline {
+	pipeline.Context.SetDeadline(duration)
 	return pipeline
 }
 

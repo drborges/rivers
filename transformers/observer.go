@@ -1,6 +1,9 @@
 package transformers
 
-import "github.com/drborges/rivers/stream"
+import (
+	"github.com/drborges/rivers/stream"
+	"time"
+)
 
 type Observer struct {
 	context     stream.Context
@@ -24,6 +27,8 @@ func (observer *Observer) Transform(in stream.Readable) stream.Readable {
 			select {
 			case <-observer.context.Failure():
 				return
+			case <-time.After(observer.context.Deadline()):
+				panic(stream.Timeout)
 			default:
 				data, more := <-in
 				if !more {

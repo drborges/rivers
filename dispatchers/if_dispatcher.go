@@ -2,6 +2,7 @@ package dispatchers
 
 import (
 	"github.com/drborges/rivers/stream"
+	"time"
 )
 
 type ifDispatcher struct {
@@ -27,6 +28,8 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream
 			select {
 			case <-dispatcher.context.Failure():
 				return
+			case <-time.After(dispatcher.context.Deadline()):
+				panic(stream.Timeout)
 			case <-done:
 				continue
 			}
@@ -42,6 +45,8 @@ func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream
 			select {
 			case <-dispatcher.context.Failure():
 				return
+			case <-time.After(dispatcher.context.Deadline()):
+				panic(stream.Timeout)
 			default:
 				if dispatcher.fn(data) {
 					dispatchedCount++

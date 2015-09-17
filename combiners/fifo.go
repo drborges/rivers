@@ -3,6 +3,7 @@ package combiners
 import (
 	"github.com/drborges/rivers/stream"
 	"sync"
+	"time"
 )
 
 type fifo struct {
@@ -13,11 +14,11 @@ func FIFO() stream.Combiner {
 	return &fifo{}
 }
 
-func (c *fifo) Bind(context stream.Context) {
-	c.context = context
+func (combiner *fifo) Bind(context stream.Context) {
+	combiner.context = context
 }
 
-func (c *fifo) Combine(in ...stream.Readable) stream.Readable {
+func (combiner *fifo) Combine(in ...stream.Readable) stream.Readable {
 	capacity := func(in ...stream.Readable) int {
 		capacity := 0
 		for _, r := range in {
@@ -32,12 +33,14 @@ func (c *fifo) Combine(in ...stream.Readable) stream.Readable {
 	for _, r := range in {
 		wg.Add(1)
 		go func(r stream.Readable) {
-			defer c.context.Recover()
+			defer combiner.context.Recover()
 			defer wg.Done()
 
 			select {
-			case <-c.context.Failure():
+			case <-combiner.context.Failure():
 				return
+			case <-time.After(combiner.context.Deadline()):
+				panic(stream.Timeout)
 			default:
 				for data := range r {
 					writer <- data

@@ -1,5 +1,7 @@
 package stream
 
+import "time"
+
 type emitter struct {
 	context  Context
 	writable Writable
@@ -15,6 +17,8 @@ func (emitter *emitter) Emit(data T) {
 		panic(Done)
 	case <-emitter.context.Failure():
 		panic(Done)
+	case <-time.After(emitter.context.Deadline()):
+		panic(Timeout)
 	default:
 		emitter.writable <- data
 	}
