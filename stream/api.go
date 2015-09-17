@@ -32,24 +32,29 @@ type Context interface {
 
 // a.k.a Source
 type Producer interface {
+	attachable
 	Produce() (out Readable)
 }
 
 // a.k.a Sink
 type Consumer interface {
+	attachable
 	Consume(in Readable)
 }
 
 type Transformer interface {
+	attachable
 	Transform(in Readable) (out Readable)
 }
 
 // FIFO, Zip, InOrder combiner
 type Combiner interface {
+	attachable
 	Combine(in ...Readable) (out Readable)
 }
 
 type Dispatcher interface {
+	attachable
 	Dispatch(from Readable, to ...Writable) (out Readable)
 }
 
@@ -57,8 +62,8 @@ type Emitter interface {
 	Emit(data T)
 }
 
-type Bindable interface {
-	Bind(Context)
+type attachable interface {
+	Attach(Context)
 }
 
 type Batch interface {

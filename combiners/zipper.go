@@ -13,7 +13,7 @@ func Zip() stream.Combiner {
 	return &zip{}
 }
 
-func (combiner *zip) Bind(context stream.Context) {
+func (combiner *zip) Attach(context stream.Context) {
 	combiner.context = context
 }
 

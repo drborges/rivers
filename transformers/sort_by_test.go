@@ -23,7 +23,7 @@ func TestSortBy(t *testing.T) {
 
 			Convey("When I apply a mapper transformer to the stream", func() {
 				transformer := transformers.SortBy(sorter)
-				transformer.(stream.Bindable).Bind(context)
+				transformer.Attach(context)
 				next := transformer.Transform(in)
 
 				Convey("Then a transformed stream is returned", func() {
@@ -36,7 +36,7 @@ func TestSortBy(t *testing.T) {
 
 				Convey("And I apply the transformer to the stream", func() {
 					transformer := transformers.SortBy(sorter)
-					transformer.(stream.Bindable).Bind(context)
+					transformer.Attach(context)
 					next := transformer.Transform(in)
 
 					Convey("Then no item is sent to the next stage", func() {

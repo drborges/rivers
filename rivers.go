@@ -18,10 +18,7 @@ type Pipeline struct {
 
 func From(producer stream.Producer) *Pipeline {
 	context := NewContext()
-
-	if bindable, ok := producer.(stream.Bindable); ok {
-		bindable.Bind(context)
-	}
+	producer.Attach(context)
 
 	return &Pipeline{
 		Context: context,
@@ -109,9 +106,7 @@ func (pipeline *Pipeline) ZipBy(fn stream.ReduceFn, pipelines ...*Pipeline) *Pip
 }
 
 func (pipeline *Pipeline) Combine(combiner stream.Combiner, pipelines []*Pipeline) *Pipeline {
-	if bindable, ok := combiner.(stream.Bindable); ok {
-		bindable.Bind(pipeline.Context)
-	}
+	combiner.Attach(pipeline.Context)
 
 	readables := []stream.Readable{pipeline.Stream}
 	for _, p := range pipelines {
@@ -126,9 +121,7 @@ func (pipeline *Pipeline) Combine(combiner stream.Combiner, pipelines []*Pipelin
 }
 
 func (pipeline *Pipeline) Apply(transformer stream.Transformer) *Pipeline {
-	if bindable, ok := transformer.(stream.Bindable); ok {
-		bindable.Bind(pipeline.Context)
-	}
+	transformer.Attach(pipeline.Context)
 
 	return &Pipeline{
 		Stream:   transformer.Transform(pipeline.Stream),
@@ -218,9 +211,7 @@ func (pipeline *Pipeline) BatchBy(batch stream.Batch) *Pipeline {
 }
 
 func (pipeline *Pipeline) Then(consumer stream.Consumer) error {
-	if bindable, ok := consumer.(stream.Bindable); ok {
-		bindable.Bind(pipeline.Context)
-	}
+	consumer.Attach(pipeline.Context)
 	consumer.Consume(pipeline.Stream)
 	return pipeline.Context.Err()
 }

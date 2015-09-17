@@ -20,7 +20,7 @@ func TestDrainer(t *testing.T) {
 
 			Convey("When I apply the drainer consumer", func() {
 				consumer := consumers.Drainer()
-				consumer.(stream.Bindable).Bind(context)
+				consumer.Attach(context)
 				consumer.Consume(in)
 
 				Convey("Then the stream is drained", func() {

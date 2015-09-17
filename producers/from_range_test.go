@@ -14,7 +14,7 @@ func TestFromRange(t *testing.T) {
 
 		Convey("And I have a range producer", func() {
 			producer := producers.FromRange(1, 3)
-			producer.(stream.Bindable).Bind(context)
+			producer.Attach(context)
 
 			Convey("When I produce data", func() {
 				readable := producer.Produce()

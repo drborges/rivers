@@ -35,7 +35,6 @@ func (context *context) Close(err error) {
 	}
 
 	select {
-	// TODO timeout?
 	case <-ch:
 		return
 	default:

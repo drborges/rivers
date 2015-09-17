@@ -16,7 +16,7 @@ func ZipBy(fn stream.ReduceFn) stream.Combiner {
 	}
 }
 
-func (combiner *zipBy) Bind(context stream.Context) {
+func (combiner *zipBy) Attach(context stream.Context) {
 	combiner.context = context
 }
 

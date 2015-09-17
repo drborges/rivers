@@ -14,7 +14,7 @@ func FIFO() stream.Combiner {
 	return &fifo{}
 }
 
-func (combiner *fifo) Bind(context stream.Context) {
+func (combiner *fifo) Attach(context stream.Context) {
 	combiner.context = context
 }
 

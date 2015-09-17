@@ -10,7 +10,7 @@ type Sink struct {
 	OnNext  stream.EachFn
 }
 
-func (sink *Sink) Bind(context stream.Context) {
+func (sink *Sink) Attach(context stream.Context) {
 	sink.context = context
 }
 

@@ -20,7 +20,7 @@ func TestFromFileByDelimiter(t *testing.T) {
 
 			Convey("When I produce data from the file", func() {
 				producer := producers.FromFile(file).ByDelimiter(' ')
-				producer.(stream.Bindable).Bind(context)
+				producer.Attach(context)
 				readable := producer.Produce()
 
 				Convey("Then I can read the produced data from the stream", func() {

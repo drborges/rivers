@@ -21,7 +21,7 @@ func TestLastItemCollector(t *testing.T) {
 			Convey("When I apply the collector consumer", func() {
 				var number int
 				consumer := consumers.LastItemCollector(&number)
-				consumer.(stream.Bindable).Bind(context)
+				consumer.Attach(context)
 				consumer.Consume(in)
 
 				Convey("Then data is collected out of the stream", func() {

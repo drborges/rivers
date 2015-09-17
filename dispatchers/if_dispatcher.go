@@ -5,12 +5,16 @@ import (
 	"time"
 )
 
-type ifDispatcher struct {
+type dispatcher struct {
 	context stream.Context
 	fn      stream.PredicateFn
 }
 
-func (dispatcher *ifDispatcher) Dispatch(in stream.Readable, writables ...stream.Writable) stream.Readable {
+func (dispatcher *dispatcher) Attach(context stream.Context) {
+	dispatcher.context = context
+}
+
+func (dispatcher *dispatcher) Dispatch(in stream.Readable, writables ...stream.Writable) stream.Readable {
 	notDispatchedReadable, notDispatchedWritable := stream.New(in.Capacity())
 
 	dispatchedCount := 0

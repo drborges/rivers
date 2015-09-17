@@ -11,7 +11,7 @@ type Observer struct {
 	OnNext      func(data stream.T, emitter stream.Emitter) error
 }
 
-func (observer *Observer) Bind(context stream.Context) {
+func (observer *Observer) Attach(context stream.Context) {
 	observer.context = context
 }
 

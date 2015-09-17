@@ -8,7 +8,7 @@ type Observable struct {
 	Emit     func(stream.Emitter)
 }
 
-func (observable *Observable) Bind(context stream.Context) {
+func (observable *Observable) Attach(context stream.Context) {
 	observable.context = context
 }
 

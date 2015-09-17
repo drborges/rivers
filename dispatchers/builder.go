@@ -11,14 +11,14 @@ func New(c stream.Context) *Builder {
 }
 
 func (b *Builder) If(fn stream.PredicateFn) stream.Dispatcher {
-	return &ifDispatcher{
+	return &dispatcher{
 		context: b.context,
 		fn:      fn,
 	}
 }
 
 func (b *Builder) Always() stream.Dispatcher {
-	return &ifDispatcher{
+	return &dispatcher{
 		context: b.context,
 		fn:      func(_ stream.T) bool { return true },
 	}
