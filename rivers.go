@@ -198,10 +198,6 @@ func (pipeline *Pipeline) Flatten() *Pipeline {
 	return pipeline.ApplyParallel(transformers.Flatten())
 }
 
-func (pipeline *Pipeline) SortBy(fn stream.SortByFn) *Pipeline {
-	return pipeline.Apply(transformers.SortBy(fn))
-}
-
 func (pipeline *Pipeline) Batch(size int) *Pipeline {
 	return pipeline.Apply(transformers.Batch(size))
 }
@@ -245,6 +241,17 @@ func (pipeline *Pipeline) CollectLastAs(data interface{}) error {
 
 func (pipeline *Pipeline) CollectBy(fn stream.EachFn) error {
 	return pipeline.Then(consumers.CollectBy(fn))
+}
+
+func (pipeline *Pipeline) SortBy(fn stream.SortByFn) ([]stream.T, error) {
+	items, err := pipeline.Collect()
+
+	if err != nil {
+		return nil, err
+	}
+
+	fn.Sort(items)
+	return items, nil
 }
 
 func (pipeline *Pipeline) Drain() error {

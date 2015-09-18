@@ -50,19 +50,14 @@ func TestRiversAPI(t *testing.T) {
 			So(data, ShouldResemble, []stream.T{8})
 		})
 
-		Convey("From Data -> Flatten -> Map -> Sort By -> Batch", func() {
-			data, _ := rivers.FromData([]stream.T{"a", "c"}, "b", []stream.T{"d", "e"}).
+		Convey("From Data -> Flatten -> Map -> Sort By", func() {
+			items, err := rivers.FromData([]stream.T{"a", "c"}, "b", []stream.T{"d", "e"}).
 				Flatten().
 				Map(concat("_")).
-				SortBy(alphabeticOrder).
-				Batch(2).
-				Collect()
+				SortBy(alphabeticOrder)
 
-			So(data, ShouldResemble, []stream.T{
-				[]stream.T{"a_", "b_"},
-				[]stream.T{"c_", "d_"},
-				[]stream.T{"e_"},
-			})
+			So(err, ShouldBeNil)
+			So(items, ShouldResemble, []stream.T{"a_", "b_", "c_", "d_", "e_"})
 		})
 
 		Convey("From Data -> FlatMap", func() {

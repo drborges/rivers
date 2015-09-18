@@ -125,22 +125,6 @@ func BatchBy(batch stream.Batch) stream.Transformer {
 	}
 }
 
-func SortBy(sorter stream.SortByFn) stream.Transformer {
-	items := []stream.T{}
-	return &Observer{
-		OnNext: func(data stream.T, emitter stream.Emitter) error {
-			items = append(items, data)
-			return nil
-		},
-		OnCompleted: func(emitter stream.Emitter) {
-			sorter.Sort(items)
-			for _, item := range items {
-				emitter.Emit(item)
-			}
-		},
-	}
-}
-
 func Each(fn stream.EachFn) stream.Transformer {
 	return &Observer{
 		OnNext: func(data stream.T, emitter stream.Emitter) error {
