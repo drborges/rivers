@@ -50,3 +50,16 @@ func CollectBy(fn stream.EachFn) stream.Consumer {
 		OnNext: fn,
 	}
 }
+
+func GroupBy(fn stream.MapFn, result stream.Groups) stream.Consumer {
+	return &Sink{
+		OnNext: func(data stream.T) {
+			groupKey := fn(data)
+			if _, exists := result[groupKey]; !exists {
+				result[groupKey] = []stream.T{}
+			}
+
+			result[groupKey] = append(result[groupKey], data)
+		},
+	}
+}

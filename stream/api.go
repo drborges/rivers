@@ -72,3 +72,25 @@ type Batch interface {
 	Empty() bool
 	Add(data T)
 }
+
+type Groups map[T][]T
+
+func (groups Groups) Empty() bool {
+	return len(groups) == 0
+}
+
+func (groups Groups) HasGroup(key T) bool {
+	_, contains := groups[key]
+	return contains
+}
+
+func (groups Groups) HasItem(val T) bool {
+	for _, group := range groups {
+		for _, item := range group {
+			if item == val {
+				return true
+			}
+		}
+	}
+	return false
+}

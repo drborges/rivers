@@ -254,6 +254,11 @@ func (pipeline *Pipeline) SortBy(fn stream.SortByFn) ([]stream.T, error) {
 	return items, nil
 }
 
+func (pipeline *Pipeline) GroupBy(groupFn stream.MapFn) (stream.Groups, error) {
+	result := make(stream.Groups)
+	return result, pipeline.Then(consumers.GroupBy(groupFn, result))
+}
+
 func (pipeline *Pipeline) Drain() error {
 	return pipeline.Then(consumers.Drainer())
 }

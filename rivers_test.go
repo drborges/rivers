@@ -342,5 +342,29 @@ func TestRiversAPI(t *testing.T) {
 			So(err, ShouldEqual, stream.Timeout)
 			So(items, ShouldBeNil)
 		})
+
+		Convey("From Range -> Group By", func() {
+			evensAndOdds := func(data stream.T) (key stream.T) {
+				if data.(int) % 2 == 0 {
+					return "evens"
+				}
+
+				return "odds"
+			}
+
+			groups, err := rivers.FromRange(1, 5).GroupBy(evensAndOdds)
+
+			So(err, ShouldBeNil)
+			So(groups.Empty(), ShouldBeFalse)
+			So(groups.HasGroup("evens"), ShouldBeTrue)
+			So(groups.HasGroup("odds"), ShouldBeTrue)
+			So(groups.HasGroup("invalid"), ShouldBeFalse)
+			So(groups.HasItem(2), ShouldBeTrue)
+			So(groups.HasItem(6), ShouldBeFalse)
+			So(groups, ShouldResemble, stream.Groups {
+				"evens": []stream.T{2, 4},
+				"odds":  []stream.T{1, 3, 5},
+			})
+		})
 	})
 }
