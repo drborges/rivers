@@ -44,6 +44,8 @@ func (observer *Observer) Transform(in stream.Readable) stream.Readable {
 
 				if err := observer.OnNext(data, emitter); err != nil {
 					if err == stream.Done {
+						// Tell producer to shutdown without errors
+						observer.context.Close(nil)
 						return
 					}
 					panic(err)
