@@ -23,7 +23,7 @@ func NewContext() stream.Context {
 		requests: make(chan error, 1),
 		success:  make(chan struct{}),
 		failure:  make(chan struct{}),
-		deadline: 10 * time.Second,
+		deadline: time.Hour,
 	}
 }
 
