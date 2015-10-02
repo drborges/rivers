@@ -1,7 +1,9 @@
 package producers
 
 import (
+	"bufio"
 	"github.com/drborges/rivers/stream"
+	"io"
 	"os"
 	"reflect"
 )
@@ -33,6 +35,26 @@ func FromSlice(slice stream.T) stream.Producer {
 		Emit: func(emitter stream.Emitter) {
 			for i := 0; i < sv.Len(); i++ {
 				emitter.Emit(sv.Index(i).Interface())
+			}
+		},
+	}
+}
+
+func FromReader(r io.Reader) stream.Producer {
+	return &Observable{
+		Emit: func(emitter stream.Emitter) {
+			buf := bufio.NewReader(r)
+
+			for {
+				b, err := buf.ReadByte()
+				if err == io.EOF {
+					return
+				}
+				if err != nil {
+					panic(err)
+				}
+
+				emitter.Emit(b)
 			}
 		},
 	}

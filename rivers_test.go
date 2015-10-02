@@ -1,6 +1,7 @@
 package rivers_test
 
 import (
+	"bytes"
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/producers"
 	"github.com/drborges/rivers/stream"
@@ -345,7 +346,7 @@ func TestRiversAPI(t *testing.T) {
 
 		Convey("From Range -> Group By", func() {
 			evensAndOdds := func(data stream.T) (key stream.T) {
-				if data.(int) % 2 == 0 {
+				if data.(int)%2 == 0 {
 					return "evens"
 				}
 
@@ -361,10 +362,20 @@ func TestRiversAPI(t *testing.T) {
 			So(groups.HasGroup("invalid"), ShouldBeFalse)
 			So(groups.HasItem(2), ShouldBeTrue)
 			So(groups.HasItem(6), ShouldBeFalse)
-			So(groups, ShouldResemble, stream.Groups {
+			So(groups, ShouldResemble, stream.Groups{
 				"evens": []stream.T{2, 4},
 				"odds":  []stream.T{1, 3, 5},
 			})
+		})
+
+		Convey("From Reader -> Map -> Filter -> Collect", func() {
+			toString := func(data stream.T) stream.T { return string(data.(byte)) }
+			dashes := func(data stream.T) bool { return data == "-" }
+
+			items, err := rivers.FromReader(bytes.NewReader([]byte("abcd"))).Map(toString).Drop(dashes).Collect()
+
+			So(err, ShouldBeNil)
+			So(items, ShouldResemble, []stream.T{"a", "b", "c", "d"})
 		})
 	})
 }

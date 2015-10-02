@@ -1,6 +1,7 @@
 package rivers_test
 
 import (
+	"errors"
 	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/stream"
 	. "github.com/smartystreets/goconvey/convey"
@@ -8,7 +9,6 @@ import (
 	"runtime"
 	"testing"
 	"time"
-	"errors"
 )
 
 func slowProcess(data stream.T) {

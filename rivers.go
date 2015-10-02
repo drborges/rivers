@@ -7,6 +7,7 @@ import (
 	"github.com/drborges/rivers/producers"
 	"github.com/drborges/rivers/stream"
 	"github.com/drborges/rivers/transformers"
+	"io"
 	"time"
 )
 
@@ -28,6 +29,10 @@ func From(producer stream.Producer) *Pipeline {
 
 func FromRange(from, to int) *Pipeline {
 	return From(producers.FromRange(from, to))
+}
+
+func FromReader(r io.Reader) *Pipeline {
+	return From(producers.FromReader(r))
 }
 
 func FromData(data ...stream.T) *Pipeline {
