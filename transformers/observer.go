@@ -27,6 +27,8 @@ func (observer *Observer) Transform(in stream.Readable) stream.Readable {
 			select {
 			case <-observer.context.Failure():
 				return
+			case <-observer.context.Done():
+				return
 			case <-time.After(observer.context.Deadline()):
 				panic(stream.Timeout)
 			default:
