@@ -264,6 +264,11 @@ func (pipeline *Pipeline) GroupBy(groupFn stream.MapFn) (stream.Groups, error) {
 	return result, pipeline.Then(consumers.GroupBy(groupFn, result))
 }
 
+func (pipeline *Pipeline) Count() (int, error) {
+	items, err := pipeline.Collect()
+	return len(items), err
+}
+
 func (pipeline *Pipeline) Drain() error {
 	return pipeline.Then(consumers.Drainer())
 }

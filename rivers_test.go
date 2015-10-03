@@ -377,5 +377,12 @@ func TestRiversAPI(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(items, ShouldResemble, []stream.T{"a", "b", "c", "d"})
 		})
+
+		Convey("From Range -> Count", func() {
+			count, err := rivers.FromRange(1, 5).Count()
+
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 5)
+		})
 	})
 }
