@@ -6,6 +6,7 @@ import (
 	"github.com/drborges/rivers/stream"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+	"github.com/smartystreets/assertions/should"
 )
 
 func TestIfDispatcher(t *testing.T) {
@@ -26,7 +27,9 @@ func TestIfDispatcher(t *testing.T) {
 				sink := dispatchers.New(context).If(evens).Dispatch(in, evensOut)
 
 				Convey("Then items matching the condition are dispatched to the corresponding stream", func() {
-					So(evensIn.ReadAll(), ShouldResemble, []stream.T{2, 4})
+					data := evensIn.ReadAll()
+					So(data, should.Contain, 2)
+					So(data, should.Contain, 4)
 
 					Convey("And items not matching the condition are dispatched to the sink stream", func() {
 						So(sink.ReadAll(), ShouldResemble, []stream.T{3})
@@ -40,8 +43,15 @@ func TestIfDispatcher(t *testing.T) {
 				sink := dispatchers.New(context).Always().Dispatch(in, streamOut1, streamOut2)
 
 				Convey("Then all items are dispatched to the corresponding streams", func() {
-					So(streamIn1.ReadAll(), ShouldResemble, []stream.T{2, 3, 4})
-					So(streamIn2.ReadAll(), ShouldResemble, []stream.T{2, 3, 4})
+					streamIn1Items := streamIn1.ReadAll()
+					streamIn2Items := streamIn2.ReadAll()
+					So(streamIn1Items, should.Contain, 2)
+					So(streamIn1Items, should.Contain, 3)
+					So(streamIn1Items, should.Contain, 4)
+
+					So(streamIn2Items, should.Contain, 2)
+					So(streamIn2Items, should.Contain, 3)
+					So(streamIn2Items, should.Contain, 4)
 
 					Convey("And no item is dispatched to the sink stream", func() {
 						So(sink.ReadAll(), ShouldBeEmpty)

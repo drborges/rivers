@@ -6,6 +6,7 @@ import (
 	"github.com/drborges/rivers/stream"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+	"github.com/smartystreets/assertions/should"
 )
 
 func TestFifo(t *testing.T) {
@@ -29,7 +30,11 @@ func TestFifo(t *testing.T) {
 				combined := combiner.Combine(in1, in2)
 
 				Convey("Then a transformed stream is returned", func() {
-					So(combined.ReadAll(), ShouldResemble, []stream.T{1, 2, 3, 4})
+					items := combined.ReadAll()
+					So(items, should.Contain, 1)
+					So(items, should.Contain, 2)
+					So(items, should.Contain, 3)
+					So(items, should.Contain, 4)
 				})
 			})
 
