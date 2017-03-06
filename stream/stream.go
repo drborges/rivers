@@ -25,9 +25,6 @@ type Reader interface {
 
 	// Read provides a readable stream from which data can be read
 	Read() Readable
-
-	// Fork creates a new pair of stream reader and writer
-	Fork() (Reader, Writer)
 }
 
 // Writer provides means to write data to a writable stream as well as signal the
@@ -73,17 +70,6 @@ type reader struct {
 
 func (reader *reader) Read() Readable {
 	return reader.ch
-}
-
-func (parent *reader) Fork() (Reader, Writer) {
-	ch := make(chan T, 2)
-	ctx, cancel := contextFromRoot(parent.rootCtx)
-	propagateCancellation := context.CancelFunc(func() {
-		cancel()
-		parent.cancel()
-	})
-
-	return &reader{ctx, propagateCancellation, parent.rootCtx, parent.cancelRoot, ch}, &writer{ctx, parent.cancelRoot, ch}
 }
 
 func (reader *reader) Close(err error) {
