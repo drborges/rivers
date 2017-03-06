@@ -1,6 +1,8 @@
 package stream
 
-import "context"
+import (
+	"github.com/drborges/rivers/context"
+)
 
 // T data type flowing through rivers streams
 type T interface{}
@@ -50,22 +52,13 @@ var Empty = func() Reader {
 // configuration.
 func New() (Reader, Writer) {
 	ch := make(chan T, 2)
-	rootCtx, cancelRoot := context.WithCancel(context.Background())
-	ctx, cancel := contextFromRoot(rootCtx)
-
-	return &reader{ctx, cancel, rootCtx, cancelRoot, ch}, &writer{ctx, cancelRoot, ch}
-}
-
-func contextFromRoot(ctx context.Context) (context.Context, context.CancelFunc) {
-	return context.WithCancel(ctx)
+	ctx := context.New()
+	return &reader{ctx, ch}, &writer{ctx, ch}
 }
 
 type reader struct {
-	ctx        context.Context
-	cancel     context.CancelFunc
-	rootCtx    context.Context
-	cancelRoot context.CancelFunc
-	ch         Readable
+	ctx context.Context
+	ch  Readable
 }
 
 func (reader *reader) Read() Readable {
@@ -73,16 +66,12 @@ func (reader *reader) Read() Readable {
 }
 
 func (reader *reader) Close(err error) {
-	reader.cancel()
-	if err != nil {
-		reader.cancelRoot()
-	}
+	reader.ctx.Close()
 }
 
 type writer struct {
-	ctx        context.Context
-	cancelRoot context.CancelFunc
-	ch         Writable
+	ctx context.Context
+	ch  Writable
 }
 
 func (writer *writer) Write(data T) error {
@@ -92,7 +81,5 @@ func (writer *writer) Write(data T) error {
 
 func (writer *writer) Close(err error) {
 	defer close(writer.ch)
-	if err != nil {
-		writer.cancelRoot()
-	}
+	writer.ctx.Close()
 }
