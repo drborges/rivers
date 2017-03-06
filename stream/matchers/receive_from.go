@@ -26,8 +26,13 @@ func Receive(items ...int) receiveFromMatcher {
 			for _, num := range items {
 				writer.Write(num)
 
-				if data := <-reader.Read(); data != num {
-					return errors.New(fmt.Sprintf("Expected %v, got %v", num, data))
+				select {
+				case data := <-reader.Read():
+					if data != num {
+						return errors.New(fmt.Sprintf("Expected %v, got %v", num, data))
+					}
+				default:
+					return errors.New(fmt.Sprintf("Expected stream to have received %v, but it was closed.", num))
 				}
 			}
 

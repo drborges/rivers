@@ -84,7 +84,12 @@ type writer struct {
 
 func (writer *writer) Write(data T) error {
 	select {
-	case writer.ch <- data:
+	case <-writer.ctx.Done():
+		return nil
+	default:
+		select {
+		case writer.ch <- data:
+		}
 	}
 	return nil
 }

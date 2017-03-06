@@ -28,3 +28,27 @@ func TestReaderWriterStreamComponentsWithCustomContext(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestReaderDoesNotReceiveDataFromWriterWhenWriterIsClosed(t *testing.T) {
+	expect := expectations.New()
+
+	reader, writer := stream.NewWithStdContext(context.Background())
+
+	writer.Close(nil)
+
+	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestReaderDoesNotReceiveDataFromWriterWhenReaderIsClosed(t *testing.T) {
+	expect := expectations.New()
+
+	reader, writer := stream.NewWithStdContext(context.Background())
+
+	reader.Close(nil)
+
+	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
+		t.Error(err)
+	}
+}
