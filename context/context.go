@@ -2,7 +2,24 @@ package context
 
 import (
 	goContext "context"
+	"time"
 )
+
+var (
+	// DefaultConfig the default configuration used to create a context.
+	DefaultConfig = Config{
+		Timeout:    5 * time.Second,
+		BufferSize: 1000,
+	}
+)
+
+// Config configuration used to adjust the behavior of the context.
+type Config struct {
+	// Timeout the timeout which after the context is automatically closed.
+	Timeout time.Duration
+	// BufferSize the size of the buffer used by workers bound to this context.
+	BufferSize int
+}
 
 // Context implements the golang context.Context interface, with support to
 // Context Trees, providing a different semanthics for cancellation propagation.
@@ -24,6 +41,8 @@ import (
 type Context interface {
 	// Implements the golang context.Context interface.
 	goContext.Context
+	// Config returns the configuration used to create the context.
+	Config() Config
 	// Open opens the context and all its descendants so that taks bound to these
 	// contexts can start their work.
 	Open()
@@ -41,7 +60,7 @@ type Context interface {
 func New() Context {
 	ctx, cancel := goContext.WithCancel(goContext.Background())
 	opened := make(chan struct{})
-	return &context{ctx, cancel, opened, make([]Context, 0)}
+	return &context{ctx, cancel, opened, make([]Context, 0), DefaultConfig}
 }
 
 type context struct {
@@ -49,6 +68,11 @@ type context struct {
 	cancel   goContext.CancelFunc
 	opened   chan struct{}
 	children []Context
+	config   Config
+}
+
+func (ctx *context) Config() Config {
+	return ctx.config
 }
 
 func (ctx *context) Close() {
@@ -77,7 +101,7 @@ func (parent *context) NewChild() Context {
 		cancel()
 		parent.Close()
 	}
-	child := &context{ctx, cancelWithPropagation, parent.opened, make([]Context, 0)}
+	child := &context{ctx, cancelWithPropagation, parent.opened, make([]Context, 0), parent.config}
 	parent.children = append(parent.children, child)
 	return child
 }

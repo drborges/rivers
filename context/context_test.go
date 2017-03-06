@@ -6,6 +6,7 @@ import (
 	"github.com/drborges/rivers/context"
 	. "github.com/drborges/rivers/context/matchers"
 	"github.com/drborges/rivers/expectations"
+	. "github.com/drborges/rivers/expectations/matchers"
 )
 
 func TestOpen(t *testing.T) {
@@ -147,6 +148,17 @@ func TestParentContextIsClosedWhenAllChildrenAreClosed(t *testing.T) {
 	}
 
 	if err := expect(parent).To(BeClosed()); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestConfigPropagation(t *testing.T) {
+	expect := expectations.New()
+
+	parent := context.New()
+	child := parent.NewChild()
+
+	if err := expect(parent.Config()).To(Be(child.Config())); err != nil {
 		t.Error(err)
 	}
 }
