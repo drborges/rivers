@@ -1,6 +1,8 @@
 package stream
 
 import (
+	goContext "context"
+
 	"github.com/drborges/rivers/context"
 )
 
@@ -51,8 +53,14 @@ var Empty = func() Reader {
 // New Creates the Reader and Writer components of a rivers stream with the default
 // configuration.
 func New() (Reader, Writer) {
+	return NewWithStdContext(goContext.Background())
+}
+
+// NewWithStdContext Creates the Reader and Writer components of a rivers stream
+// with the default configuration.
+func NewWithStdContext(stdCtx goContext.Context) (Reader, Writer) {
 	ch := make(chan T, 2)
-	ctx := context.New()
+	ctx := context.FromStdContext(stdCtx)
 	return &reader{ctx, ch}, &writer{ctx, ch}
 }
 
@@ -75,7 +83,9 @@ type writer struct {
 }
 
 func (writer *writer) Write(data T) error {
-	writer.ch <- data
+	select {
+	case writer.ch <- data:
+	}
 	return nil
 }
 

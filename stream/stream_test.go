@@ -1,6 +1,7 @@
 package stream_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/drborges/rivers/expectations"
@@ -12,6 +13,16 @@ func TestReaderWriterStreamComponents(t *testing.T) {
 	expect := expectations.New()
 
 	reader, writer := stream.New()
+
+	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestReaderWriterStreamComponentsWithCustomContext(t *testing.T) {
+	expect := expectations.New()
+
+	reader, writer := stream.NewWithStdContext(context.Background())
 
 	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
 		t.Error(err)

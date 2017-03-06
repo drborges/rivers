@@ -58,7 +58,12 @@ type Context interface {
 
 // New creates a new Context.
 func New() Context {
-	ctx, cancel := goContext.WithCancel(goContext.Background())
+	return FromStdContext(goContext.Background())
+}
+
+// FromStdContext creates a new Context from the standard golang context.
+func FromStdContext(stdCtx goContext.Context) Context {
+	ctx, cancel := goContext.WithCancel(stdCtx)
 	opened := make(chan struct{})
 	return &context{ctx, cancel, opened, make([]Context, 0), DefaultConfig}
 }
