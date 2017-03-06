@@ -8,7 +8,7 @@ import (
 	. "github.com/drborges/rivers/stream/matchers"
 )
 
-func TestReadableWritableStreams(t *testing.T) {
+func TestReaderWriterStreamComponents(t *testing.T) {
 	expect := expectations.New()
 
 	reader, writer := stream.New()
