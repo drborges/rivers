@@ -43,15 +43,9 @@ type Context interface {
 	goContext.Context
 	// Config returns the configuration used to create the context.
 	Config() Config
-	// Open opens the context and all its descendants so that taks bound to these
-	// contexts can start their work.
-	Open()
 	// Close attempts to close the context. If the context still has opened
 	// children, this operation will be a noop.
 	Close()
-	// Opened read-only channel used to check whether or not the context is still
-	// opened for work.
-	Opened() <-chan struct{}
 	// NewChild creates a new child Context.
 	NewChild() Context
 }
@@ -64,14 +58,12 @@ func New() Context {
 // FromStdContext creates a new Context from the standard golang context.
 func FromStdContext(stdCtx goContext.Context) Context {
 	ctx, cancel := goContext.WithCancel(stdCtx)
-	opened := make(chan struct{})
-	return &context{ctx, cancel, opened, make([]Context, 0), DefaultConfig}
+	return &context{ctx, cancel, make([]Context, 0), DefaultConfig}
 }
 
 type context struct {
 	goContext.Context
 	cancel   goContext.CancelFunc
-	opened   chan struct{}
 	children []Context
 	config   Config
 }
@@ -92,21 +84,13 @@ func (ctx *context) Close() {
 	ctx.cancel()
 }
 
-func (ctx *context) Open() {
-	close(ctx.opened)
-}
-
-func (ctx *context) Opened() <-chan struct{} {
-	return ctx.opened
-}
-
 func (parent *context) NewChild() Context {
 	ctx, cancel := goContext.WithCancel(parent.Context)
 	cancelWithPropagation := func() {
 		cancel()
 		parent.Close()
 	}
-	child := &context{ctx, cancelWithPropagation, parent.opened, make([]Context, 0), parent.config}
+	child := &context{ctx, cancelWithPropagation, make([]Context, 0), parent.config}
 	parent.children = append(parent.children, child)
 	return child
 }

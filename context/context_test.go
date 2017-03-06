@@ -9,56 +9,6 @@ import (
 	. "github.com/drborges/rivers/expectations/matchers"
 )
 
-func TestOpen(t *testing.T) {
-	expect := expectations.New()
-
-	ctx := context.New()
-
-	if err := expect(ctx).ToNot(BeOpened()); err != nil {
-		t.Error(err)
-	}
-
-	ctx.Open()
-
-	if err := expect(ctx).To(BeOpened()); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestOpenPropagatesSignalToChildren(t *testing.T) {
-	expect := expectations.New()
-
-	parent := context.New()
-	child1 := parent.NewChild()
-	child2 := parent.NewChild()
-
-	if err := expect(parent).ToNot(BeOpened()); err != nil {
-		t.Error(err)
-	}
-
-	if err := expect(child1).ToNot(BeOpened()); err != nil {
-		t.Error(err)
-	}
-
-	if err := expect(child2).ToNot(BeOpened()); err != nil {
-		t.Error(err)
-	}
-
-	parent.Open()
-
-	if err := expect(parent).To(BeOpened()); err != nil {
-		t.Error(err)
-	}
-
-	if err := expect(child1).To(BeOpened()); err != nil {
-		t.Error(err)
-	}
-
-	if err := expect(child2).To(BeOpened()); err != nil {
-		t.Error(err)
-	}
-}
-
 func TestClose(t *testing.T) {
 	expect := expectations.New()
 
