@@ -4,20 +4,40 @@ import (
 	goContext "context"
 )
 
-// Context
+// Context implements the golang context.Context interface, with support to
+// Context Trees, providing a different semanthics for cancellation propagation.
+// In a Context Tree, cancellation is propagated from leaf nodes up to their
+// parent. A parent node can only be canceled if all its children are canceled.
+// For example, given the following Context Tree:
 //
 //  ┏━━━> c2
 // c1 ━━> c3 ━━> c5
 //  ┗━━━> c4
 //
+// The context c1, con only be canceld if all its children (c2, c3, and c4) are
+// already canceld. Similarly, c3 can only be canceled if c5 is canceled,
+// threfore, c1 depends on c5 being canceled befre it may be canceled.
+//
+// This abstraction enables the creation of stream pipelines, wheren downstreams
+// can signal to their upstream when they are done consuming data, freeing the
+// upstream to cease its work when no more data is required by its downstreams.
 type Context interface {
+	// Implements the golang context.Context interface.
 	goContext.Context
+	// Open opens the context and all its descendants so that taks bound to these
+	// contexts can start their work.
 	Open()
+	// Close attempts to close the context. If the context still has opened
+	// children, this operation will be a noop.
 	Close()
+	// Opened read-only channel used to check whether or not the context is still
+	// opened for work.
 	Opened() <-chan struct{}
+	// NewChild creates a new child Context.
 	NewChild() Context
 }
 
+// New creates a new Context.
 func New() Context {
 	ctx, cancel := goContext.WithCancel(goContext.Background())
 	opened := make(chan struct{})
