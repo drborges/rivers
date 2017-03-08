@@ -61,6 +61,11 @@ func FromStdContext(stdCtx goContext.Context) Context {
 	return &context{ctx, cancel, make([]Context, 0), DefaultConfig}
 }
 
+func WithConfig(parent Context, config Config) Context {
+	ctx, cancel := goContext.WithTimeout(parent, config.Timeout)
+	return &context{ctx, cancel, make([]Context, 0), config}
+}
+
 type context struct {
 	goContext.Context
 	cancel   goContext.CancelFunc

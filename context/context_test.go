@@ -2,6 +2,7 @@ package context_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/drborges/rivers/context"
 	. "github.com/drborges/rivers/context/matchers"
@@ -109,6 +110,30 @@ func TestConfigPropagation(t *testing.T) {
 	child := parent.NewChild()
 
 	if err := expect(parent.Config()).To(Be(child.Config())); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestNewContextWithConfig(t *testing.T) {
+	expect := expectations.New()
+
+	config := context.Config{
+		Timeout:    1 * time.Second,
+		BufferSize: 2,
+	}
+
+	ctx := context.WithConfig(context.New(), config)
+
+	if err := expect(ctx.Config()).To(Be(config)); err != nil {
+		t.Error(err)
+	}
+
+	deadline, ok := ctx.Deadline()
+	if err := expect(ok).To(Be(true)); err != nil {
+		t.Error(err)
+	}
+
+	if err := expect(deadline).ToNot(Be(nil)); err != nil {
 		t.Error(err)
 	}
 }
