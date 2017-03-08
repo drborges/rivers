@@ -80,11 +80,12 @@ type writer struct {
 func (writer *writer) Write(data T) error {
 	select {
 	case <-writer.ctx.Done():
-		return nil
+		return writer.ctx.Err()
 	default:
 		select {
 		case writer.ch <- data:
 		case <-writer.ctx.Done(): // Eventually times out
+			return writer.ctx.Err()
 		}
 	}
 	return nil

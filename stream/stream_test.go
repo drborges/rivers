@@ -1,11 +1,13 @@
 package stream_test
 
 import (
+	goContext "context"
 	"testing"
 	"time"
 
 	"github.com/drborges/rivers/context"
 	"github.com/drborges/rivers/expectations"
+	. "github.com/drborges/rivers/expectations/matchers"
 	"github.com/drborges/rivers/stream"
 	. "github.com/drborges/rivers/stream/matchers"
 )
@@ -64,6 +66,10 @@ func TestClosingWriter(t *testing.T) {
 	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
 		t.Error(err)
 	}
+
+	if err := expect(writer.Write(1)).To(Be(goContext.Canceled)); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestWriterTimesout(t *testing.T) {
@@ -77,6 +83,21 @@ func TestWriterTimesout(t *testing.T) {
 	_, writer := stream.NewWithContext(ctx)
 
 	if err := expect(writer).To(TimeoutWithin(500 * time.Millisecond)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestWriterReturnsTimeoutError(t *testing.T) {
+	expect := expectations.New()
+
+	ctx := context.WithConfig(context.New(), context.Config{
+		Timeout:    500 * time.Millisecond,
+		BufferSize: 0,
+	})
+
+	_, writer := stream.NewWithContext(ctx)
+
+	if err := expect(writer.Write(1)).To(Be(goContext.DeadlineExceeded)); err != nil {
 		t.Error(err)
 	}
 }
