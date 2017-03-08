@@ -1,10 +1,6 @@
 package stream
 
-import (
-	goContext "context"
-
-	"github.com/drborges/rivers/context"
-)
+import "github.com/drborges/rivers/context"
 
 // T data type flowing through rivers streams
 type T interface{}
@@ -53,14 +49,13 @@ var Empty = func() Reader {
 // New Creates the Reader and Writer components of a rivers stream with the default
 // configuration.
 func New() (Reader, Writer) {
-	return NewWithStdContext(goContext.Background())
+	return NewWithContext(context.New())
 }
 
-// NewWithStdContext Creates the Reader and Writer components of a rivers stream
-// with the default configuration.
-func NewWithStdContext(stdCtx goContext.Context) (Reader, Writer) {
+// NewWithContext Creates the Reader and Writer components of a
+// rivers stream from a given context.
+func NewWithContext(ctx context.Context) (Reader, Writer) {
 	ch := make(chan T, 2)
-	ctx := context.FromStdContext(stdCtx)
 	return &reader{ctx, ch}, &writer{ctx, ch}
 }
 

@@ -1,9 +1,9 @@
 package stream_test
 
 import (
-	"context"
 	"testing"
 
+	"github.com/drborges/rivers/context"
 	"github.com/drborges/rivers/expectations"
 	"github.com/drborges/rivers/stream"
 	. "github.com/drborges/rivers/stream/matchers"
@@ -22,7 +22,7 @@ func TestReaderWriterStreamComponents(t *testing.T) {
 func TestReaderWriterStreamComponentsWithCustomContext(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.NewWithStdContext(context.Background())
+	reader, writer := stream.NewWithContext(context.New())
 
 	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
 		t.Error(err)
@@ -32,7 +32,7 @@ func TestReaderWriterStreamComponentsWithCustomContext(t *testing.T) {
 func TestReaderDoesNotReceiveDataFromWriterWhenWriterIsClosed(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.NewWithStdContext(context.Background())
+	reader, writer := stream.New()
 
 	writer.Close(nil)
 
@@ -44,7 +44,7 @@ func TestReaderDoesNotReceiveDataFromWriterWhenWriterIsClosed(t *testing.T) {
 func TestReaderDoesNotReceiveDataFromWriterWhenReaderIsClosed(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.NewWithStdContext(context.Background())
+	reader, writer := stream.New()
 
 	reader.Close(nil)
 
@@ -56,7 +56,19 @@ func TestReaderDoesNotReceiveDataFromWriterWhenReaderIsClosed(t *testing.T) {
 func TestClosingWriter(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.NewWithStdContext(context.Background())
+	reader, writer := stream.New()
+
+	writer.Close(nil)
+
+	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestWriterTimesout(t *testing.T) {
+	expect := expectations.New()
+
+	reader, writer := stream.New()
 
 	writer.Close(nil)
 
