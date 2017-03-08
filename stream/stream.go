@@ -55,7 +55,7 @@ func New() (Reader, Writer) {
 // NewWithContext Creates the Reader and Writer components of a
 // rivers stream from a given context.
 func NewWithContext(ctx context.Context) (Reader, Writer) {
-	ch := make(chan T, 2)
+	ch := make(chan T, ctx.Config().BufferSize)
 	return &reader{ctx, ch}, &writer{ctx, ch}
 }
 
@@ -84,6 +84,7 @@ func (writer *writer) Write(data T) error {
 	default:
 		select {
 		case writer.ch <- data:
+		case <-writer.ctx.Done(): // Eventually times out
 		}
 	}
 	return nil

@@ -2,6 +2,7 @@ package stream_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/drborges/rivers/context"
 	"github.com/drborges/rivers/expectations"
@@ -68,11 +69,14 @@ func TestClosingWriter(t *testing.T) {
 func TestWriterTimesout(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.New()
+	ctx := context.WithConfig(context.New(), context.Config{
+		Timeout:    500 * time.Millisecond,
+		BufferSize: 0,
+	})
 
-	writer.Close(nil)
+	_, writer := stream.NewWithContext(ctx)
 
-	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
+	if err := expect(writer).To(TimeoutWithin(500 * time.Millisecond)); err != nil {
 		t.Error(err)
 	}
 }
