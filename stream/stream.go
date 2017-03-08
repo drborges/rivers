@@ -11,17 +11,14 @@ type Readable <-chan T
 // Writable a channel which one may write data to
 type Writable chan<- T
 
-// Closer represents a type which may be closed. When no error is given, that
-// indicates the Closer was gracefully closed without errors. Closing with an
-// error, indicates a failure.
-type Closer interface {
-	Close(error)
-}
-
 // Reader provides means to read from a readable stream as well as signal the
 // termination of the stream, gracefully or not.
 type Reader interface {
-	Closer
+	// Close closes the stream indicating that no further data will
+	// be read from this reader. If no error is provided, the stream
+	// is then gracefully closed. Closing with an error, indicates a
+	// failure.
+	Close(error)
 
 	// Read provides a readable stream from which data can be read
 	Read() Readable
@@ -31,7 +28,11 @@ type Reader interface {
 // termination of the stream, gracefully or not. Closing also closes the underlying
 // writable stream.
 type Writer interface {
-	Closer
+	// Close closes the stream indicating that no further data will
+	// be written to the stream. If no error is provided, the stream
+	// is then gracefully closed. Closing with an error, indicates a
+	// failure.
+	Close(error)
 
 	// Write writes the given data to the underlying writable stream, returning an
 	// error in case of a failure.
