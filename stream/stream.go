@@ -22,6 +22,16 @@ type Reader interface {
 
 	// Read provides a readable stream from which data can be read
 	Read() Readable
+
+	// NewDownstream creates the components reader and writer of a
+	// new downstream, which is bound to this stream. This
+	// relationship dictates how stream cancellation is propagated:
+	// 1. A stream is only closed if all its downstreams are also
+	// closed.
+	// 2. Closing a downstream, propagates the cancellation signal
+	// to the upstream, which then checks whether or not it should
+	// close itself.
+	NewDownstream() (Reader, Writer)
 }
 
 // Writer provides means to write data to a writable stream as well as signal the
@@ -71,6 +81,10 @@ func (reader *reader) Read() Readable {
 
 func (reader *reader) Close(err error) {
 	reader.ctx.Close()
+}
+
+func (reader *reader) NewDownstream() (Reader, Writer) {
+	return NewWithContext(reader.ctx.NewChild())
 }
 
 type writer struct {
