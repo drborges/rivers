@@ -82,6 +82,7 @@ func WithConfig(parent Context, config Config) Context {
 		cancel()
 		parent.Close(err)
 	}
+
 	return &context{
 		Context:   ctx,
 		config:    config,
@@ -128,4 +129,11 @@ func (parent *context) NewChild() Context {
 	}
 	parent.children = append(parent.children, child)
 	return child
+}
+
+func (context *context) Err() error {
+	if closingErr := context.err; closingErr != nil {
+		return closingErr
+	}
+	return context.Context.Err()
 }

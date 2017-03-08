@@ -1,6 +1,7 @@
 package context_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -134,6 +135,21 @@ func TestNewContextWithConfig(t *testing.T) {
 	}
 
 	if err := expect(deadline).ToNot(Be(nil)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestErrorsArePropagatedToRootContext(t *testing.T) {
+	expect := expectations.New()
+
+	root := context.New()
+	child := root.NewChild()
+	grandchild := child.NewChild()
+
+	closingErr := errors.New("Something went wrong")
+	grandchild.Close(closingErr)
+
+	if err := expect(root.Err()).To(Be(closingErr)); err != nil {
 		t.Error(err)
 	}
 }
