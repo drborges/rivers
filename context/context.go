@@ -13,6 +13,8 @@ var (
 	}
 )
 
+type closeFunc func(error)
+
 // Config configuration used to adjust the behavior of the context.
 type Config struct {
 	// Timeout the timeout which after the context is automatically closed.
@@ -44,8 +46,9 @@ type Context interface {
 	// Config returns the configuration used to create the context.
 	Config() Config
 	// Close attempts to close the context. If the context still has opened
-	// children, this operation will be a noop.
-	Close()
+	// children, this operation will be a noop, unless an error is provided, which
+	// then causes the whole context tree to be closed.
+	Close(error)
 	// NewChild creates a new child Context.
 	NewChild() Context
 }
@@ -58,26 +61,48 @@ func New() Context {
 // FromStdContext creates a new Context from the standard golang context.
 func FromStdContext(stdCtx goContext.Context) Context {
 	ctx, cancel := goContext.WithCancel(stdCtx)
-	return &context{ctx, cancel, make([]Context, 0), DefaultConfig}
+	context := &context{
+		Context:  ctx,
+		config:   DefaultConfig,
+		children: make([]Context, 0),
+	}
+
+	closeFunc := func(err error) {
+		cancel()
+		context.err = err
+	}
+
+	context.closeFunc = closeFunc
+	return context
 }
 
 func WithConfig(parent Context, config Config) Context {
 	ctx, cancel := goContext.WithTimeout(parent, config.Timeout)
-	return &context{ctx, cancel, make([]Context, 0), config}
+	closeFunc := func(err error) {
+		cancel()
+		parent.Close(err)
+	}
+	return &context{
+		Context:   ctx,
+		config:    config,
+		closeFunc: closeFunc,
+		children:  make([]Context, 0),
+	}
 }
 
 type context struct {
 	goContext.Context
-	cancel   goContext.CancelFunc
-	children []Context
-	config   Config
+	closeFunc closeFunc
+	children  []Context
+	config    Config
+	err       error
 }
 
 func (ctx *context) Config() Config {
 	return ctx.config
 }
 
-func (ctx *context) Close() {
+func (ctx *context) Close(err error) {
 	for _, child := range ctx.children {
 		select {
 		case <-child.Done():
@@ -86,16 +111,21 @@ func (ctx *context) Close() {
 			return
 		}
 	}
-	ctx.cancel()
+	ctx.closeFunc(err)
 }
 
 func (parent *context) NewChild() Context {
 	ctx, cancel := goContext.WithCancel(parent.Context)
-	cancelWithPropagation := func() {
+	closeFunc := func(err error) {
 		cancel()
-		parent.Close()
+		parent.Close(err)
 	}
-	child := &context{ctx, cancelWithPropagation, make([]Context, 0), parent.config}
+	child := &context{
+		Context:   ctx,
+		closeFunc: closeFunc,
+		config:    parent.config,
+		children:  make([]Context, 0),
+	}
 	parent.children = append(parent.children, child)
 	return child
 }

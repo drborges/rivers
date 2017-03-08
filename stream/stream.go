@@ -80,7 +80,7 @@ func (reader *reader) Read() Readable {
 }
 
 func (reader *reader) Close(err error) {
-	reader.ctx.Close()
+	reader.ctx.Close(err)
 }
 
 func (reader *reader) NewDownstream() (Reader, Writer) {
@@ -108,5 +108,5 @@ func (writer *writer) Write(data T) error {
 
 func (writer *writer) Close(err error) {
 	defer close(writer.ch)
-	writer.ctx.Close()
+	writer.ctx.Close(err)
 }

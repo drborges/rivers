@@ -19,7 +19,7 @@ func TestClose(t *testing.T) {
 		t.Error(err)
 	}
 
-	ctx.Close()
+	ctx.Close(nil)
 
 	if err := expect(ctx).To(BeClosed()); err != nil {
 		t.Error(err)
@@ -41,7 +41,7 @@ func TestParentContextCannotBeClosedWhenChildrenAreStillOpened(t *testing.T) {
 		t.Error(err)
 	}
 
-	parent.Close()
+	parent.Close(nil)
 
 	if err := expect(child1).ToNot(BeClosed()); err != nil {
 		t.Error(err)
@@ -60,7 +60,7 @@ func TestParentContextIsClosedWhenAllChildrenAreClosed(t *testing.T) {
 	child2 := parent.NewChild()
 	grandchild := child2.NewChild()
 
-	child1.Close()
+	child1.Close(nil)
 
 	if err := expect(child1).To(BeClosed()); err != nil {
 		t.Error(err)
@@ -78,7 +78,7 @@ func TestParentContextIsClosedWhenAllChildrenAreClosed(t *testing.T) {
 		t.Error(err)
 	}
 
-	child2.Close()
+	child2.Close(nil)
 
 	if err := expect(child2).ToNot(BeClosed()); err != nil {
 		t.Error(err)
@@ -88,7 +88,7 @@ func TestParentContextIsClosedWhenAllChildrenAreClosed(t *testing.T) {
 		t.Error(err)
 	}
 
-	grandchild.Close()
+	grandchild.Close(nil)
 
 	if err := expect(grandchild).To(BeClosed()); err != nil {
 		t.Error(err)
