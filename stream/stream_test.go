@@ -2,10 +2,12 @@ package stream_test
 
 import (
 	goContext "context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/drborges/rivers/context"
+	. "github.com/drborges/rivers/context/matchers"
 	"github.com/drborges/rivers/expectations"
 	. "github.com/drborges/rivers/expectations/matchers"
 	"github.com/drborges/rivers/stream"
@@ -145,6 +147,58 @@ func TestUpstreamIsClosedAfterAllDownstreamsAreClosed(t *testing.T) {
 	}
 
 	if err := expect(upstreamReader).ToNot(Receive(1, 2, 4).From(upstreamWriter)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDownstreamErrorIsCollectedByRootContext(t *testing.T) {
+	expect := expectations.New()
+
+	ctx := context.New()
+	r1, _ := stream.NewWithContext(ctx)
+	r2, _ := r1.NewDownstream()
+
+	err := errors.New("panic!")
+	r2.Close(err)
+
+	if err := expect(ctx.Err()).To(Be(err)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDownstreamErrorClosesContext(t *testing.T) {
+	expect := expectations.New()
+
+	ctx := context.New()
+	r1, _ := stream.NewWithContext(ctx)
+	r2, _ := r1.NewDownstream()
+
+	r2.Close(errors.New("panic!"))
+
+	if err := expect(ctx).To(BeClosed()); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDownstreamErrorClosesAllStreams(t *testing.T) {
+	expect := expectations.New()
+
+	ctx := context.New()
+	r1, w1 := stream.NewWithContext(ctx)
+	r2, w2 := r1.NewDownstream()
+	r3, w3 := r2.NewDownstream()
+
+	r2.Close(errors.New("panic!"))
+
+	if err := expect(r1).ToNot(Receive(1, 2, 4).From(w1)); err != nil {
+		t.Error(err)
+	}
+
+	if err := expect(r2).ToNot(Receive(1, 2, 4).From(w2)); err != nil {
+		t.Error(err)
+	}
+
+	if err := expect(r3).ToNot(Receive(1, 2, 4).From(w3)); err != nil {
 		t.Error(err)
 	}
 }
