@@ -76,6 +76,7 @@ func FromStdContext(stdCtx goContext.Context) Context {
 	return context
 }
 
+// WithConfig creates a new Context with the provided configuration.
 func WithConfig(parent Context, config Config) Context {
 	ctx, cancel := goContext.WithTimeout(parent, config.Timeout)
 	closeFunc := func(err error) {
@@ -118,25 +119,28 @@ func (ctx *context) Close(err error) {
 	ctx.closeFunc(err)
 }
 
-func (parent *context) NewChild() Context {
-	ctx, cancel := goContext.WithCancel(parent.Context)
+func (ctx *context) NewChild() Context {
+	childCtx, cancel := goContext.WithCancel(ctx.Context)
 	closeFunc := func(err error) {
 		cancel()
-		parent.Close(err)
+		ctx.Close(err)
 	}
+
 	child := &context{
-		Context:   ctx,
+		Context:   childCtx,
 		closeFunc: closeFunc,
-		config:    parent.config,
+		config:    ctx.config,
 		children:  make([]Context, 0),
 	}
-	parent.children = append(parent.children, child)
+
+	ctx.children = append(ctx.children, child)
 	return child
 }
 
-func (context *context) Err() error {
-	if closingErr := context.err; closingErr != nil {
-		return closingErr
+func (ctx *context) Err() error {
+	if ctx.err != nil {
+		return ctx.err
 	}
-	return context.Context.Err()
+
+	return ctx.Context.Err()
 }
