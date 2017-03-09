@@ -7,7 +7,7 @@
   - [x] Errors are signaled by `ctx.Close(err)` where `err != nil`.
   - [x] Errors are stored in the root context. Need a way to allow any node in the
   tree to signal an error and propagate it to the root context.
-  - [x] `rootCtx.Err()` returns any existing error, falling back to `goContext.Err()`
+  - [x] `rootCtx.Err()` returns any existing error, falling back to `context.Err()`
   in case the former is `nil`.
 - [x] Implement Producer abstraction
 - [ ] Implement Transformer abstraction

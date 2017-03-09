@@ -1,10 +1,10 @@
 package matchers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
-	"github.com/drborges/rivers/context"
 	"github.com/drborges/rivers/expectations"
 )
 

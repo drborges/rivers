@@ -1,12 +1,12 @@
-package context_test
+package ctxtree_test
 
 import (
 	"errors"
 	"testing"
 	"time"
 
-	"github.com/drborges/rivers/context"
-	. "github.com/drborges/rivers/context/matchers"
+	"github.com/drborges/rivers/ctxtree"
+	. "github.com/drborges/rivers/ctxtree/matchers"
 	"github.com/drborges/rivers/expectations"
 	. "github.com/drborges/rivers/expectations/matchers"
 )
@@ -14,7 +14,7 @@ import (
 func TestClose(t *testing.T) {
 	expect := expectations.New()
 
-	ctx := context.New()
+	ctx := ctxtree.New()
 
 	if err := expect(ctx).ToNot(BeClosed()); err != nil {
 		t.Error(err)
@@ -30,7 +30,7 @@ func TestClose(t *testing.T) {
 func TestParentContextCannotBeClosedWhenChildrenAreStillOpened(t *testing.T) {
 	expect := expectations.New()
 
-	parent := context.New()
+	parent := ctxtree.New()
 	child1 := parent.NewChild()
 	child2 := parent.NewChild()
 
@@ -56,7 +56,7 @@ func TestParentContextCannotBeClosedWhenChildrenAreStillOpened(t *testing.T) {
 func TestParentContextIsClosedWhenAllChildrenAreClosed(t *testing.T) {
 	expect := expectations.New()
 
-	parent := context.New()
+	parent := ctxtree.New()
 	child1 := parent.NewChild()
 	child2 := parent.NewChild()
 	grandchild := child2.NewChild()
@@ -107,7 +107,7 @@ func TestParentContextIsClosedWhenAllChildrenAreClosed(t *testing.T) {
 func TestConfigPropagation(t *testing.T) {
 	expect := expectations.New()
 
-	parent := context.New()
+	parent := ctxtree.New()
 	child := parent.NewChild()
 
 	if err := expect(parent.Config()).To(Be(child.Config())); err != nil {
@@ -118,12 +118,12 @@ func TestConfigPropagation(t *testing.T) {
 func TestNewContextWithConfig(t *testing.T) {
 	expect := expectations.New()
 
-	config := context.Config{
+	config := ctxtree.Config{
 		Timeout:    1 * time.Second,
 		BufferSize: 2,
 	}
 
-	ctx := context.WithConfig(context.New(), config)
+	ctx := ctxtree.WithConfig(ctxtree.New(), config)
 
 	if err := expect(ctx.Config()).To(Be(config)); err != nil {
 		t.Error(err)
@@ -142,7 +142,7 @@ func TestNewContextWithConfig(t *testing.T) {
 func TestErrorsArePropagatedToRootContext(t *testing.T) {
 	expect := expectations.New()
 
-	root := context.New()
+	root := ctxtree.New()
 	child := root.NewChild()
 	grandchild := child.NewChild()
 
@@ -157,7 +157,7 @@ func TestErrorsArePropagatedToRootContext(t *testing.T) {
 func TestClosingAnyNodeWithAnErrorCausesTheWholeContextTreeToBeClosed(t *testing.T) {
 	expect := expectations.New()
 
-	root := context.New()
+	root := ctxtree.New()
 	child1 := root.NewChild()
 	child2 := root.NewChild()
 	grandchild := child1.NewChild()

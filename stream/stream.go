@@ -1,6 +1,6 @@
 package stream
 
-import "github.com/drborges/rivers/context"
+import "github.com/drborges/rivers/ctxtree"
 
 // T data type flowing through rivers streams
 type T interface{}
@@ -60,18 +60,18 @@ var Empty = func() Reader {
 // New Creates the Reader and Writer components of a rivers stream with the default
 // configuration.
 func New() (Reader, Writer) {
-	return NewWithContext(context.New())
+	return NewWithContext(ctxtree.New())
 }
 
 // NewWithContext Creates the Reader and Writer components of a
 // rivers stream from a given context.
-func NewWithContext(ctx context.Context) (Reader, Writer) {
+func NewWithContext(ctx ctxtree.Context) (Reader, Writer) {
 	ch := make(chan T, ctx.Config().BufferSize)
 	return &reader{ctx, ch}, &writer{ctx, ch}
 }
 
 type reader struct {
-	ctx context.Context
+	ctx ctxtree.Context
 	ch  Readable
 }
 
@@ -88,7 +88,7 @@ func (reader *reader) NewDownstream() (Reader, Writer) {
 }
 
 type writer struct {
-	ctx context.Context
+	ctx ctxtree.Context
 	ch  Writable
 }
 

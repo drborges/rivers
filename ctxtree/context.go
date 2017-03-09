@@ -1,7 +1,7 @@
-package context
+package ctxtree
 
 import (
-	goContext "context"
+	"context"
 	"time"
 )
 
@@ -42,7 +42,7 @@ type Config struct {
 // upstream to cease its work when no more data is required by its downstreams.
 type Context interface {
 	// Implements the golang context.Context interface.
-	goContext.Context
+	context.Context
 	// Config returns the configuration used to create the context.
 	Config() Config
 	// Close attempts to close the context. If the context still has opened
@@ -55,13 +55,13 @@ type Context interface {
 
 // New creates a new Context.
 func New() Context {
-	return FromStdContext(goContext.Background())
+	return FromStdContext(context.Background())
 }
 
 // FromStdContext creates a new Context from the standard golang context.
-func FromStdContext(stdCtx goContext.Context) Context {
-	ctx, cancel := goContext.WithCancel(stdCtx)
-	context := &context{
+func FromStdContext(stdCtx context.Context) Context {
+	ctx, cancel := context.WithCancel(stdCtx)
+	context := &ctxtree{
 		Context:  ctx,
 		config:   DefaultConfig,
 		children: make([]Context, 0),
@@ -78,13 +78,13 @@ func FromStdContext(stdCtx goContext.Context) Context {
 
 // WithConfig creates a new Context with the provided configuration.
 func WithConfig(parent Context, config Config) Context {
-	ctx, cancel := goContext.WithTimeout(parent, config.Timeout)
+	ctx, cancel := context.WithTimeout(parent, config.Timeout)
 	closeFunc := func(err error) {
 		cancel()
 		parent.Close(err)
 	}
 
-	return &context{
+	return &ctxtree{
 		Context:   ctx,
 		config:    config,
 		closeFunc: closeFunc,
@@ -92,19 +92,19 @@ func WithConfig(parent Context, config Config) Context {
 	}
 }
 
-type context struct {
-	goContext.Context
+type ctxtree struct {
+	context.Context
 	closeFunc closeFunc
 	children  []Context
 	config    Config
 	err       error
 }
 
-func (ctx *context) Config() Config {
+func (ctx *ctxtree) Config() Config {
 	return ctx.config
 }
 
-func (ctx *context) Close(err error) {
+func (ctx *ctxtree) Close(err error) {
 	if err == nil {
 		for _, child := range ctx.children {
 			select {
@@ -119,14 +119,14 @@ func (ctx *context) Close(err error) {
 	ctx.closeFunc(err)
 }
 
-func (ctx *context) NewChild() Context {
-	childCtx, cancel := goContext.WithCancel(ctx.Context)
+func (ctx *ctxtree) NewChild() Context {
+	childCtx, cancel := context.WithCancel(ctx.Context)
 	closeFunc := func(err error) {
 		cancel()
 		ctx.Close(err)
 	}
 
-	child := &context{
+	child := &ctxtree{
 		Context:   childCtx,
 		closeFunc: closeFunc,
 		config:    ctx.config,
@@ -137,7 +137,7 @@ func (ctx *context) NewChild() Context {
 	return child
 }
 
-func (ctx *context) Err() error {
+func (ctx *ctxtree) Err() error {
 	if ctx.err != nil {
 		return ctx.err
 	}

@@ -1,7 +1,7 @@
 package pipeline
 
 import (
-	"github.com/drborges/rivers/context"
+	"github.com/drborges/rivers/ctxtree"
 	"github.com/drborges/rivers/stream"
 )
 
@@ -9,7 +9,7 @@ import (
 // the producer produces data until there is no more data to be produced or until
 // the context is closed by any of its downstreams, due to an error or becase no
 // further data is required.
-type Producer func(ctx context.Context) stream.Reader
+type Producer func(ctx ctxtree.Context) stream.Reader
 
 // Transformer represents intermidiary stages of the pipeline, responsible for
 // applying a transformation function to every item flowing through the stream,

@@ -3,7 +3,7 @@ package matchers
 import (
 	"fmt"
 
-	"github.com/drborges/rivers/context"
+	"github.com/drborges/rivers/ctxtree"
 	"github.com/drborges/rivers/expectations"
 	"github.com/drborges/rivers/pipeline"
 )
@@ -18,7 +18,7 @@ func Produce(items ...int) expectations.MatchFunc {
 			return fmt.Errorf("Expected actual to implement 'pipeline.Producer', got %v", actual)
 		}
 
-		reader := producer(context.New())
+		reader := producer(ctxtree.New())
 
 		for _, item := range items {
 			if data := <-reader.Read(); data != item {

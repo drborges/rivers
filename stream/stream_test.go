@@ -1,13 +1,13 @@
 package stream_test
 
 import (
-	goContext "context"
+	"context"
 	"errors"
 	"testing"
 	"time"
 
-	"github.com/drborges/rivers/context"
-	. "github.com/drborges/rivers/context/matchers"
+	"github.com/drborges/rivers/ctxtree"
+	. "github.com/drborges/rivers/ctxtree/matchers"
 	"github.com/drborges/rivers/expectations"
 	. "github.com/drborges/rivers/expectations/matchers"
 	"github.com/drborges/rivers/stream"
@@ -27,7 +27,7 @@ func TestReaderWriterStreamComponents(t *testing.T) {
 func TestReaderWriterStreamComponentsWithCustomContext(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.NewWithContext(context.New())
+	reader, writer := stream.NewWithContext(ctxtree.New())
 
 	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
 		t.Error(err)
@@ -69,7 +69,7 @@ func TestClosingWriter(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := expect(writer.Write(1)).To(Be(goContext.Canceled)); err != nil {
+	if err := expect(writer.Write(1)).To(Be(context.Canceled)); err != nil {
 		t.Error(err)
 	}
 }
@@ -77,7 +77,7 @@ func TestClosingWriter(t *testing.T) {
 func TestWriterTimesout(t *testing.T) {
 	expect := expectations.New()
 
-	ctx := context.WithConfig(context.New(), context.Config{
+	ctx := ctxtree.WithConfig(ctxtree.New(), ctxtree.Config{
 		Timeout:    50 * time.Millisecond,
 		BufferSize: 0,
 	})
@@ -92,14 +92,14 @@ func TestWriterTimesout(t *testing.T) {
 func TestWriterReturnsTimeoutError(t *testing.T) {
 	expect := expectations.New()
 
-	ctx := context.WithConfig(context.New(), context.Config{
+	ctx := ctxtree.WithConfig(ctxtree.New(), ctxtree.Config{
 		Timeout:    50 * time.Millisecond,
 		BufferSize: 0,
 	})
 
 	_, writer := stream.NewWithContext(ctx)
 
-	if err := expect(writer.Write(1)).To(Be(goContext.DeadlineExceeded)); err != nil {
+	if err := expect(writer.Write(1)).To(Be(context.DeadlineExceeded)); err != nil {
 		t.Error(err)
 	}
 }
@@ -154,7 +154,7 @@ func TestUpstreamIsClosedAfterAllDownstreamsAreClosed(t *testing.T) {
 func TestDownstreamErrorIsCollectedByRootContext(t *testing.T) {
 	expect := expectations.New()
 
-	ctx := context.New()
+	ctx := ctxtree.New()
 	r1, _ := stream.NewWithContext(ctx)
 	r2, _ := r1.NewDownstream()
 
@@ -169,7 +169,7 @@ func TestDownstreamErrorIsCollectedByRootContext(t *testing.T) {
 func TestDownstreamErrorClosesContext(t *testing.T) {
 	expect := expectations.New()
 
-	ctx := context.New()
+	ctx := ctxtree.New()
 	r1, _ := stream.NewWithContext(ctx)
 	r2, _ := r1.NewDownstream()
 
@@ -183,7 +183,7 @@ func TestDownstreamErrorClosesContext(t *testing.T) {
 func TestDownstreamErrorClosesAllStreams(t *testing.T) {
 	expect := expectations.New()
 
-	ctx := context.New()
+	ctx := ctxtree.New()
 	r1, w1 := stream.NewWithContext(ctx)
 	r2, w2 := r1.NewDownstream()
 	r3, w3 := r2.NewDownstream()
