@@ -104,14 +104,17 @@ func (ctx *context) Config() Config {
 }
 
 func (ctx *context) Close(err error) {
-	for _, child := range ctx.children {
-		select {
-		case <-child.Done():
-		default:
-			// Parent can only close the context when all children have closed theirs.
-			return
+	if err == nil {
+		for _, child := range ctx.children {
+			select {
+			case <-child.Done():
+			default:
+				// Parent can only close the context when all children have closed theirs.
+				return
+			}
 		}
 	}
+
 	ctx.closeFunc(err)
 }
 

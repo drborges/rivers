@@ -153,3 +153,30 @@ func TestErrorsArePropagatedToRootContext(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestClosingAnyNodeWithAnErrorCausesTheWholeContextTreeToBeClosed(t *testing.T) {
+	expect := expectations.New()
+
+	root := context.New()
+	child1 := root.NewChild()
+	child2 := root.NewChild()
+	grandchild := child1.NewChild()
+
+	child2.Close(errors.New("Something went wrong"))
+
+	if err := expect(root).To(BeClosed()); err != nil {
+		t.Error(err)
+	}
+
+	if err := expect(child1).To(BeClosed()); err != nil {
+		t.Error(err)
+	}
+
+	if err := expect(child2).To(BeClosed()); err != nil {
+		t.Error(err)
+	}
+
+	if err := expect(grandchild).To(BeClosed()); err != nil {
+		t.Error(err)
+	}
+}
