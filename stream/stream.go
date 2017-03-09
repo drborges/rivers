@@ -52,20 +52,14 @@ type Writer interface {
 // Empty represents an empty readable stream which has already ceased producing
 // data.
 var Empty = func() Reader {
-	r, w := New()
+	r, w := New(ctxtree.New())
 	w.Close(nil)
 	return r
 }()
 
 // New Creates the Reader and Writer components of a rivers stream with the default
 // configuration.
-func New() (Reader, Writer) {
-	return NewWithContext(ctxtree.New())
-}
-
-// NewWithContext Creates the Reader and Writer components of a
-// rivers stream from a given context.
-func NewWithContext(ctx ctxtree.Context) (Reader, Writer) {
+func New(ctx ctxtree.Context) (Reader, Writer) {
 	ch := make(chan T, ctx.Config().BufferSize)
 	return &reader{ctx, ch}, &writer{ctx, ch}
 }
@@ -84,7 +78,7 @@ func (reader *reader) Close(err error) {
 }
 
 func (reader *reader) NewDownstream() (Reader, Writer) {
-	return NewWithContext(reader.ctx.NewChild())
+	return New(reader.ctx.NewChild())
 }
 
 type writer struct {

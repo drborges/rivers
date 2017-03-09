@@ -17,17 +17,7 @@ import (
 func TestReaderWriterStreamComponents(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.New()
-
-	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestReaderWriterStreamComponentsWithCustomContext(t *testing.T) {
-	expect := expectations.New()
-
-	reader, writer := stream.NewWithContext(ctxtree.New())
+	reader, writer := stream.New(ctxtree.New())
 
 	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
 		t.Error(err)
@@ -37,7 +27,7 @@ func TestReaderWriterStreamComponentsWithCustomContext(t *testing.T) {
 func TestReaderDoesNotReceiveDataFromWriterWhenWriterIsClosed(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.New()
+	reader, writer := stream.New(ctxtree.New())
 
 	writer.Close(nil)
 
@@ -49,7 +39,7 @@ func TestReaderDoesNotReceiveDataFromWriterWhenWriterIsClosed(t *testing.T) {
 func TestReaderDoesNotReceiveDataFromWriterWhenReaderIsClosed(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.New()
+	reader, writer := stream.New(ctxtree.New())
 
 	reader.Close(nil)
 
@@ -61,7 +51,7 @@ func TestReaderDoesNotReceiveDataFromWriterWhenReaderIsClosed(t *testing.T) {
 func TestClosingWriter(t *testing.T) {
 	expect := expectations.New()
 
-	reader, writer := stream.New()
+	reader, writer := stream.New(ctxtree.New())
 
 	writer.Close(nil)
 
@@ -82,7 +72,7 @@ func TestWriterTimesout(t *testing.T) {
 		BufferSize: 0,
 	})
 
-	_, writer := stream.NewWithContext(ctx)
+	_, writer := stream.New(ctx)
 
 	if err := expect(writer).To(TimeoutWithin(100 * time.Millisecond)); err != nil {
 		t.Error(err)
@@ -97,7 +87,7 @@ func TestWriterReturnsTimeoutError(t *testing.T) {
 		BufferSize: 0,
 	})
 
-	_, writer := stream.NewWithContext(ctx)
+	_, writer := stream.New(ctx)
 
 	if err := expect(writer.Write(1)).To(Be(context.DeadlineExceeded)); err != nil {
 		t.Error(err)
@@ -107,7 +97,7 @@ func TestWriterReturnsTimeoutError(t *testing.T) {
 func TestDownstream(t *testing.T) {
 	expect := expectations.New()
 
-	upstream, _ := stream.New()
+	upstream, _ := stream.New(ctxtree.New())
 	reader, writer := upstream.NewDownstream()
 
 	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
@@ -118,7 +108,7 @@ func TestDownstream(t *testing.T) {
 func TestUpstreamIsClosedAfterAllDownstreamsAreClosed(t *testing.T) {
 	expect := expectations.New()
 
-	upstreamReader, upstreamWriter := stream.New()
+	upstreamReader, upstreamWriter := stream.New(ctxtree.New())
 	r1, w1 := upstreamReader.NewDownstream()
 	r2, w2 := upstreamReader.NewDownstream()
 
@@ -155,7 +145,7 @@ func TestDownstreamErrorIsCollectedByRootContext(t *testing.T) {
 	expect := expectations.New()
 
 	ctx := ctxtree.New()
-	r1, _ := stream.NewWithContext(ctx)
+	r1, _ := stream.New(ctx)
 	r2, _ := r1.NewDownstream()
 
 	err := errors.New("panic!")
@@ -170,7 +160,7 @@ func TestDownstreamErrorClosesContext(t *testing.T) {
 	expect := expectations.New()
 
 	ctx := ctxtree.New()
-	r1, _ := stream.NewWithContext(ctx)
+	r1, _ := stream.New(ctx)
 	r2, _ := r1.NewDownstream()
 
 	r2.Close(errors.New("panic!"))
@@ -184,7 +174,7 @@ func TestDownstreamErrorClosesAllStreams(t *testing.T) {
 	expect := expectations.New()
 
 	ctx := ctxtree.New()
-	r1, w1 := stream.NewWithContext(ctx)
+	r1, w1 := stream.New(ctx)
 	r2, w2 := r1.NewDownstream()
 	r3, w3 := r2.NewDownstream()
 

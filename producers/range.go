@@ -9,7 +9,7 @@ import (
 // Range creates a producer that generates integers within the given range.
 func Range(from, to int) pipeline.Producer {
 	return func(ctx ctxtree.Context) stream.Reader {
-		r, w := stream.NewWithContext(ctx)
+		r, w := stream.New(ctx)
 
 		go func() {
 			defer w.Close(nil)
