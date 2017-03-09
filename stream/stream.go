@@ -1,6 +1,10 @@
 package stream
 
-import "github.com/drborges/rivers/ctxtree"
+import (
+	"fmt"
+
+	"github.com/drborges/rivers/ctxtree"
+)
 
 // T data type flowing through rivers streams
 type T interface{}
@@ -61,12 +65,21 @@ var Empty = func() Reader {
 // configuration.
 func New(ctx ctxtree.Context) (Reader, Writer) {
 	ch := make(chan T, ctx.Config().BufferSize)
-	return &reader{ctx, ch}, &writer{ctx, ch}
+	closeChan := func(ch chan T) {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recovered from %v", r)
+			}
+		}()
+		close(ch)
+	}
+	return &reader{ctx, closeChan, ch}, &writer{ctx, closeChan, ch}
 }
 
 type reader struct {
-	ctx ctxtree.Context
-	ch  Readable
+	ctx       ctxtree.Context
+	closeChan func(chan T)
+	ch        chan T
 }
 
 func (reader *reader) Read() Readable {
@@ -74,6 +87,7 @@ func (reader *reader) Read() Readable {
 }
 
 func (reader *reader) Close(err error) {
+	defer reader.closeChan(reader.ch)
 	reader.ctx.Close(err)
 }
 
@@ -82,8 +96,9 @@ func (reader *reader) NewDownstream() (Reader, Writer) {
 }
 
 type writer struct {
-	ctx ctxtree.Context
-	ch  Writable
+	ctx       ctxtree.Context
+	closeChan func(chan T)
+	ch        chan T
 }
 
 func (writer *writer) Write(data T) error {
@@ -101,6 +116,6 @@ func (writer *writer) Write(data T) error {
 }
 
 func (writer *writer) Close(err error) {
-	defer close(writer.ch)
+	defer writer.closeChan(writer.ch)
 	writer.ctx.Close(err)
 }

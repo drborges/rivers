@@ -42,6 +42,7 @@ func TestReaderDoesNotReceiveDataFromWriterWhenReaderIsClosed(t *testing.T) {
 	reader, writer := stream.New(ctxtree.New())
 
 	reader.Close(nil)
+	reader.Close(nil) // accounts for multiple attempts to close a channel
 
 	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
 		t.Error(err)
@@ -54,6 +55,7 @@ func TestClosingWriter(t *testing.T) {
 	reader, writer := stream.New(ctxtree.New())
 
 	writer.Close(nil)
+	writer.Close(nil) // accounts for multiple attempts to close a channel
 
 	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
 		t.Error(err)
