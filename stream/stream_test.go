@@ -78,13 +78,13 @@ func TestWriterTimesout(t *testing.T) {
 	expect := expectations.New()
 
 	ctx := context.WithConfig(context.New(), context.Config{
-		Timeout:    500 * time.Millisecond,
+		Timeout:    50 * time.Millisecond,
 		BufferSize: 0,
 	})
 
 	_, writer := stream.NewWithContext(ctx)
 
-	if err := expect(writer).To(TimeoutWithin(500 * time.Millisecond)); err != nil {
+	if err := expect(writer).To(TimeoutWithin(100 * time.Millisecond)); err != nil {
 		t.Error(err)
 	}
 }
@@ -93,7 +93,7 @@ func TestWriterReturnsTimeoutError(t *testing.T) {
 	expect := expectations.New()
 
 	ctx := context.WithConfig(context.New(), context.Config{
-		Timeout:    500 * time.Millisecond,
+		Timeout:    50 * time.Millisecond,
 		BufferSize: 0,
 	})
 
