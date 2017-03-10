@@ -1,11 +1,11 @@
-package pipeline
+package rivers
 
 import (
 	"github.com/drborges/rivers/ctxtree"
 	"github.com/drborges/rivers/stream"
 )
 
-// Producer represents the source of a rivers pipeline. Bound to the given context,
+// Producer represents the source of a rivers rivers. Bound to the given context,
 // the producer produces data until there is no more data to be produced or until
 // the context is closed by any of its downstreams, due to an error or becase no
 // further data is required.

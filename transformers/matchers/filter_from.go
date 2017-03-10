@@ -3,9 +3,9 @@ package matchers
 import (
 	"fmt"
 
+	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/ctxtree"
 	"github.com/drborges/rivers/expectations"
-	"github.com/drborges/rivers/pipeline"
 	"github.com/drborges/rivers/stream"
 )
 
@@ -20,10 +20,10 @@ func (fn From) From(streamItems ...interface{}) expectations.MatchFunc {
 func Filter(expectedItems ...interface{}) From {
 	return func(streamItems []interface{}) expectations.MatchFunc {
 		return func(actual interface{}) error {
-			transformer, ok := actual.(pipeline.Transformer)
+			transformer, ok := actual.(rivers.Transformer)
 
 			if !ok {
-				return fmt.Errorf("Exected an actual that implements 'pipeline.Transformer', got %v", actual)
+				return fmt.Errorf("Exected an actual that implements 'rivers.Transformer', got %v", actual)
 			}
 
 			reader, writer := stream.New(ctxtree.New())

@@ -1,7 +1,7 @@
 package transformers
 
 import (
-	"github.com/drborges/rivers/pipeline"
+	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/stream"
 )
 
@@ -9,9 +9,9 @@ import (
 // the predicate, false otherwise.
 type Predicate func(stream.T) bool
 
-// Filter implements a pipeline.Transformer which filters stream data that match
+// Filter implements a rivers.Transformer which filters stream data that match
 // the given predicate.
-func Filter(fn Predicate) pipeline.Transformer {
+func Filter(fn Predicate) rivers.Transformer {
 	return func(upstream stream.Reader) stream.Reader {
 		reader, writer := upstream.NewDownstream()
 

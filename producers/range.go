@@ -1,13 +1,13 @@
 package producers
 
 import (
+	"github.com/drborges/rivers"
 	"github.com/drborges/rivers/ctxtree"
-	"github.com/drborges/rivers/pipeline"
 	"github.com/drborges/rivers/stream"
 )
 
 // Range creates a producer that generates integers within the given range.
-func Range(from, to int) pipeline.Producer {
+func Range(from, to int) rivers.Producer {
 	return func(ctx ctxtree.Context) stream.Reader {
 		r, w := stream.New(ctx)
 
