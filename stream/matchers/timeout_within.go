@@ -1,7 +1,6 @@
 package matchers
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -9,12 +8,14 @@ import (
 	"github.com/drborges/rivers/stream"
 )
 
+// TimeoutWithin matcher that verifies if the given stream.Writer times out within
+// the given time.Duration.
 func TimeoutWithin(duration time.Duration) expectations.MatchFunc {
 	return func(actual interface{}) error {
 		writer, ok := actual.(stream.Writer)
 
 		if !ok {
-			return errors.New(fmt.Sprintf("Expected an actual that implements stream.Writer, got %v", actual))
+			return fmt.Errorf("Expected an actual that implements stream.Writer, got %v", actual)
 		}
 
 		timeout := make(chan bool, 1)
@@ -31,7 +32,7 @@ func TimeoutWithin(duration time.Duration) expectations.MatchFunc {
 
 		select {
 		case <-timeoutExceeded:
-			return errors.New(fmt.Sprintf("Expected stream.Writer to have timed out within %v", duration))
+			return fmt.Errorf("Expected stream.Writer to have timed out within %v", duration)
 		case <-timeout:
 			return nil
 		}

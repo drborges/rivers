@@ -1,7 +1,6 @@
 package matchers
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/drborges/rivers/expectations"
@@ -12,7 +11,7 @@ import (
 func Be(expected interface{}) expectations.MatchFunc {
 	return func(actual interface{}) error {
 		if actual != expected {
-			return errors.New(fmt.Sprintf("Expected %v, to be %v", expected, actual))
+			return fmt.Errorf("Expected %v, to be %v", expected, actual)
 		}
 
 		return nil
