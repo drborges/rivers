@@ -22,7 +22,7 @@ func TestFilterEvenIntegers(t *testing.T) {
 func TestDoesNotFilterStreamWhenContextIsClosed(t *testing.T) {
 	expect := expectations.New()
 	evens := func(data stream.T) bool { return data.(int)%2 == 0 }
-	transformer := transformers.WithClosedUpstream(transformers.Filter(evens))
+	transformer := transformers.TransformerWithClosedUpstream(transformers.Filter(evens))
 
 	if err := expect(transformer).ToNot(Filter(2, 4).From(1, 2, 3, 4)); err != nil {
 		t.Error(err)

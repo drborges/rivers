@@ -5,9 +5,9 @@ import (
 	"github.com/drborges/rivers/stream"
 )
 
-// WithClosedUpstream decorates a given producer by closing the context before its
+// ConsumerWithClosedUpstream decorates a given producer by closing the context before its
 // execution.
-func WithClosedUpstream(consumer rivers.Consumer) rivers.Consumer {
+func ConsumerWithClosedUpstream(consumer rivers.Consumer) rivers.Consumer {
 	return func(upstream stream.Reader) {
 		upstream.Close(nil)
 		consumer(upstream)

@@ -24,7 +24,7 @@ func TestForwardToDoesNotConsumeDataIfUpstreamIsClosed(t *testing.T) {
 	expect := expectations.New()
 
 	ch := make(chan stream.T, 0)
-	consumer := consumers.WithClosedUpstream(consumers.ForwardTo(ch))
+	consumer := consumers.ConsumerWithClosedUpstream(consumers.ForwardTo(ch))
 
 	if err := expect(consumer).ToNot(Forward(1, 2, 3).To(ch)); err != nil {
 		t.Error(err)
