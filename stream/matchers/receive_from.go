@@ -19,7 +19,7 @@ func (fn From) From(writer stream.Writer) expectations.MatchFunc {
 
 // Receive allows constructing a matcher to verify whether a stream.Reader
 // receives the given sequence of items From the provided stream.Writer.
-func Receive(items ...int) From {
+func Receive(items ...interface{}) From {
 	return func(writer stream.Writer) expectations.MatchFunc {
 		return func(actual interface{}) error {
 			reader, ok := actual.(stream.Reader)
@@ -28,16 +28,16 @@ func Receive(items ...int) From {
 				return fmt.Errorf("Exected an actual that implements 'stream.Reader', got %v", actual)
 			}
 
-			for _, num := range items {
-				writer.Write(num)
+			for _, item := range items {
+				writer.Write(item)
 
 				select {
 				case data := <-reader.Read():
-					if data != num {
-						return fmt.Errorf("Expected %v, got %v", num, data)
+					if data != item {
+						return fmt.Errorf("Expected %v, got %v", item, data)
 					}
 				default:
-					return fmt.Errorf("Expected stream to have received %v, but it was closed", num)
+					return fmt.Errorf("Expected stream to have received %v, but it was closed", item)
 				}
 			}
 
