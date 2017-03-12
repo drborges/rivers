@@ -24,9 +24,9 @@ type Consumer func(stream.Reader)
 // two new ones.
 type Splitter func(stream.Reader) (stream.Reader, stream.Reader)
 
-// Joinner represents a joining stage in the pipeline which joins two streams
-// into a single one.
-type Joinner func(stream.Reader, stream.Reader) stream.Reader
+// Aggregators implements an aggregation between two streams returning a new
+// stream.
+type Aggregators func(stream.Reader, stream.Reader) stream.Reader
 
 // Predicate is a function that given an input it returns true if the input matches
 // the predicate, false otherwise.
