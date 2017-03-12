@@ -43,3 +43,29 @@ func (receive ReceiveFrom) FromWriter(writer stream.Writer) expectations.MatchFu
 		return nil
 	}
 }
+
+func (receive ReceiveFrom) FromWriters(writers ...stream.Writer) expectations.MatchFunc {
+	return func(actual interface{}) error {
+		reader, ok := actual.(stream.Reader)
+
+		if !ok {
+			return fmt.Errorf("Exected an actual that implements 'stream.Reader', got %v", actual)
+		}
+
+		for i, item := range receive.items {
+			writers[i].Write(item)
+
+			data, more := <-reader.Read()
+
+			if !more {
+				return fmt.Errorf("Expected stream.Reader to have received %v from writer at position %v, but there was no more data", item, i)
+			}
+
+			if data != item {
+				return fmt.Errorf("Expected stream.Reader to have received %v from writer at position %v, got %v", item, i, data)
+			}
+		}
+
+		return nil
+	}
+}

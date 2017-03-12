@@ -102,6 +102,11 @@ type writer struct {
 }
 
 func (writer *writer) Write(data T) error {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from %v", r)
+		}
+	}()
 	select {
 	case <-writer.ctx.Done():
 		return writer.ctx.Err()
