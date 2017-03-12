@@ -23,6 +23,13 @@ type Config struct {
 	BufferSize int
 }
 
+// Signaler allows checking if the underlying context is done.
+type Signaler interface {
+	// Done returns a read-only channel which when closed, signals to all tasks
+	// bound to the underlying context should halt their jobs.
+	Done() <-chan struct{}
+}
+
 // Context implements the golang context.Context interface, with support to
 // Context Trees, providing a different semanthics for cancellation propagation.
 // In a Context Tree, cancellation is propagated from leaf nodes up to their

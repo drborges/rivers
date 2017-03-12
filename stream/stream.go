@@ -27,6 +27,9 @@ type Reader interface {
 	// Read provides a readable stream from which data can be read
 	Read() Readable
 
+	// Done implements 'ctxtree.Signaler'
+	Done() <-chan struct{}
+
 	// NewDownstream creates the components reader and writer of a
 	// new downstream, which is bound to this stream. This
 	// relationship dictates how stream cancellation is propagated:
@@ -84,6 +87,10 @@ type reader struct {
 
 func (reader *reader) Read() Readable {
 	return reader.ch
+}
+
+func (reader *reader) Done() <-chan struct{} {
+	return reader.ctx.Done()
 }
 
 func (reader *reader) Close(err error) {
