@@ -52,10 +52,7 @@ func TestSplitByPredicateUpstreamIsClosedWhenAllDownstreamsAreClosed(t *testing.
 
 	downstream1.Close(nil)
 
-	writer.Write(1)
-	writer.Write(2)
-	writer.Write(3)
-	writer.Write(4)
+	writer.Write(1, 2, 3, 4)
 
 	if err := expect(ctx).ToNot(BeClosed()); err != nil {
 		t.Error(err)
@@ -71,10 +68,7 @@ func TestSplitByPredicateUpstreamIsClosedWhenAllDownstreamsAreClosed(t *testing.
 
 	downstream2.Close(nil)
 
-	writer.Write(1)
-	writer.Write(2)
-	writer.Write(3)
-	writer.Write(4)
+	writer.Write(1, 2, 3, 4)
 
 	if err := expect(ctx).To(BeClosed()); err != nil {
 		t.Error(err)

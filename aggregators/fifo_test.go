@@ -17,9 +17,12 @@ func FIFO(t *testing.T) {
 	r1, w1 := stream.New(ctx)
 	r2, w2 := stream.New(ctx)
 
+	w1.Write(1)
+	w2.Write(2, 3)
+
 	reader := aggregators.FIFO(r1, r2)
 
-	if err := expect(reader).To(Receive(1, 2, 3).FromWriters(w1, w2, w1)); err != nil {
+	if err := expect(reader).To(HaveReceived(1, 2, 3)); err != nil {
 		t.Error(err)
 	}
 }
@@ -43,8 +46,7 @@ func TestFIFODoesNotReceiveFromClosedUpstream(t *testing.T) {
 
 	r2.Close(nil)
 
-	w1.Write(1)
-	w2.Write(2)
+	w1.Write(1, 2)
 
 	if err := expect(reader).ToNot(HaveReceived(1)); err != nil {
 		t.Error(err)
