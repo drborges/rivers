@@ -51,9 +51,9 @@ type Writer interface {
 	// failure.
 	Close(error)
 
-	// Write writes the given data to the underlying writable stream, returning an
+	// Write writes the given items to the underlying writable stream, returning an
 	// error in case of a failure.
-	Write(data T) error
+	Write(items ...T) error
 }
 
 // Empty represents an empty readable stream which has already ceased producing
@@ -108,7 +108,7 @@ type writer struct {
 	ch        chan T
 }
 
-func (writer *writer) Write(data T) error {
+func (writer *writer) write(data T) error {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Recovered from %v", r)
@@ -124,6 +124,16 @@ func (writer *writer) Write(data T) error {
 			return writer.ctx.Err()
 		}
 	}
+	return nil
+}
+
+func (writer *writer) Write(items ...T) error {
+	for _, item := range items {
+		if err := writer.write(item); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
