@@ -19,7 +19,7 @@ func TestReaderWriterStreamComponents(t *testing.T) {
 
 	reader, writer := stream.New(ctxtree.New())
 
-	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
+	if err := expect(reader).To(Receive(1, 2, 4).FromWriter(writer)); err != nil {
 		t.Error(err)
 	}
 }
@@ -31,7 +31,7 @@ func TestReaderDoesNotReceiveDataFromWriterWhenWriterIsClosed(t *testing.T) {
 
 	writer.Close(nil)
 
-	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
+	if err := expect(reader).ToNot(Receive(1, 2, 4).FromWriter(writer)); err != nil {
 		t.Error(err)
 	}
 }
@@ -44,7 +44,7 @@ func TestReaderDoesNotReceiveDataFromWriterWhenReaderIsClosed(t *testing.T) {
 	reader.Close(nil)
 	reader.Close(nil) // accounts for multiple attempts to close a channel
 
-	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
+	if err := expect(reader).ToNot(Receive(1, 2, 4).FromWriter(writer)); err != nil {
 		t.Error(err)
 	}
 }
@@ -57,7 +57,7 @@ func TestClosingWriter(t *testing.T) {
 	writer.Close(nil)
 	writer.Close(nil) // accounts for multiple attempts to close a channel
 
-	if err := expect(reader).ToNot(Receive(1, 2, 4).From(writer)); err != nil {
+	if err := expect(reader).ToNot(Receive(1, 2, 4).FromWriter(writer)); err != nil {
 		t.Error(err)
 	}
 
@@ -102,7 +102,7 @@ func TestDownstream(t *testing.T) {
 	upstream, _ := stream.New(ctxtree.New())
 	reader, writer := upstream.NewDownstream()
 
-	if err := expect(reader).To(Receive(1, 2, 4).From(writer)); err != nil {
+	if err := expect(reader).To(Receive(1, 2, 4).FromWriter(writer)); err != nil {
 		t.Error(err)
 	}
 }
@@ -116,29 +116,29 @@ func TestUpstreamIsClosedAfterAllDownstreamsAreClosed(t *testing.T) {
 
 	r1.Close(nil)
 
-	if err := expect(r1).ToNot(Receive(1, 2, 4).From(w1)); err != nil {
+	if err := expect(r1).ToNot(Receive(1, 2, 4).FromWriter(w1)); err != nil {
 		t.Error(err)
 	}
 
-	if err := expect(r2).To(Receive(1, 2, 4).From(w2)); err != nil {
+	if err := expect(r2).To(Receive(1, 2, 4).FromWriter(w2)); err != nil {
 		t.Error(err)
 	}
 
-	if err := expect(upstreamReader).To(Receive(1, 2, 4).From(upstreamWriter)); err != nil {
+	if err := expect(upstreamReader).To(Receive(1, 2, 4).FromWriter(upstreamWriter)); err != nil {
 		t.Error(err)
 	}
 
 	r2.Close(nil)
 
-	if err := expect(r1).ToNot(Receive(1, 2, 4).From(w1)); err != nil {
+	if err := expect(r1).ToNot(Receive(1, 2, 4).FromWriter(w1)); err != nil {
 		t.Error(err)
 	}
 
-	if err := expect(r2).ToNot(Receive(1, 2, 4).From(w2)); err != nil {
+	if err := expect(r2).ToNot(Receive(1, 2, 4).FromWriter(w2)); err != nil {
 		t.Error(err)
 	}
 
-	if err := expect(upstreamReader).ToNot(Receive(1, 2, 4).From(upstreamWriter)); err != nil {
+	if err := expect(upstreamReader).ToNot(Receive(1, 2, 4).FromWriter(upstreamWriter)); err != nil {
 		t.Error(err)
 	}
 }
@@ -182,15 +182,15 @@ func TestDownstreamErrorClosesAllStreams(t *testing.T) {
 
 	r2.Close(errors.New("panic!"))
 
-	if err := expect(r1).ToNot(Receive(1, 2, 4).From(w1)); err != nil {
+	if err := expect(r1).ToNot(Receive(1, 2, 4).FromWriter(w1)); err != nil {
 		t.Error(err)
 	}
 
-	if err := expect(r2).ToNot(Receive(1, 2, 4).From(w2)); err != nil {
+	if err := expect(r2).ToNot(Receive(1, 2, 4).FromWriter(w2)); err != nil {
 		t.Error(err)
 	}
 
-	if err := expect(r3).ToNot(Receive(1, 2, 4).From(w3)); err != nil {
+	if err := expect(r3).ToNot(Receive(1, 2, 4).FromWriter(w3)); err != nil {
 		t.Error(err)
 	}
 }
