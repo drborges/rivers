@@ -5,12 +5,13 @@ import (
 
 	"github.com/drborges/rivers/aggregators"
 	"github.com/drborges/rivers/ctxtree"
+	. "github.com/drborges/rivers/ctxtree/matchers"
 	"github.com/drborges/rivers/expectations"
 	"github.com/drborges/rivers/stream"
 	. "github.com/drborges/rivers/stream/matchers"
 )
 
-func FIFO(t *testing.T) {
+func TesdtFIFO(t *testing.T) {
 	expect := expectations.New()
 
 	ctx := ctxtree.New()
@@ -27,32 +28,18 @@ func FIFO(t *testing.T) {
 	}
 }
 
-func TestFIFODoesNotReceiveFromClosedUpstream(t *testing.T) {
+func TestFIFOIsClosedWhenUpstreamsAreClosed(t *testing.T) {
 	expect := expectations.New()
 
 	r1, w1 := stream.New(ctxtree.New())
 	r2, w2 := stream.New(ctxtree.New())
 
+	w1.Close(nil)
+	w2.Close(nil)
+
 	reader := aggregators.FIFO(r1, r2)
 
-	r1.Close(nil)
-
-	w1.Write(1)
-	w2.Write(2)
-
-	if err := expect(reader).To(HaveReceived(2)); err != nil {
-		t.Error(err)
-	}
-
-	r2.Close(nil)
-
-	w1.Write(1, 2)
-
-	if err := expect(reader).ToNot(HaveReceived(1)); err != nil {
-		t.Error(err)
-	}
-
-	if err := expect(reader).ToNot(HaveReceived(2)); err != nil {
+	if err := expect(reader).To(BeClosed()); err != nil {
 		t.Error(err)
 	}
 }

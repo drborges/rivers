@@ -18,20 +18,14 @@ func TimeoutWithin(duration time.Duration) expectations.MatchFunc {
 			return fmt.Errorf("Expected an actual that implements stream.Writer, got %v", actual)
 		}
 
-		timeout := make(chan bool, 1)
+		timeout := make(chan bool, 0)
 		go func() {
+			defer close(timeout)
 			writer.Write(1)
-			timeout <- true
-		}()
-
-		timeoutExceeded := make(chan bool, 1)
-		go func() {
-			time.Sleep(duration + 10*time.Millisecond)
-			timeoutExceeded <- true
 		}()
 
 		select {
-		case <-timeoutExceeded:
+		case <-time.After(duration + 10*time.Millisecond):
 			return fmt.Errorf("Expected stream.Writer to have timed out within %v", duration)
 		case <-timeout:
 			return nil

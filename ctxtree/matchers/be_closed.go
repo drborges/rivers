@@ -3,6 +3,7 @@ package matchers
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/drborges/rivers/ctxtree"
 	"github.com/drborges/rivers/expectations"
@@ -20,7 +21,7 @@ func BeClosed() expectations.MatchFunc {
 		select {
 		case <-ctx.Done():
 			return nil
-		default:
+		case <-time.After(20 * time.Millisecond):
 			return errors.New("Expected context to be closed, it was not")
 		}
 	}

@@ -14,8 +14,13 @@ func ForwardTo(ch stream.Writable) rivers.Consumer {
 			defer close(ch)
 
 			for data := range upstream.Read() {
-				ch <- data
+				select {
+				case <-upstream.Done():
+					return
+				case ch <- data:
+				}
 			}
+
 		}()
 	}
 }

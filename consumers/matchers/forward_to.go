@@ -30,7 +30,9 @@ func Forward(expectedItems ...interface{}) To {
 			consumer(reader)
 
 			for _, expected := range expectedItems {
-				writer.Write(expected)
+				if err := writer.Write(expected); err != nil {
+					writer.Close(err)
+				}
 
 				if data := <-ch; data != expected {
 					return fmt.Errorf("Expected consumer to have received %v, got %v", expected, data)
