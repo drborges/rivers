@@ -23,7 +23,8 @@ type Reader interface {
 	// Read provides a readable stream from which data can be read
 	Read() Readable
 
-	// Done implements 'ctxtree.Signaler'
+	// Done returns a read-only channel which when closed, signals to all tasks
+	// bound to the underlying context should halt their jobs.
 	Done() <-chan struct{}
 
 	// NewDownstream creates the components reader and writer of a

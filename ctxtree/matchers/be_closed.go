@@ -5,17 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/drborges/rivers/ctxtree"
 	"github.com/drborges/rivers/expectations"
 )
+
+// Signaler allows checking if the underlying context is done.
+type Signaler interface {
+	Done() <-chan struct{}
+}
 
 // BeClosed matcher that verifies if the given context.Context is closed.
 func BeClosed() expectations.MatchFunc {
 	return func(actual interface{}) error {
-		ctx, ok := actual.(ctxtree.Signaler)
+		ctx, ok := actual.(Signaler)
 
 		if !ok {
-			return fmt.Errorf("Exected an actual that implements 'ctxtree.Signaler', got %v", actual)
+			return fmt.Errorf("Exected an actual that provides a Done() signal method, got %v", actual)
 		}
 
 		select {
