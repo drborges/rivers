@@ -19,7 +19,7 @@ func TestFilterEvenIntegers(t *testing.T) {
 
 	evensStream := transformers.Filter(evens)(reader)
 
-	if err := expect(evensStream).To(HaveReceived(2, 4)); err != nil {
+	if err := expect(evensStream).To(Receive(2, 4)); err != nil {
 		t.Error(err)
 	}
 }
@@ -34,7 +34,7 @@ func TestDoesNotFilterStreamWhenContextIsClosed(t *testing.T) {
 
 	evensStream := transformers.Filter(evens)(reader)
 
-	if err := expect(evensStream).ToNot(HaveReceived(2, 4)); err != nil {
+	if err := expect(evensStream).ToNot(Receive(2, 4)); err != nil {
 		t.Error(err)
 	}
 }

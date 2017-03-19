@@ -20,11 +20,11 @@ func TestSplitByPredicate(t *testing.T) {
 
 	evensStream, oddsStream := splitters.ByPredicate(evens)(reader)
 
-	if err := expect(evensStream).To(HaveReceived(2, 4)); err != nil {
+	if err := expect(evensStream).To(Receive(2, 4)); err != nil {
 		t.Error(err)
 	}
 
-	if err := expect(oddsStream).To(HaveReceived(1, 3)); err != nil {
+	if err := expect(oddsStream).To(Receive(1, 3)); err != nil {
 		t.Error(err)
 	}
 }
@@ -39,11 +39,11 @@ func TestSplitByPredicateDoesNotConsumeDataWhenUpstreamIsClosed(t *testing.T) {
 
 	evensStream, oddsStream := splitters.ByPredicate(evens)(reader)
 
-	if err := expect(evensStream).ToNot(HaveReceived(2, 4)); err != nil {
+	if err := expect(evensStream).ToNot(Receive(2, 4)); err != nil {
 		t.Error(err)
 	}
 
-	if err := expect(oddsStream).ToNot(HaveReceived(1, 3)); err != nil {
+	if err := expect(oddsStream).ToNot(Receive(1, 3)); err != nil {
 		t.Error(err)
 	}
 }

@@ -23,7 +23,7 @@ func TesdtFIFO(t *testing.T) {
 
 	reader := aggregators.FIFO(r1, r2)
 
-	if err := expect(reader).To(HaveReceived(1, 2, 3)); err != nil {
+	if err := expect(reader).To(Receive(1, 2, 3)); err != nil {
 		t.Error(err)
 	}
 }

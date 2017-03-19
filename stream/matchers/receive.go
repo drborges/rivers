@@ -2,24 +2,15 @@ package matchers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/drborges/rivers/expectations"
 	"github.com/drborges/rivers/stream"
 )
 
-// Receive allows constructing a matcher to verify whether a stream.Reader
-// receives the given sequence of items From the provided stream.Writer.
-func Receive(items ...interface{}) ReceiveFrom {
-	return ReceiveFrom{
-		items: items,
-	}
-}
-
-type ReceiveFrom struct {
-	items []interface{}
-}
-
-func (receive ReceiveFrom) FromWriter() expectations.MatchFunc {
+// Receive returns a matcher that verifies if the given stream.Reader has
+// received the given sequence of items.
+func Receive(items ...interface{}) expectations.MatchFunc {
 	return func(actual interface{}) error {
 		reader, ok := actual.(stream.Reader)
 
@@ -27,17 +18,13 @@ func (receive ReceiveFrom) FromWriter() expectations.MatchFunc {
 			return fmt.Errorf("Exected an actual that implements 'stream.Reader', got %v", actual)
 		}
 
-		for _, item := range receive.items {
+		for _, item := range items {
 			select {
-			case data, more := <-reader.Read():
-				if !more {
-					return fmt.Errorf("Expected stream.Reader to have received %v from upstream, but there was no more data", item)
-				}
-
+			case data := <-reader.Read():
 				if data != item {
 					return fmt.Errorf("Expected stream.Reader to have received %v from upstream, got %v", item, data)
 				}
-			default:
+			case <-time.After(10 * time.Millisecond):
 				return fmt.Errorf("Expected stream.Reader to have received %v from upstream, but there was no more data", item)
 			}
 		}
