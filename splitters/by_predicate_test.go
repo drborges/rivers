@@ -52,19 +52,18 @@ func TestSplitByPredicateUpstreamIsClosedWhenAllDownstreamsAreClosed(t *testing.
 	expect := expectations.New()
 	evens := func(data stream.T) bool { return data.(int)%2 == 0 }
 
-	ctx := ctxtree.New()
-	reader, _ := stream.New(ctx)
-	downstream1, downstream2 := splitters.ByPredicate(evens)(reader)
+	upstream, _ := stream.New(ctxtree.New())
+	downstream1, downstream2 := splitters.ByPredicate(evens)(upstream)
 
 	downstream1.Close(nil)
 
-	if err := expect(ctx).ToNot(BeClosed()); err != nil {
+	if err := expect(upstream).ToNot(BeClosed()); err != nil {
 		t.Error(err)
 	}
 
 	downstream2.Close(nil)
 
-	if err := expect(ctx).To(BeClosed()); err != nil {
+	if err := expect(upstream).To(BeClosed()); err != nil {
 		t.Error(err)
 	}
 }
