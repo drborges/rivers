@@ -43,3 +43,21 @@ func TestFIFOIsClosedWhenUpstreamsAreClosed(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestFIFOUpstreamsAreClosedWhenDownstreamIsClosed(t *testing.T) {
+	expect := expectations.New()
+
+	r1, _ := stream.New(ctxtree.New())
+	r2, _ := stream.New(ctxtree.New())
+	reader := aggregators.FIFO(r1, r2)
+
+	reader.Close(nil)
+
+	if err := expect(r1).To(BeClosed()); err != nil {
+		t.Error(err)
+	}
+
+	if err := expect(r2).To(BeClosed()); err != nil {
+		t.Error(err)
+	}
+}

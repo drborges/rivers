@@ -11,9 +11,9 @@ func FIFO(upstream1, upstream2 stream.Reader) stream.Reader {
 	upstream1Done := make(chan struct{}, 0)
 	upstream2Done := make(chan struct{}, 0)
 
+	// Forwards data from upstream1 to downstream.
 	go func() {
 		defer close(upstream1Done)
-		defer upstream1.Close(nil)
 
 		for data := range upstream1.Read() {
 			if err := writer.Write(data); err != nil {
@@ -22,9 +22,9 @@ func FIFO(upstream1, upstream2 stream.Reader) stream.Reader {
 		}
 	}()
 
+	// Forwards data from upstream2 to downstream.
 	go func() {
 		defer close(upstream2Done)
-		defer upstream2.Close(nil)
 
 		for data := range upstream2.Read() {
 			if err := writer.Write(data); err != nil {
@@ -33,6 +33,14 @@ func FIFO(upstream1, upstream2 stream.Reader) stream.Reader {
 		}
 	}()
 
+	// Propagates downstream cancellation to the upstream.
+	go func() {
+		defer upstream1.Close(nil)
+		defer upstream2.Close(nil)
+		<-reader.Done()
+	}()
+
+	// Closes downstream when there is no longer upstream data to be consumed.
 	go func() {
 		defer writer.Close(nil)
 		<-upstream1Done
