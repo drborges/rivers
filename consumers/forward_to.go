@@ -19,7 +19,6 @@ func ForwardTo(ch stream.Writable) rivers.Consumer {
 				case ch <- data:
 				}
 			}
-
 		}()
 	}
 }

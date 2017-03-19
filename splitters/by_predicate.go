@@ -5,6 +5,8 @@ import (
 	"github.com/drborges/rivers/stream"
 )
 
+// ByPredicate splits one upstream into two different downstreams routing data
+// based on a given predicate function.
 func ByPredicate(fn rivers.Predicate) rivers.Splitter {
 	return func(upstream stream.Reader) (stream.Reader, stream.Reader) {
 		reader1, writer1 := upstream.NewDownstream()

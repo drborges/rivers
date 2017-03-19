@@ -5,6 +5,8 @@ import (
 	"github.com/drborges/rivers/stream"
 )
 
+// FIFO merges two streams into one applying a first-in-first-out strategy.
+// Implements rivers.Aggregator interface
 func FIFO(upstream1, upstream2 stream.Reader) stream.Reader {
 	reader, writer := stream.New(ctxtree.New())
 
