@@ -10,7 +10,6 @@ import (
 func ForwardTo(ch stream.Writable) rivers.Consumer {
 	return func(upstream stream.Reader) {
 		go func() {
-			defer upstream.Close(nil)
 			defer close(ch)
 
 			for data := range upstream.Read() {
