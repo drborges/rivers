@@ -51,6 +51,9 @@ type Writer interface {
 	// Write writes the given items to the underlying writable stream, returning an
 	// error in case of a failure.
 	Write(items ...T) error
+
+	// Writable exposes the underlying writable channel.
+	Writable() Writable
 }
 
 // Empty represents an empty readable stream which has already ceased producing
@@ -121,4 +124,8 @@ func (writer *writer) Write(items ...T) error {
 func (writer *writer) Close(err error) {
 	defer close(writer.ch)
 	writer.ctx.Close(err)
+}
+
+func (writer *writer) Writable() Writable {
+	return writer.ch
 }
